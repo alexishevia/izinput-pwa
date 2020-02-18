@@ -1,4 +1,10 @@
+# IZ Input PWA
+IZ Input PWA is a Progressive Web App that lets you manually add transactions to "Invoice Zero" - the personal finance system.
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+
+## UI Library
+This project was built using [Semantic UI React](https://react.semantic-ui.com). No particular reason, other than it looked nice and easy to use.
 
 ## Available Scripts
 
