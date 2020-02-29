@@ -1,30 +1,28 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Header } from 'semantic-ui-react';
-import DropboxFilePicker from 'react-dropbox-filepicker';
-import { selectors, actions } from '../../redux/dropbox';
-import { DROPBOX_APP_KEY } from '../../constants';
-import localStorage from '../../localStorage';
+import GDriveFilePicker from '../../GDriveFilePicker';
+import { selectors as gdriveSelectors, actions } from '../../redux/gdrive';
 
-const { getAccessToken, getFilePath } = selectors;
 const { login, logout, selectFile } = actions;
 
 function Login({
-  accessToken,
-  filepath,
+  isGDriveReady,
+  isLoggedIn,
+  file,
   onLogin,
   onLogout,
   onFilePick,
   onError
 }) {
+  if (!isGDriveReady) {
+    return <div>Connecting to Google Drive...</div>;
+  }
   return (
     <div>
-      <Header size="small">Dropbox</Header>
-      <DropboxFilePicker
-        appKey={DROPBOX_APP_KEY}
-        accessToken={accessToken}
-        filepath={filepath}
+      <GDriveFilePicker
+        isLoggedIn={isLoggedIn}
+        file={file}
         onLogin={onLogin}
         onLogout={onLogout}
         onFilePick={onFilePick}
@@ -35,35 +33,33 @@ function Login({
 }
 
 const mapStateToProps = state => ({
-  accessToken: getAccessToken(state),
-  filepath: getFilePath(state)
+  file: gdriveSelectors.getFile(state),
+  isLoggedIn: gdriveSelectors.isLoggedIn(state),
+  isGDriveReady: gdriveSelectors.isInitialized(state),
 });
 
 const mapDispatchToProps = dispatch => ({
   onLogin: accessToken => {
-    localStorage.setDropboxToken(accessToken);
     dispatch(login(accessToken));
   },
   onLogout: () => {
-    localStorage.clear();
     dispatch(logout())
   },
-  onFilePick: filepath => {
-    localStorage.setDropboxFilepath(filepath);
-    dispatch(selectFile(filepath));
+  onFilePick: file => {
+    dispatch(selectFile(file));
   },
   onError: err => window.alert(err.msg)
 });
 
 Login.defaultProps = {
   accessToken: null,
-  filepath: null
+  file: null
 };
 
 Login.propTypes = {
   // redux props
   accessToken: PropTypes.string,
-  filepath: PropTypes.string,
+  file: PropTypes.string,
   onLogin: PropTypes.func.isRequired,
   onLogout: PropTypes.func.isRequired,
   onFilePick: PropTypes.func.isRequired,

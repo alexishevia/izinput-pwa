@@ -6,22 +6,13 @@ import rootReducer from './redux/rootReducer';
 
 import App from './App';
 import * as serviceWorker from './serviceWorker';
-import localStorage from './localStorage';
-import { login, selectFile } from './redux/dropbox/actions';
+import { init as gdriveInit } from './redux/gdrive/actions';
 
 import 'semantic-ui-css/semantic.min.css'
 
 const store = configureStore({ reducer: rootReducer });
 
-const dropboxToken = localStorage.getDropboxToken();
-if (dropboxToken) {
-  store.dispatch(login(dropboxToken));
-}
-
-const dropboxFilepath = localStorage.getDropboxFilepath();
-if (dropboxFilepath) {
-  store.dispatch(selectFile(dropboxFilepath));
-}
+store.dispatch(gdriveInit());
 
 ReactDOM.render(
   <ReduxProvider store={store}>
