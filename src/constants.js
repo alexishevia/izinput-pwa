@@ -1,2 +1,10 @@
-export const GOOGLE_API_KEY = 'AIzaSyA4vmImC6Kgr1EgyIuX2MVDXatzo9fHhV4';
-export const GOOGLE_CLIENT_ID = '566089236068-7sq6ej6n98o1pvce73vo5mst0o98uqld.apps.googleusercontent.com';
+export const GOOGLE_API_KEY = process.env.REACT_APP_GOOGLE_API_KEY;
+export const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+
+if (!GOOGLE_API_KEY) {
+  throw new Error("missing GOOGLE_API_KEY. Cannot start.");
+}
+
+if (!GOOGLE_CLIENT_ID) {
+  throw new Error("missing GOOGLE_CLIENT_ID. Cannot start.");
+}

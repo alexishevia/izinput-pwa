@@ -1,4 +1,5 @@
 # To-Do
+- [ ] get this app deployed to input.invoicezero.com
 - [ ] allow syncing with Google Drive
     I want to build something similar to
     https://github.com/alexishevia/redux-file-sync
