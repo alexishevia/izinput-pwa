@@ -59,7 +59,11 @@ Login.defaultProps = {
 Login.propTypes = {
   // redux props
   accessToken: PropTypes.string,
-  file: PropTypes.string,
+  file: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    fileType: PropTypes.string.isRequired,
+    mimeType: PropTypes.string.isRequired,
+  }),
   onLogin: PropTypes.func.isRequired,
   onLogout: PropTypes.func.isRequired,
   onFilePick: PropTypes.func.isRequired,

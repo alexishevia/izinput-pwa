@@ -3,10 +3,10 @@ import { Button } from "semantic-ui-react";
 
 const warningMsg = "Are you sure you want to disconnect from Google Drive?";
 
-export default function LogoutButton() {
+export default function LogoutButton({ onClick }) {
   function onBtnPress() {
     if (window.confirm(warningMsg)) {
-      window.gapi.auth2.getAuthInstance().signOut();
+      onClick();
     }
   }
   return (

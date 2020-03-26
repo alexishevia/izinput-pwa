@@ -1,8 +1,11 @@
 /*
-"kind": "drive#file",
-"id": "0Bw9P99xSQYrCMjJjMTYzMmYtODE0OC00NGQ1LTliOGUtZDI2NDhmZTFkNDQ4",
-"name": "Documents",
-"mimeType": "application/vnd.google-apps.folder"
+ * example gdrive entry
+ * {
+ *   "kind": "drive#file",
+ *   "id": "0Bw9P99xSQYrCMjJjMTYzMmYtODE0OC00NGQ1LTliOGUtZDI2NDhmZTFkNDQ4",
+ *   "name": "Documents",
+ *   "mimeType": "application/vnd.google-apps.folder"
+ * }
 */
 
 const getFileType = entry => {

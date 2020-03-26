@@ -14,9 +14,9 @@ export const SELECT_FILE = 'gdrive/selectFile';
 
 function onLoginStatusChange(dispatch, isSignedIn) {
   if (isSignedIn) {
-    return dispatch(login());
+    return dispatch({ type: LOGIN });
   }
-  return dispatch(logout());
+  return dispatch({ type: LOGOUT });
 }
 
 export function init() {
@@ -66,12 +66,17 @@ export function init() {
   }
 }
 
-export function login() {
-  return { type: LOGIN };
+export function logout() {
+  return async function(dispatch) {
+    await window.gapi.auth2.getAuthInstance().signOut();
+    localStorage.removeItem(STORAGE_KEY_SELECTED_FILE);
+  }
 }
 
-export function logout() {
-  return { type: LOGOUT };
+export function login() {
+  return async function(dispatch) {
+    await window.gapi.auth2.getAuthInstance().signIn();
+  }
 }
 
 export function selectFile(file) {
