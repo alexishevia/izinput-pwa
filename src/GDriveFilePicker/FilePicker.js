@@ -82,8 +82,8 @@ class FilePicker extends React.Component {
     const { onFilePick, onError } = this.props;
     const { path, pathIDs } = this.state
     if (isDir(node)) {
-      this.setState({ 
-          ...initialState, 
+      this.setState({
+          ...initialState,
           path: `${path}/${node.name}`,
           pathIDs: `${pathIDs}/${node.id}`,
         });
@@ -161,7 +161,7 @@ class FilePicker extends React.Component {
       <Menu fluid vertical attached="bottom">
         {contents.map(item => (
           <FilePickerItem
-            key={item.path}
+            key={item.id}
             node={item}
             onClick={() => this.openNode(item)}
           />

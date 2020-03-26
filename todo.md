@@ -1,5 +1,4 @@
 # To-Do
-- [ ] make sure the google sync is working on https://input.invoicezero.com/
 - [ ] allow syncing with Google Drive
     I want to build something similar to
     https://github.com/alexishevia/redux-file-sync
