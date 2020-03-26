@@ -11,8 +11,11 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
     REACT_APP_GOOGLE_API_KEY=yourAPIKey
     REACT_APP_GOOGLE_CLIENT_ID=yourClientID
     ```
-    You can find the `GOOGLE_API_KEY` and `GOOGLE_CLIENT_ID` in the [Google Developer Console](https://console.developers.google.com).
+
+    Notes:
+    - You can find the `GOOGLE_API_KEY` and `GOOGLE_CLIENT_ID` in the [Google Developer Console](https://console.developers.google.com).  
     If you do not already have an app in the Google Developer Console, read the [Create a Google App](#create-a-google-app) section.
+    - In prod, these variables are set up as part of the Netlify deployment environment.
 
 ## Create a Google App
 - Create your App in the [Google Developer Console](https://console.developers.google.com).
