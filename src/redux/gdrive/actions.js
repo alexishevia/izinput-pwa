@@ -34,8 +34,14 @@ export function init() {
       await window.gapi.client.init({
         apikey: GOOGLE_API_KEY,
         clientId: GOOGLE_CLIENT_ID,
-        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-        scope: 'https://www.googleapis.com/auth/drive.readonly',
+        discoveryDocs: [
+          'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest',
+          'https://sheets.googleapis.com/$discovery/rest?version=v4',
+        ],
+        scope: [
+          'https://www.googleapis.com/auth/drive.readonly',
+          'https://www.googleapis.com/auth/spreadsheets',
+        ].join(' ')
       })
 
       // add listener for login status
