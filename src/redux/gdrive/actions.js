@@ -11,14 +11,21 @@ export const LOGOUT = 'gdrive/logout';
 export const SELECT_FILE = 'gdrive/selectFile';
 
 // --- action creators --- //
-
-function onLoginStatusChange(dispatch, isSignedIn) {
-  if (isSignedIn) {
-    return dispatch({ type: LOGIN });
-  }
-  return dispatch({ type: LOGOUT });
+function _login() {
+  return { type: LOGIN };
 }
 
+function _logout() {
+  return { type: LOGOUT };
+}
+
+function _selectFile(file) {
+  localStorage.setItem(STORAGE_KEY_SELECTED_FILE, JSON.stringify(file))
+  return { type: SELECT_FILE, payload: file};
+}
+
+
+// --- thunk creators --- //
 export function init() {
   return async function initThunk(dispatch, getState) {
     if (isInitialized(getState())) {
@@ -45,7 +52,9 @@ export function init() {
       })
 
       // add listener for login status
-      const onLoginChange = onLoginStatusChange.bind(null, dispatch);
+      const onLoginChange = function(isSignedIn) {
+        return isSignedIn ? dispatch(_login()) : dispatch(_logout())
+      }
       window.gapi.auth2.getAuthInstance().isSignedIn.listen(onLoginChange);
 
       // get initial login status
@@ -55,7 +64,7 @@ export function init() {
       const selectedFile = localStorage.getItem(STORAGE_KEY_SELECTED_FILE);
       if (selectedFile) {
         try {
-          dispatch(selectFile(JSON.parse(selectedFile)));
+          dispatch(_selectFile(JSON.parse(selectedFile)));
         } catch (err) {
           console.error(
             `Error trying to parse selectedFile from localStorage: "${selectedFile}"
@@ -83,9 +92,4 @@ export function login() {
   return async function(dispatch) {
     await window.gapi.auth2.getAuthInstance().signIn();
   }
-}
-
-export function selectFile(file) {
-  localStorage.setItem(STORAGE_KEY_SELECTED_FILE, JSON.stringify(file))
-  return { type: SELECT_FILE, payload: file};
 }

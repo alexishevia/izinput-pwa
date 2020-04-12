@@ -7,12 +7,14 @@ import rootReducer from './redux/rootReducer';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 import { init as gdriveInit } from './redux/gdrive/actions';
+import { init as idbInit } from './redux/idb/actions';
 
 import 'semantic-ui-css/semantic.min.css'
 
 const store = configureStore({ reducer: rootReducer });
 
 store.dispatch(gdriveInit());
+store.dispatch(idbInit());
 
 ReactDOM.render(
   <ReduxProvider store={store}>
