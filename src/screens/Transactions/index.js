@@ -1,9 +1,10 @@
 import React from 'react';
+import NewTransaction from './NewTransaction';
 
 export default function Transactions() {
   return (
     <div>
-      Add Transaction
+      <NewTransaction />
     </div>
   )
 }

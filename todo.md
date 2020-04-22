@@ -1,7 +1,11 @@
 # To-Do
-- [ ] create app that writes to indexedDB
-    I am already opening a db connection on: `src/redux/idb`
-    Now I need to connect `src/components/DBWriter` with this store to detect when it is ready, and start writing to it
+- [ ] validate transaction before writing it to db.
+    see ./src/redux/transactions/actions.js
+- [ ] create action.payload.category if it does not exist yet
+    see ./src/redux/transactions/actions.js
+- [ ] on load, read existing transactions from DB and display them below the "new transaction" form
+- [ ] allow creating "Income" transactions
+- [ ] allow editing transactions
 - [ ] allow syncing indexedDB with Google Drive SpreadSheet
     I want to build something similar to
     https://github.com/alexishevia/redux-file-sync
