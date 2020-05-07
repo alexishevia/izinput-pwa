@@ -1,3 +1,4 @@
+import { openDB } from 'idb';
 import { MIGRATIONS, runMigrations } from './migrations';
 
 const _dbConnections = {};
@@ -22,24 +23,10 @@ async function getLatestLocalDbName() {
   return newLocalDbName(num);
 }
 
-async function openDBConnection(name) {
-  return new Promise((resolve, reject) => {
-    try {
-      const openRequest = window.indexedDB.open(name, MIGRATIONS.length);
-      openRequest.onupgradeneeded = () => runMigrations(openRequest.result);
-      openRequest.onsuccess = () => resolve(openRequest.result);
-      openRequest.onerror = (evt) => reject(evt);
-    } catch(err) {
-      reject(err);
-      return;
-    }
-  });
-}
-
 export default async function getLocalDb() {
   const name = await getLatestLocalDbName();
   if (!_dbConnections[name]) {
-    const conn = await openDBConnection(name);
+    const conn = await openDB(name, MIGRATIONS.length, { upgrade: runMigrations });
     _dbConnections[name] = conn;
   }
   return _dbConnections[name];
