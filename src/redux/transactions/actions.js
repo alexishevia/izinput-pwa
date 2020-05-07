@@ -40,26 +40,35 @@ export function put(data) {
     try {
       const action = transactionsSlice.actions.put(data);
       const db = await getLocalDb();
-      const dbTx = db.transaction(["localActions", "transactions"], "readwrite");
-      const txStore = dbTx.objectStore("transactions");
-      const actionsStore = dbTx.objectStore("localActions");
+      const dbTx = db.transaction(["localActions", "transactions", "categories"], "readwrite");
 
-      const existingTransaction = (await txStore.get(action.payload.id)) || {}
-
+      // merge new data with previous data (if transaction already exists)
+      const existingTransaction = (
+        await dbTx.objectStore("transactions").get(action.payload.id)
+      ) || {};
       if (isPutConflict(existingTransaction, action.payload)) {
         throw new Error("PUT conflict. Action will be ignored.");
       }
-
       const transaction = { ...existingTransaction, ...action.payload };
       delete transaction.deletedAt;
 
       validateTransaction(transaction);
 
-      await txStore.put(transaction);
-      // TODO: create action.payload.category if it does not exist yet
-      // see: https://github.com/alexishevia/izreducer/blob/master/src/categories/reducer.js#L28
+      // create transaction in idb
+      await dbTx.objectStore("transactions").put(transaction);
 
-      await actionsStore.put(action);
+      // create category in idb if it does not exist yet
+      if (action.payload.category) {
+        await dbTx.objectStore("categories").put({ id: action.payload.category });
+      }
+
+      // save action to idb
+      await dbTx.objectStore("localActions").put(action);
+
+      // finalize idb transaction
+      await dbTx.done;
+
+      // dispatch action to Redux. TODO: is this needed?
       dispatch(action);
     } catch(err) {
       console.error(err);

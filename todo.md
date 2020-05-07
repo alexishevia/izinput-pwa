@@ -1,6 +1,4 @@
 # To-Do
-- [ ] create action.payload.category if it does not exist yet
-    see ./src/redux/transactions/actions.js
 - [ ] on load, read existing transactions from DB and display them below the "new transaction" form
 - [ ] allow creating "Income" transactions
 - [ ] allow editing transactions
