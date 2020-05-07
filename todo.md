@@ -1,6 +1,4 @@
 # To-Do
-- [ ] validate transaction before writing it to db.
-    see ./src/redux/transactions/actions.js
 - [ ] create action.payload.category if it does not exist yet
     see ./src/redux/transactions/actions.js
 - [ ] on load, read existing transactions from DB and display them below the "new transaction" form

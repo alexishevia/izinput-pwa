@@ -1,6 +1,36 @@
 import { transactions as transactionsSlice } from 'izreducer';
 import { actions as errActions } from '../errors';
 import { getLocalDb } from '../../indexedDB';
+import Validation from '../../helpers/Validation';
+
+const { TYPES, CASH_FLOW } = transactionsSlice;
+
+// --- helper functions --- //
+
+function isPutConflict(prevTx, newTx) {
+  if (!prevTx || !prevTx.id) return false;
+  return (
+    prevTx.modifiedAt >= newTx.modifiedAt ||
+    prevTx.deletedAt >= newTx.modifiedAt
+  );
+}
+
+function validateTransaction(transaction) {
+  new Validation(transaction, "id")
+    .required()
+    .string()
+    .notEmpty();
+  new Validation(transaction, "amount").required().number();
+  new Validation(transaction, "category").string();
+  new Validation(transaction, "description").string();
+  new Validation(transaction, "type").required().oneOf(Object.values(TYPES));
+  new Validation(transaction, "cashFlow")
+    .required()
+    .oneOf(Object.values(CASH_FLOW));
+  new Validation(transaction, "transactionDate").required().dayString();
+  new Validation(transaction, "modifiedAt").required().dateString();
+  new Validation(transaction, "deletedAt").dateString();
+}
 
 // --- thunk creators --- //
 
@@ -11,13 +41,26 @@ export function put(data) {
       const action = transactionsSlice.actions.put(data);
       const db = await getLocalDb();
       const dbTx = db.transaction(["localActions", "transactions"], "readwrite");
-      // TODO: validate transaction before writing it to db.
-      // see: https://github.com/alexishevia/izreducer/blob/master/src/transactions/reducer.js#L49-L62
-      await dbTx.objectStore("transactions").put(action.payload);
-      await dbTx.objectStore("localActions").put(action);
+      const txStore = dbTx.objectStore("transactions");
+      const actionsStore = dbTx.objectStore("localActions");
+
+      const existingTransaction = (await txStore.get(action.payload.id)) || {}
+
+      if (isPutConflict(existingTransaction, action.payload)) {
+        throw new Error("PUT conflict. Action will be ignored.");
+      }
+
+      const transaction = { ...existingTransaction, ...action.payload };
+      delete transaction.deletedAt;
+
+      validateTransaction(transaction);
+
+      await txStore.put(transaction);
       // TODO: create action.payload.category if it does not exist yet
+      // see: https://github.com/alexishevia/izreducer/blob/master/src/categories/reducer.js#L28
+
+      await actionsStore.put(action);
       dispatch(action);
-      return;
     } catch(err) {
       console.error(err);
       dispatch(errActions.add("Failed saving transaction to database."));
