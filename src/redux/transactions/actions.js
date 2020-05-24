@@ -5,6 +5,10 @@ import Validation from '../../helpers/Validation';
 
 const { TYPES, CASH_FLOW } = transactionsSlice;
 
+// --- action types --- //
+export const RESET = 'transactions/reset';
+export const ADD = 'transactions/add';
+
 // --- helper functions --- //
 
 function isPutConflict(prevTx, newTx) {
@@ -32,7 +36,36 @@ function validateTransaction(transaction) {
   new Validation(transaction, "deletedAt").dateString();
 }
 
+// --- action creators --- //
+export function reset() {
+  return { type: RESET };
+}
+
+export function add(tx) {
+  return { type: ADD, payload: tx };
+}
+
 // --- thunk creators --- //
+
+// load reads transactions from indexedDB
+export function load() {
+  return async function(dispatch) {
+    try {
+      dispatch(reset());
+      const db = await getLocalDb();
+      const dbTx = db.transaction(["transactions"], "readonly");
+      let cursor = await dbTx.store.openCursor();
+      while (cursor) {
+        dispatch(add(cursor.value));
+        cursor = await cursor.continue();
+      }
+    }
+    catch(err) {
+      console.error(err);
+      dispatch(errActions.add("Failed loading transactions from database."));
+    }
+  }
+}
 
 // put creates a new transaction, and saves it to indexedDB
 export function put(data) {
