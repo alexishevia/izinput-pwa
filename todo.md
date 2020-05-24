@@ -1,5 +1,4 @@
 # To-Do
-- [ ] make sure that creating a new transaction updates the transactions list
 - [ ] allow syncing indexedDB with Google Drive SpreadSheet
     I want to build something similar to
     https://github.com/alexishevia/redux-file-sync

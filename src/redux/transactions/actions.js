@@ -101,8 +101,8 @@ export function put(data) {
       // finalize idb transaction
       await dbTx.done;
 
-      // dispatch action to Redux. TODO: is this needed?
-      dispatch(action);
+      // reload transactions store from indexedDB
+      dispatch(load());
     } catch(err) {
       console.error(err);
       dispatch(errActions.add("Failed saving transaction to database."));
