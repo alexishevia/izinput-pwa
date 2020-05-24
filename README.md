@@ -30,6 +30,9 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
     2. `API restrictions`
         Select both the "Google Drive API" and "Google Sheets API"
 
+## GDrive Sync
+This app allows syncing data to a Google Drive Spreadsheet. [Read More](./docs/gdrive_sync.md)
+
 ## UI Library
 This project was built using [Semantic UI React](https://react.semantic-ui.com). No particular reason, other than it looked nice and easy to use.
 

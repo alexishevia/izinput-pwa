@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import GDriveFilePicker from './GDriveFilePicker';
+import RunSync from './RunSync';
 import { selectors as gdriveSelectors, actions } from '../../redux/gdrive';
 
 const { login, logout, selectFile } = actions;
@@ -29,6 +30,7 @@ function Login({
         onError={onError}
       />
       <hr />
+      <RunSync />
     </div>
   );
 }

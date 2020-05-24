@@ -10,7 +10,7 @@ export default function LogoutButton({ onClick }) {
     }
   }
   return (
-    <Button secondary onClick={onBtnPress}>
+    <Button onClick={onBtnPress}>
       Disconnect
     </Button>
   );

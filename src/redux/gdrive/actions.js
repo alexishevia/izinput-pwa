@@ -1,6 +1,7 @@
 import { promisify } from 'util';
 import { GOOGLE_API_KEY, GOOGLE_CLIENT_ID } from '../../constants';
 import { isInitialized } from './selectors';
+import runSync from './sync';
 
 const STORAGE_KEY_SELECTED_FILE = 'gDriveSelectedFile';
 
@@ -24,8 +25,9 @@ export function selectFile(file) {
   return { type: SELECT_FILE, payload: file};
 }
 
-
 // --- thunk creators --- //
+export const sync = runSync;
+
 export function init() {
   return async function initThunk(dispatch, getState) {
     if (isInitialized(getState())) {
