@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import FilePickButton from "./FilePickButton";
 import LogoutButton from "./LogoutButton";
 
-export default function LoggedIn({ openFilePicker }) {
+export default function LoggedIn({ openFilePicker, onLogout }) {
   return (
     <div>
       <p>
@@ -15,7 +15,7 @@ export default function LoggedIn({ openFilePicker }) {
         style={{ flexDirection: "row", justifyContent: "center", padding: 10 }}
       >
         <FilePickButton onClick={openFilePicker} />
-        <LogoutButton />
+        <LogoutButton onClick={onLogout} />
       </div>
     </div>
   );

@@ -55,7 +55,7 @@ export default class Root extends React.Component {
           );
         }
 
-        return <LoggedIn openFilePicker={openFilePicker} />;
+        return <LoggedIn openFilePicker={openFilePicker} onLogout={onLogout} />;
     }
 
     render() {

@@ -19,7 +19,7 @@ function _logout() {
   return { type: LOGOUT };
 }
 
-function _selectFile(file) {
+export function selectFile(file) {
   localStorage.setItem(STORAGE_KEY_SELECTED_FILE, JSON.stringify(file))
   return { type: SELECT_FILE, payload: file};
 }
@@ -64,7 +64,7 @@ export function init() {
       const selectedFile = localStorage.getItem(STORAGE_KEY_SELECTED_FILE);
       if (selectedFile) {
         try {
-          dispatch(_selectFile(JSON.parse(selectedFile)));
+          dispatch(selectFile(JSON.parse(selectedFile)));
         } catch (err) {
           console.error(
             `Error trying to parse selectedFile from localStorage: "${selectedFile}"
