@@ -6,14 +6,14 @@ import { selectors as gSelectors, actions as gActions } from '../../../redux/gdr
 
 class RunSync extends React.Component {
   render() {
-    const { isFileSelected } = this.props;
+    const { isFileSelected, onRunSync } = this.props;
 
     if (!isFileSelected) {
       return null;
     }
 
     return (
-      <Button primary>
+      <Button primary onClick={onRunSync}>
         Run Sync
       </Button>
     );

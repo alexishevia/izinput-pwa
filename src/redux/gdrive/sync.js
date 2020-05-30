@@ -1,12 +1,15 @@
 import { get } from 'lodash'
 import { getFile } from './selectors'
+import getCloudReplica from '../../CloudReplica/get';
 import { actions as errActions } from '../errors';
 
-function getCells(props) {
-  return new Promise((resolve, reject) => (
-    window.gapi.client.sheets.spreadsheets.values.get(props)
+async function getActions({ spreadsheetId, from, to }) {
+  const range = `A${from}:${to}`; // eg: 'A1:A21'
+  const response = await new Promise((resolve, reject) => (
+    window.gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range })
     .then(resolve, reject)
-  ));
+  ))
+  return get(response, 'result.values', []).map(row => row[0]);
 }
 
 function appendCells(params, valueRangeBody) {
@@ -14,16 +17,6 @@ function appendCells(params, valueRangeBody) {
     window.gapi.client.sheets.spreadsheets.values.append(params, valueRangeBody)
     .then(resolve, reject)
   ));
-}
-
-async function downloadFile(file) {
-  try {
-    const response = await getCells({ spreadsheetId: file.id, range: 'A1:A5' });
-    const values = get(response, 'result.values', []);
-    console.log(values);
-  } catch (err) {
-    throw err;
-  }
 }
 
 async function uploadPending(file) {
@@ -52,6 +45,17 @@ async function uploadPending(file) {
   }
 }
 
+async function updateCloudReplica({ cloudReplica, spreadsheetId }) {
+  const lastKnownIndex = await cloudReplica.getLastIndex();
+  const from = lastKnownIndex || 1; // always re-download the last index
+  const actions = await getActions({ spreadsheetId, from, to: from + 25 });
+  if (!actions || actions.length <= 1) {
+    console.log('cloudReplica is up to date');
+    return;
+  }
+  await cloudReplica.append({ actions, from });
+  return updateCloudReplica({ cloudReplica, spreadsheetId });
+}
 
 // sync is a thunk creator
 export default function sync() {
@@ -64,25 +68,16 @@ export default function sync() {
       return;
     }
 
-    // TODO: implement sync correctly
+    try {
+      const cloudReplica = await getCloudReplica();
+      await updateCloudReplica({ cloudReplica, spreadsheetId: file.id })
+    } catch(err) {
+      console.error(err);
+      dispatch(errActions.add('Failed to download data from Google Spreadsheet.'));
+      return;
+    }
 
-    // uploadPending()
-    // - read entries in idb.localN.localActions
-    // - append entries to gdrive
-    // - delete entries from idb.localN.localActions
-
-    // downloadCloudFile()
-    // - create idb.cloudReplica if it does not exist
-    //    * NOTE: if idb.cloudReplica.metadata.version does not match the current reducerVersion, it means
-    //    we need to completely discard idb.cloudReplica and build a new one
-    // - download any rows from gdrive where rowNum > idb.cloudReplica.metadata.latestRow
-    // - write entries to idb.cloudReplica
-    //    * update idb.cloudReplica.metadata.latestRow
-    //    * update idb.cloudReplica.metadata.lastUpdate
-    //    * update idb.cloudReplica.metadata.lastUpdate
-
-    // await uploadPending(file)
-    // await downloadFile(file);
+    // TODO: finish sync implementation
   }
 }
 
