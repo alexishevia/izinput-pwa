@@ -17,33 +17,43 @@ async function checkConflicts({ dbTx, expectedLastAction, expectedLastIndex }) {
 }
 
 export default function CloudReplica(db) {
-  async function append({ actions, from }) {
-    const dbTx = db.transaction(["actions"], "readwrite");
-
-    // the first action being appended should match the last action in the DB.
-    // Otherwise, a conflict error is thrown.
-    if (from === 1) {
-      await checkStoreEmpty({ dbTx });
-    } else {
-      const expectedLastAction = actions.shift();
-      await checkConflicts({ dbTx, expectedLastAction, expectedLastIndex: from });
-    }
-
-    // append to 'actions' store
-    for (const action of actions) {
-      await dbTx.objectStore("actions").put(action);
-    }
-
-    await dbTx.done;
+  function getActions({ from, to }) {
+    return db.getAll("actions", IDBKeyRange.bound(from, to));
   }
 
-  // returns the last index (aka row number) that was downloaded from google spreadsheets
-  async function getLastIndex(){
-    return await db.count('actions');
+  async function append({ actions, from }) {
+    const dbTx = db.transaction(["actions"], "readwrite");
+    try {
+      // the first action being appended should match the last action in the DB.
+      // Otherwise, a conflict error is thrown.
+      if (from === 1) {
+        await checkStoreEmpty({ dbTx });
+      } else {
+        const expectedLastAction = actions.shift();
+        await checkConflicts({ dbTx, expectedLastAction, expectedLastIndex: from });
+      }
+
+      // append to 'actions' store
+      for (const action of actions) {
+        await dbTx.objectStore("actions").put(action);
+      }
+
+      await dbTx.done;
+    } catch(err) {
+      await dbTx.abort();
+      throw err;
+    }
+  }
+
+  // returns the amount of processed actions
+  async function getActionsCount(){
+    const count = await db.count('actions');
+    return count || 0;
   }
 
   return {
     append,
-    getLastIndex,
+    getActionsCount,
+    getActions,
   };
 }

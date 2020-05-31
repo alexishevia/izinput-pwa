@@ -7,7 +7,8 @@ export default function txReducer(state = initialState, action) {
     case RESET:
       return initialState;
     case ADD:
-      return [...state, action.payload];
+      let toAdd = Array.isArray(action.payload) ? action.payload : [action.payload];
+      return [...state, ...toAdd];
     default:
       return state;
   }

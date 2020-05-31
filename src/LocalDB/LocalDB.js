@@ -35,7 +35,7 @@ async function processTransactionsPutV1({ dbTx, payload }) {
   ) || {};
 
   if (isPutConflict(existingTransaction, payload)) {
-    throw new Error("PUT conflict. Action will be ignored.");
+    console.warn("PUT conflict. Action will be ignored.");
   }
 
   const transaction = { ...existingTransaction, ...payload };
@@ -52,32 +52,46 @@ async function processTransactionsPutV1({ dbTx, payload }) {
   }
 }
 
-export default function LocalDb(db) {
-  async function getTransactionsCursor() {
-    const dbTx = db.transaction(["transactions"], "readonly");
-    const cursor = await dbTx.store.openCursor();
-    return cursor;
+export default function LocalDB(db) {
+  function getTransactions({ from, count }) {
+    return db.getAll("transactions", IDBKeyRange.lowerBound(from, true), count);
   }
 
-  async function processActions(actions) {
-    const dbTx = db.transaction(["localActions", "transactions", "categories"], "readwrite");
+  async function processActions(actions, { actionsAreRemote } = {}) {
+    const dbTx = db.transaction(["localActions", "meta", "transactions", "categories"], "readwrite");
 
-    for (const action of actions) {
-      switch(action.type) {
-        case 'transactions/putv1':
-          await processTransactionsPutV1({ dbTx, payload: action.payload });
-          break;
-        default:
-          throw new Error('Unknown action type:', action.type);
+    try {
+      for (const action of actions) {
+        switch(action.type) {
+          case 'transactions/putv1':
+            await processTransactionsPutV1({ dbTx, payload: action.payload });
+            break;
+          default:
+            throw new Error('Unknown action type:', action.type);
+        }
+        if (!actionsAreRemote) {
+          await dbTx.objectStore("localActions").put(action);
+        }
       }
-      await dbTx.objectStore("localActions").put(action);
-    }
 
-    await dbTx.done;
+      const lastAction = actions[actions.length - 1];
+      if (lastAction) {
+        await dbTx.objectStore("meta").put(JSON.stringify(lastAction), "lastAction");
+      }
+
+      const count = await dbTx.objectStore("meta").get("actionsCount")
+      const newCount = (count || 0) + actions.length;
+      await dbTx.objectStore("meta").put(newCount, "actionsCount");
+
+      await dbTx.done;
+    } catch(err) {
+      await dbTx.abort();
+      throw err;
+    }
   }
 
   return {
-    getTransactionsCursor,
+    getTransactions,
     processActions,
   };
 }

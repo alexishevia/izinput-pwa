@@ -2,8 +2,9 @@ import { get } from 'lodash'
 import { getFile } from './selectors'
 import getCloudReplica from '../../CloudReplica/get';
 import { actions as errActions } from '../errors';
+import { PAGE_SIZE } from '../../constants';
 
-async function getActions({ spreadsheetId, from, to }) {
+async function getActionsFromSpreadsheet({ spreadsheetId, from, to }) {
   const range = `A${from}:${to}`; // eg: 'A1:A21'
   const response = await new Promise((resolve, reject) => (
     window.gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range })
@@ -46,9 +47,9 @@ async function uploadPending(file) {
 }
 
 async function updateCloudReplica({ cloudReplica, spreadsheetId }) {
-  const lastKnownIndex = await cloudReplica.getLastIndex();
+  const lastKnownIndex = await cloudReplica.getActionsCount();
   const from = lastKnownIndex || 1; // always re-download the last index
-  const actions = await getActions({ spreadsheetId, from, to: from + 25 });
+  const actions = await getActionsFromSpreadsheet({ spreadsheetId, from, to: from + PAGE_SIZE });
   if (!actions || actions.length <= 1) {
     console.log('cloudReplica is up to date');
     return;
