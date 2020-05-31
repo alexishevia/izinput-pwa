@@ -57,6 +57,27 @@ async function uploadLocalActionsRecursive({ localDB, spreadsheetId, uploadCount
   });
 }
 
+async function hasConflicts({ cloudReplica, localDB }) {
+  const cloudCount = await cloudReplica.getActionsCount();
+  const localCount = await localDB.getActionsCount();
+  if (cloudCount !== localCount) {
+    console.warn(`Conflict. cloudReplica actions count: ${cloudCount} vs localDB actions count: ${localCount}`);
+    return true;
+  }
+
+  const cloudLastAction = await cloudReplica.getLastAction();
+  const localLastAction = await localDB.getLastAction();
+  if (
+    (cloudLastAction || localLastAction) // skip comparison if both are falsy
+    && (cloudLastAction !== localLastAction)
+  ) {
+    console.warn(`Conflict. cloudReplica last action:\n${cloudLastAction}\nvs localDB last action:\n${localLastAction}`);
+    return true;
+  }
+
+  return false;
+}
+
 async function syncRecursive({ dispatch, spreadsheetId, cloudReplica, localDB }) {
     // update cloud replica
     try {
@@ -81,7 +102,13 @@ async function syncRecursive({ dispatch, spreadsheetId, cloudReplica, localDB })
       return;
     }
 
-    // TODO: finish sync implementation
+    // check conflicts
+    if (await hasConflicts({ cloudReplica, localDB })) {
+      const newLocalDB = await getLocalDB({ forceNew: true });
+      return syncRecursive({ dispatch, spreadsheetId, cloudReplica, localDB: newLocalDB });
+    } else {
+      console.log('Sync succeeded.');
+    }
 }
 
 // sync is a thunk creator

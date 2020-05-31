@@ -34,15 +34,29 @@ function newLocalDBName(num) {
     .replace('<NUM>', num || 0);
 }
 
-async function getLatestLocalDBName() {
+async function getLatestLocalDBNumber() {
   const dbs = await window.indexedDB.databases()
-  const num = dbs
+  const val = dbs
     .map(db => db.name)
     .map(name => (localDBName.regex.exec(name) || [])[2])
     .filter(Boolean)
     .sort()
-    .reverse()[0]
-  return newLocalDBName(num);
+    .reverse()[0] || 0;
+  const num = parseInt(val, 10);
+  if (Number.isNaN(num)) {
+    throw new Error('LatestLocalDBNumber cannot be parsed to int:', val);
+  }
+  return num;
+}
+
+async function getLatestLocalDBName() {
+  const latestNumber = await getLatestLocalDBNumber();
+  return newLocalDBName(latestNumber);
+}
+
+async function getNewLocalDBName() {
+  const latestNumber = await getLatestLocalDBNumber();
+  return newLocalDBName(latestNumber + 1);
 }
 
 async function dbIsNew(name) {
@@ -79,12 +93,17 @@ async function getLocalDBByName(name) {
   return _activeConnections[name];
 }
 
-export default async function getLocalDB() {
-  const activeLocalDBName = localStorage.getItem(STORAGE_KEY_ACTIVE_DB)
-  if (activeLocalDBName) {
-    return getLocalDBByName(activeLocalDBName)
+export default async function getLocalDB({ forceNew } = {}) {
+  let name;
+  if (forceNew) {
+    name = await getNewLocalDBName();
+  } else {
+    const activeLocalDBName = localStorage.getItem(STORAGE_KEY_ACTIVE_DB)
+    if (activeLocalDBName) {
+      return getLocalDBByName(activeLocalDBName)
+    }
+    name = await getLatestLocalDBName();
   }
-  const name = await getLatestLocalDBName();
   const localDB = await getLocalDBByName(name)
   localStorage.setItem(STORAGE_KEY_ACTIVE_DB, name);
   return localDB;

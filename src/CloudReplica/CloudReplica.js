@@ -55,9 +55,22 @@ export default function CloudReplica(db) {
     return count || 0;
   }
 
+  async function getLastAction() {
+    // given that:
+    // * the 'actions' store auto-increment key starts at 1, AND
+    // * we never delete actions from the cloudReplica
+    // the last action's key is the same as the actions count.
+    const count = await getActionsCount();
+    if (!count) {
+      return undefined;
+    }
+    return db.get("actions", count);
+  }
+
   return {
     append,
     getActionsCount,
+    getLastAction,
     getActions,
   };
 }

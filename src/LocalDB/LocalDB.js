@@ -60,6 +60,14 @@ export default function LocalDB(db) {
     return db.getAll("transactions", IDBKeyRange.lowerBound(from, true), count);
   }
 
+  function getActionsCount() {
+    return db.get("meta", "actionsCount");
+  }
+
+  function getLastAction() {
+    return db.get("meta", "lastAction");
+  }
+
   async function getLocalActions({ from, to }) {
     // the localActions store uses an auto-increment key.
     // Because we're constantly deleting localActions, it is not easy to
@@ -147,6 +155,8 @@ export default function LocalDB(db) {
   return {
     getTransactions,
     getLocalActions,
+    getActionsCount,
+    getLastAction,
     deleteLocalActions,
     processActions,
   };
