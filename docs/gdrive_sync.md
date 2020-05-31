@@ -100,7 +100,7 @@ Note: if there is no active local DB, a new local DB must be generated as descri
     For every action downloaded:
     * add the action to `cloudReplica.actions`
     * if the action's "version" is greater than `cloudReplica.meta.latestVersion`, update `cloudReplica.meta.latestVersion` to match.
-2. uploadPending()
+2. uploadLocalActions()
     If there are any `localDB.localActions`:
         * upload them (ie: append) to the Google spreadsheet
         * delete them from `localDB.actions`

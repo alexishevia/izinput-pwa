@@ -53,8 +53,62 @@ async function processTransactionsPutV1({ dbTx, payload }) {
 }
 
 export default function LocalDB(db) {
-  function getTransactions({ from, count }) {
+  function getTransactions({ from = "", count }) {
+    // the transactions store uses the transaction.id as the key.
+    // To retrieve all transactions without duplicates, keep calling this
+    // function using the last transaction.id as the `from` value.
     return db.getAll("transactions", IDBKeyRange.lowerBound(from, true), count);
+  }
+
+  async function getLocalActions({ from, to }) {
+    // the localActions store uses an auto-increment key.
+    // Because we're constantly deleting localActions, it is not easy to
+    // determine what is the real key for the first localAction.
+    //
+    // To simplify code for consumers of this function, we compare `to` and
+    // `from` against the order in which localActions show up when using the
+    // default cursor (not against the actual key value)
+    let result = [];
+    let counter = 0;
+    let cursor = await db.transaction('localActions').store.openCursor();
+    while (cursor && counter <= to) {
+      if (counter >= from) {
+        result.push(cursor.value);
+      }
+      counter += 1;
+      cursor = await cursor.continue();
+    }
+    return result;
+  }
+
+  async function deleteLocalActions({ from, to }) {
+    // the localActions store uses an auto-increment key.
+    // Because we're constantly deleting localActions, it is not easy to
+    // determine what is the real key for the first localAction.
+    //
+    // To simplify code for consumers of this function, we compare `to` and
+    // `from` against the order in which localActions show up when using the
+    // default cursor (not against the actual key value)
+    let keysToDelete = [];
+    let counter = 0;
+    let cursor = await db.transaction('localActions').store.openCursor();
+    while (cursor && counter <= to) {
+      if (counter >= from) {
+        keysToDelete.push(cursor.key);
+      }
+      counter += 1;
+      cursor = await cursor.continue();
+    }
+    switch(keysToDelete.length) {
+      case 0:
+        return;
+      case 1:
+        return db.delete('localActions', keysToDelete[0]);
+      default:
+        const firstKey = keysToDelete.shift();
+        const lastKey = keysToDelete.pop();
+        return db.delete('localActions', IDBKeyRange.bound(firstKey, lastKey));
+    }
   }
 
   async function processActions(actions, { actionsAreRemote } = {}) {
@@ -70,7 +124,7 @@ export default function LocalDB(db) {
             throw new Error('Unknown action type:', action.type);
         }
         if (!actionsAreRemote) {
-          await dbTx.objectStore("localActions").put(action);
+          await dbTx.objectStore("localActions").put(JSON.stringify(action));
         }
       }
 
@@ -92,6 +146,8 @@ export default function LocalDB(db) {
 
   return {
     getTransactions,
+    getLocalActions,
+    deleteLocalActions,
     processActions,
   };
 }

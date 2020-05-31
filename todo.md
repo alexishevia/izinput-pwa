@@ -6,7 +6,8 @@
     see: `./src/redux/gdrive/sync.js`
     see: `./docs/gdrive_sync.md`
 - [ ] think about how to detect change of rules versions
-- [ ] replace `localDb.getTransactionsCursor()` with a better abstraction
+- [ ] add recursive limit
+    wherever a recursive function is being used, add a counter and exit if counter goes above acceptable number
 - [ ] add lock to prevent multiple sync operations running at the same time
 - [ ] allow creating "Income" transactions
 - [ ] allow editing transactions

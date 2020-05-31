@@ -18,6 +18,10 @@ async function checkConflicts({ dbTx, expectedLastAction, expectedLastIndex }) {
 
 export default function CloudReplica(db) {
   function getActions({ from, to }) {
+    // the actions store uses an autoincrement key (starting at 1).
+    //
+    // To retrieve all actions without duplicates, keep calling this
+    // function using `from: previous to + 1`
     return db.getAll("actions", IDBKeyRange.bound(from, to));
   }
 

@@ -50,7 +50,7 @@ async function dbIsNew(name) {
   return dbs.map(db => db.name).includes(name) === false;
 }
 
-async function importCloudReplicaEvents({ cloudReplica, localDB, from }) {
+async function importCloudReplicaEventsRecursive({ cloudReplica, localDB, from }) {
   let cloudDB = cloudReplica || (await getCloudReplica());
   const lowerBound = (from || 0);
   const upperBound = lowerBound + PAGE_SIZE;
@@ -59,7 +59,7 @@ async function importCloudReplicaEvents({ cloudReplica, localDB, from }) {
     return; // done
   }
   await localDB.processActions(actions.map(JSON.parse), { actionsAreRemote: true });
-  return importCloudReplicaEvents({ cloudReplica, localDB, from: upperBound + 1 });
+  return importCloudReplicaEventsRecursive({ cloudReplica, localDB, from: upperBound + 1 });
 }
 
 async function getLocalDBByName(name) {
@@ -72,7 +72,7 @@ async function getLocalDBByName(name) {
   const localDB = new LocalDB(db);
 
   if (isNew) {
-    await importCloudReplicaEvents({ localDB });
+    await importCloudReplicaEventsRecursive({ localDB });
   };
 
    _activeConnections[name] = localDB;
