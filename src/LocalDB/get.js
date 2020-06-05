@@ -1,10 +1,9 @@
-import { openDB } from 'idb';
+import { openDB, deleteDB } from 'idb';
 import LocalDB from './LocalDB';
 import getCloudReplica from '../CloudReplica/get';
 import { RULES_VERSION, PAGE_SIZE } from '../constants';
 
 const STORAGE_KEY_ACTIVE_DB = 'activeLocalDB';
-const _activeConnections = {};
 
 const localDBName = {
   regex: /([^_\s]+)_local_(\d+)/,
@@ -59,11 +58,6 @@ async function getNewLocalDBName() {
   return newLocalDBName(latestNumber + 1);
 }
 
-async function dbIsNew(name) {
-  const dbs = await window.indexedDB.databases();
-  return dbs.map(db => db.name).includes(name) === false;
-}
-
 async function importCloudReplicaEventsRecursive({ cloudReplica, localDB, from }) {
   let cloudDB = cloudReplica || (await getCloudReplica());
   const lowerBound = (from || 0);
@@ -76,35 +70,55 @@ async function importCloudReplicaEventsRecursive({ cloudReplica, localDB, from }
   return importCloudReplicaEventsRecursive({ cloudReplica, localDB, from: upperBound + 1 });
 }
 
+async function copyLocalActions({ fromDB, toDB }) {
+  const localActions = await fromDB.getLocalActions();
+  await toDB.processActions(localActions);
+}
+
 async function getLocalDBByName(name) {
-  if (_activeConnections[name]) {
-    return _activeConnections[name]
-  }
-
-  const isNew = await dbIsNew(name);
   const db = await openDB(name, MIGRATIONS.length, { upgrade: runMigrations });
-  const localDB = new LocalDB(db);
+  return new LocalDB({ name, db });
+}
 
-  if (isNew) {
-    await importCloudReplicaEventsRecursive({ localDB });
-  };
+async function getActiveLocalDB() {
+  const name = localStorage.getItem(STORAGE_KEY_ACTIVE_DB)
+  return (name) ? (await getLocalDBByName(name)) : null;
+}
 
-   _activeConnections[name] = localDB;
-  return _activeConnections[name];
+async function getLatestLocalDB() {
+  const name = await getLatestLocalDBName();
+  const localDB = await getLocalDBByName(name)
+  await deleteLocalDBs({ except: name });
+  return localDB;
+}
+
+async function deleteLocalDBs({ except }) {
+  const dbs = await window.indexedDB.databases();
+  return Promise.all(
+    dbs.map(db => db.name)
+    .filter(name => name !== except && localDBName.regex.exec(name))
+    .map(deleteDB)
+  );
+}
+
+async function getNewLocalDB({ activeDB }) {
+  const name = await getNewLocalDBName();
+  const localDB = await getLocalDBByName(name);
+  await importCloudReplicaEventsRecursive({ localDB });
+  if (activeDB) {
+    await copyLocalActions({ fromDB: activeDB, toDB: localDB });
+  }
+  return localDB;
 }
 
 export default async function getLocalDB({ forceNew } = {}) {
-  let name;
-  if (forceNew) {
-    name = await getNewLocalDBName();
-  } else {
-    const activeLocalDBName = localStorage.getItem(STORAGE_KEY_ACTIVE_DB)
-    if (activeLocalDBName) {
-      return getLocalDBByName(activeLocalDBName)
-    }
-    name = await getLatestLocalDBName();
+  const activeDB = await getActiveLocalDB();
+  if (activeDB && !forceNew) {
+    await deleteLocalDBs({ except: activeDB.name });
+    return activeDB;
   }
-  const localDB = await getLocalDBByName(name)
-  localStorage.setItem(STORAGE_KEY_ACTIVE_DB, name);
+  const getDBPromise = forceNew ? getNewLocalDB({ activeDB }) : getLatestLocalDB();
+  const localDB = await getDBPromise;
+  localStorage.setItem(STORAGE_KEY_ACTIVE_DB, localDB.name);
   return localDB;
 }

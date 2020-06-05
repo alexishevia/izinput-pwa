@@ -79,36 +79,36 @@ async function hasConflicts({ cloudReplica, localDB }) {
 }
 
 async function syncRecursive({ dispatch, spreadsheetId, cloudReplica, localDB }) {
-    // update cloud replica
-    try {
-      await updateCloudReplicaRecursive({ cloudReplica, spreadsheetId });
-    } catch(err) {
-      console.error(err);
-      dispatch(errActions.add('Failed to download data from Google Spreadsheet.'));
-      return;
-    }
+  // update cloud replica
+  try {
+    await updateCloudReplicaRecursive({ cloudReplica, spreadsheetId });
+  } catch(err) {
+    console.error(err);
+    dispatch(errActions.add('Failed to download data from Google Spreadsheet.'));
+    return;
+  }
 
-    // upload local actions
-    try {
-      const uploadCount = await uploadLocalActionsRecursive({ spreadsheetId, localDB })
-      if (uploadCount > 0) {
-        console.log('Total localActions uploaded:', uploadCount);
-        return syncRecursive({ dispatch, spreadsheetId, cloudReplica, localDB })
-      }
-      console.log('All localActions have been uploaded.');
-    } catch(err) {
-      console.error(err);
-      dispatch(errActions.add('Failed to upload local data to Google Spreadsheet.'));
-      return;
+  // upload local actions
+  try {
+    const uploadCount = await uploadLocalActionsRecursive({ spreadsheetId, localDB })
+    if (uploadCount > 0) {
+      console.log('Total localActions uploaded:', uploadCount);
+      return syncRecursive({ dispatch, spreadsheetId, cloudReplica, localDB })
     }
+    console.log('All localActions have been uploaded.');
+  } catch(err) {
+    console.error(err);
+    dispatch(errActions.add('Failed to upload local data to Google Spreadsheet.'));
+    return;
+  }
 
-    // check conflicts
-    if (await hasConflicts({ cloudReplica, localDB })) {
-      const newLocalDB = await getLocalDB({ forceNew: true });
-      return syncRecursive({ dispatch, spreadsheetId, cloudReplica, localDB: newLocalDB });
-    } else {
-      console.log('Sync succeeded.');
-    }
+  // check conflicts
+  if (await hasConflicts({ cloudReplica, localDB })) {
+    const newLocalDB = await getLocalDB({ forceNew: true });
+    return syncRecursive({ dispatch, spreadsheetId, cloudReplica, localDB: newLocalDB });
+  }
+
+  console.log('Sync succeeded.');
 }
 
 // sync is a thunk creator

@@ -52,7 +52,7 @@ async function processTransactionsPutV1({ dbTx, payload }) {
   }
 }
 
-export default function LocalDB(db) {
+export default function LocalDB({ name, db }) {
   function getTransactions({ from = "", count }) {
     // the transactions store uses the transaction.id as the key.
     // To retrieve all transactions without duplicates, keep calling this
@@ -68,18 +68,20 @@ export default function LocalDB(db) {
     return db.get("meta", "lastAction");
   }
 
-  async function getLocalActions({ from, to }) {
+  async function getLocalActions({ from = 0, to } = {}) {
     // the localActions store uses an auto-increment key.
     // Because we're constantly deleting localActions, it is not easy to
     // determine what is the real key for the first localAction.
     //
     // To simplify code for consumers of this function, we compare `to` and
     // `from` against the order in which localActions show up when using the
-    // default cursor (not against the actual key value)
+    // default cursor (not against the actual key value).
+    //
+    // If `to` is not specified, all localActions will be retrieved.
     let result = [];
     let counter = 0;
     let cursor = await db.transaction('localActions').store.openCursor();
-    while (cursor && counter <= to) {
+    while (cursor && (!to || counter <= to)) {
       if (counter >= from) {
         result.push(cursor.value);
       }
@@ -153,6 +155,7 @@ export default function LocalDB(db) {
   }
 
   return {
+    name,
     getTransactions,
     getLocalActions,
     getActionsCount,
