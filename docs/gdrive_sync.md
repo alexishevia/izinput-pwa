@@ -19,11 +19,11 @@ Each action is a JSON string that describes an operation. See [Redux actions](ht
 
 An invoice-zero spreadsheet might look something like this:
 
-## | A | B | C
-
-1 | { "version": "1", "type": "transactions/put", "payload": { "amount": 200, "category": "Health", ... } } | |
-2 | { "version": "1", "type": "transactions/put", "payload": { "amount": 137.63, "category": "Groceries", ... } } | |
-3 | { "version": "1", "type": "transactions/put", "payload": { "amount": 28.07, "category": "Restaurants", ... } } | |
+|     | A                                                                                                              | B   | C   |
+| --- | -------------------------------------------------------------------------------------------------------------- | --- | --- |
+| 1   | { "version": "1", "type": "transactions/put", "payload": { "amount": 200, "category": "Health", ... } }        |     |     |
+| 2   | { "version": "1", "type": "transactions/put", "payload": { "amount": 137.63, "category": "Groceries", ... } }  |     |     |
+| 3   | { "version": "1", "type": "transactions/put", "payload": { "amount": 28.07, "category": "Restaurants", ... } } |     |     |
 
 The core ideas behind this sync strategy are:
 
