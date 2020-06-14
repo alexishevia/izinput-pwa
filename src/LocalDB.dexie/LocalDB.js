@@ -18,6 +18,8 @@ const ERR_EXISTING_TRANSACTION = 'A transaction with id: "<ID>" exists';
 const ERR_INVALID_TRANSACTION = "Invalid data for transaction: <ERR>";
 const ERR_UPDATE_CONFLICT = "Update conflict";
 const ERR_NO_DELETE_ALLOWED = "Delete is not allowed in this action";
+const ERR_NO_EXISTING_CATEGORY = 'No category with id: "<ID>" exists';
+const ERR_INVALID_CATEGORY = "Invalid data for category: <ERR>";
 const TRANSACTION_TYPES = {
   CASH: "CASH",
   CREDIT: "CREDIT",
@@ -57,6 +59,20 @@ function ErrUpdateConflict() {
   return { name: ERR_UPDATE_CONFLICT, message: ERR_UPDATE_CONFLICT };
 }
 
+function ErrNoExistingCategory(id) {
+  return {
+    name: ERR_NO_EXISTING_CATEGORY,
+    message: ERR_NO_EXISTING_CATEGORY.replace("<ID>", id),
+  };
+}
+
+function ErrInvalidCategory(msg) {
+  return {
+    name: ERR_INVALID_CATEGORY,
+    message: ERR_INVALID_CATEGORY.replace("<ERR>", msg),
+  };
+}
+
 function checkValidTransaction(transaction) {
   try {
     new Validation(transaction, "id").required().string().notEmpty();
@@ -74,6 +90,14 @@ function checkValidTransaction(transaction) {
     new Validation(transaction, "deleted").required().boolean();
   } catch (err) {
     throw new ErrInvalidTransaction(err.message);
+  }
+}
+
+function checkValidCategory(id) {
+  try {
+    new Validation({ id }, "id").required().string().notEmpty();
+  } catch (err) {
+    throw new ErrInvalidCategory(err.message);
   }
 }
 
@@ -99,10 +123,6 @@ function ByName(name) {
     return db.delete();
   }
 
-  function createCategory(id) {
-    return db.categories.put({ id });
-  }
-
   function getTransaction(id) {
     return db.transactions.get(id);
   }
@@ -113,6 +133,19 @@ function ByName(name) {
         throw new ErrNoExistingTransaction(payload.id);
       }
       return transaction;
+    });
+  }
+
+  function getCategory(id) {
+    return db.categories.get(id);
+  }
+
+  function getExistingCategory(id) {
+    return getCategory(id).then((category) => {
+      if (!category) {
+        throw new ErrNoExistingCategory(id);
+      }
+      return category;
     });
   }
 
@@ -128,6 +161,47 @@ function ByName(name) {
       .then((exists) => {
         if (exists) {
           throw new ErrExistingTransaction(payload.id);
+        }
+      });
+  }
+
+  function createCategory(id) {
+    return Promise.resolve()
+      .then(() => checkValidCategory(id))
+      .then(() => db.categories.put({ id }))
+      .catch((err) => {
+        switch (err.name) {
+          case ERR_INVALID_CATEGORY:
+            console.warn(`${err.message}. createCategory will be ignored`);
+            return;
+          default:
+            throw err;
+        }
+      });
+  }
+
+  function updateTransactionCategories({ from, to }) {
+    db.transactions
+      .filter(({ category }) => category === from)
+      .modify({ category: to });
+  }
+
+  function updateCategory({ payload }) {
+    const { from, to } = payload;
+    return Promise.resolve()
+      .then(() => checkValidCategory(to))
+      .then(() => getExistingCategory(from))
+      .then(() => db.categories.delete(from))
+      .then(() => createCategory(to))
+      .then(() => updateTransactionCategories({ from, to }))
+      .catch((err) => {
+        switch (err.name) {
+          case ERR_INVALID_CATEGORY:
+          case ERR_NO_EXISTING_CATEGORY:
+            console.warn(`${err.message}. updateCategory will be ignored`);
+            return;
+          default:
+            throw err;
         }
       });
   }
@@ -241,6 +315,8 @@ function ByName(name) {
                   return deleteTransaction({ payload: action.payload });
                 case "categories/create":
                   return createCategory(action.payload);
+                case "categories/update":
+                  return updateCategory({ payload: action.payload });
                 default:
                   throw new Error(`Unknown action type: ${action.type}`);
               }

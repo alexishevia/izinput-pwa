@@ -26,6 +26,11 @@ describe("categories/create", () => {
       expect: { categories: ["food"] },
     },
     {
+      name: "blank category is ignored",
+      action: "",
+      expect: { categories: [] },
+    },
+    {
       name: "duplicate category is ignored",
       setup: async (db) => {
         await createCategory(db, "electronics");

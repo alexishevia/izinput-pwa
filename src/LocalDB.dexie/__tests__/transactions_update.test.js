@@ -110,7 +110,7 @@ describe("transactions/update", () => {
       },
     },
     {
-      name: "transaction with new id is ignored",
+      name: "action with new id is ignored",
       action: {
         id: "computer",
         amount: 1500,
@@ -119,7 +119,7 @@ describe("transactions/update", () => {
       expect: { transactions: [], categories: [] },
     },
     {
-      name: "transaction without valid modifiedAt is ignored",
+      name: "action without valid modifiedAt is ignored",
       setup: async (db) => {
         await createTransaction(db, { id: "computer", amount: 1800 });
       },
