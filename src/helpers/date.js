@@ -30,3 +30,6 @@ export function isValidDateStr(str) {
   return str && typeof str === "string" && isValidDate(new Date(str));
 }
 
+export function isValidUTCDateStr(str) {
+  return isValidDateStr(str) && new Date(str).toISOString() === str;
+}

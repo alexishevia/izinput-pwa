@@ -45,6 +45,14 @@ describe("transactions/create", () => {
       },
     },
     {
+      name: "using a timezone other than UTC is ignored",
+      action: { modifiedAt: "2020-06-20T17:00:00.000-05:00" }, // using -05:00
+      expect: {
+        transactions: [],
+        categories: [],
+      },
+    },
+    {
       name: "action with duplicate id is ignored",
       setup: async (db) => {
         await createTransaction(db, {
@@ -62,6 +70,26 @@ describe("transactions/create", () => {
     {
       name: "action with invalid amount is ignored",
       action: { id: "invalidAmount", amount: -5 },
+      expect: { transactions: [], categories: [] },
+    },
+    {
+      name:
+        "action with duplicate category is created, but no category is added",
+      setup: async (db) => {
+        await createTransaction(db, { category: "OFFICE" });
+      },
+      action: { id: "buyingInk", category: "OFFICE" },
+      expect: {
+        transactions: [
+          { category: "OFFICE" },
+          { id: "buyingInk", category: "OFFICE" },
+        ],
+        categories: ["OFFICE"],
+      },
+    },
+    {
+      name: "action with 'deleted: true' is ignored",
+      action: { id: "buyingLaptop", deleted: true },
       expect: { transactions: [], categories: [] },
     },
   ];

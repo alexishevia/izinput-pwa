@@ -1,4 +1,4 @@
-import { isValidDayStr, isValidDateStr } from "./date";
+import { isValidDayStr, isValidDateStr, isValidUTCDateStr } from "./date";
 
 function isDefined({ obj, field }) {
   return obj && Object.hasOwnProperty.call(obj, field);
@@ -55,6 +55,12 @@ function mustBeDateString({ exists, value, failed }) {
   }
 }
 
+function mustBeUTCDateString({ exists, value, failed }) {
+  if (exists && !isValidUTCDateStr(value)) {
+    failed("must be an ISO-8601 formatted string, using UTC timezone");
+  }
+}
+
 export default class Validation {
   constructor(obj, field) {
     this.props = {
@@ -104,6 +110,11 @@ export default class Validation {
 
   dateString() {
     mustBeDateString(this.props);
+    return this;
+  }
+
+  UTCDateString() {
+    mustBeUTCDateString(this.props);
     return this;
   }
 
