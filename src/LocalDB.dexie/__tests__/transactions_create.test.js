@@ -76,13 +76,13 @@ describe("transactions/create", () => {
       name:
         "action with duplicate category is created, but no category is added",
       setup: async (db) => {
-        await createTransaction(db, { category: "OFFICE" });
+        await createTransaction(db, { id: "buyingPaper", category: "OFFICE" });
       },
       action: { id: "buyingInk", category: "OFFICE" },
       expect: {
         transactions: [
-          { category: "OFFICE" },
           { id: "buyingInk", category: "OFFICE" },
+          { id: "buyingPaper", category: "OFFICE" },
         ],
         categories: ["OFFICE"],
       },

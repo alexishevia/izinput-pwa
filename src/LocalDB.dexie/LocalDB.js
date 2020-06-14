@@ -239,8 +239,10 @@ function ByName(name) {
                   return updateTransaction({ payload: action.payload });
                 case "transactions/delete":
                   return deleteTransaction({ payload: action.payload });
+                case "categories/create":
+                  return createCategory(action.payload);
                 default:
-                  throw new Error("Unknown action type:", action.type);
+                  throw new Error(`Unknown action type: ${action.type}`);
               }
             }),
           Promise.resolve()
