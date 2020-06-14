@@ -25,6 +25,18 @@ function mustBeNumber({ exists, value, failed }) {
   }
 }
 
+function mustBeBoolean({ value, failed }) {
+  if (typeof value !== "boolean") {
+    failed("must be a boolean");
+  }
+}
+
+function mustBeBiggerThan({ value, failed }, num) {
+  if (value <= num) {
+    failed(`must be bigger than ${num}`);
+  }
+}
+
 function mustBeOneOf({ exists, value, failed, validOptions }) {
   if (exists && !validOptions.includes(value)) {
     failed("is not valid");
@@ -50,9 +62,9 @@ export default class Validation {
       field,
       exists: isDefined({ obj, field }),
       value: obj[field],
-      failed: msg => {
+      failed: (msg) => {
         throw new Error(`${field} ${msg}. Received: ${obj[field]}`);
-      }
+      },
     };
   }
 
@@ -72,6 +84,16 @@ export default class Validation {
 
   number() {
     mustBeNumber(this.props);
+    return this;
+  }
+
+  boolean() {
+    mustBeBoolean(this.props);
+    return this;
+  }
+
+  biggerThan(num) {
+    mustBeBiggerThan(this.props, num);
     return this;
   }
 

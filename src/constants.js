@@ -1,4 +1,4 @@
-export const RULES_VERSION = '2020-05-31';
+export const RULES_VERSION = 1;
 export const GOOGLE_API_KEY = process.env.REACT_APP_GOOGLE_API_KEY;
 export const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 

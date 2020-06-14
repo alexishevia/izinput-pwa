@@ -1,7 +1,10 @@
 # To-Do
 
+- [ ] switch from idb to dexie
+      https://dexie.org/docs/Tutorial/Design \* remove idb from dependencies when done
 - [ ] implement rules v1
       see: ./docs/rules/v1.md
+- [ ] add tests for gdrive sync
 - [ ] display categories
 - [ ] only display latest transactions in the Transactions screen
 - [ ] after sync is done, if changes were made, make sure to dispatch an event so redux reloads data from new local database
