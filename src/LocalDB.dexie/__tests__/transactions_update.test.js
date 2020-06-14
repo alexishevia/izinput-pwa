@@ -1,4 +1,4 @@
-import { v1 as uuidv1 } from "uuid";
+import { v1 as uuidv1, v4 as uuidv4 } from "uuid";
 import LocalDB from "../LocalDB";
 
 /* --- helper functions --- */
@@ -111,7 +111,11 @@ describe("transactions/update", () => {
     },
     {
       name: "transaction with new id is ignored",
-      action: { id: "computer", amount: 1500 },
+      action: {
+        id: "computer",
+        amount: 1500,
+        modifiedAt: "2020-06-14T17:50:00.000Z",
+      },
       expect: { transactions: [], categories: [] },
     },
     {
@@ -127,7 +131,7 @@ describe("transactions/update", () => {
     },
     {
       name:
-        "transaction with modifiedAt earlier than existing modifiedAt is ignored",
+        "action with modifiedAt earlier than existing modifiedAt is ignored",
       setup: async (db) => {
         await createTransaction(db, {
           id: "phone",
@@ -201,7 +205,7 @@ describe("transactions/update", () => {
 
   tests.forEach((test) => {
     it(test.name, async () => {
-      const localDB = await new LocalDB.ByName(uuidv1());
+      const localDB = await new LocalDB.ByName(uuidv4());
       try {
         // setup
         if (test.setup) {

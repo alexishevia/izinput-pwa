@@ -27,6 +27,14 @@ function TransactionsCreateAction(values) {
   };
 }
 
+function TransactionsDeleteAction({ id, modifiedAt }) {
+  return {
+    version: 1,
+    type: "transactions/delete",
+    payload: { id, modifiedAt },
+  };
+}
+
 function createTransaction(db, values) {
   const action = new TransactionsCreateAction(values);
   return db.processActions([action]);
@@ -34,63 +42,62 @@ function createTransaction(db, values) {
 
 /* --- test start --- */
 
-describe("transactions/create", () => {
+describe("transactions/delete", () => {
   const tests = [
     {
-      name: "new transaction and new category are created correctly",
-      action: { id: "buyingCandy", amount: 1.5, category: "CANDY" },
-      expect: {
-        transactions: [{ id: "buyingCandy", amount: 1.5, category: "CANDY" }],
-        categories: ["CANDY"],
+      name: "transaction is deleted correctly",
+      setup: async (db) => {
+        await createTransaction(db, {
+          id: "game",
+          amount: 50,
+          modifiedAt: "2020-06-14T17:00:00.000Z",
+        });
       },
-    },
-    {
-      name: "using a timezone other than UTC is ignored",
-      action: { modifiedAt: "2020-06-20T17:00:00.000-05:00" }, // using -05:00
+      action: {
+        id: "game",
+        modifiedAt: "2020-06-14T17:50:00.000Z",
+      },
       expect: {
         transactions: [],
-        categories: [],
+        categories: [{}],
       },
     },
     {
-      name: "action with duplicate id is ignored",
+      name: "transaction with new id is ignored",
+      action: { id: "computer", modifiedAt: "2020-06-14T17:50:00.000Z" },
+      expect: { transactions: [], categories: [] },
+    },
+    {
+      name: "action using a timezone other than UTC is ignored",
       setup: async (db) => {
         await createTransaction(db, {
           id: "milk",
           amount: 3.0,
-          category: "GROCERIES",
+          modifiedAt: "2020-06-14T21:00:00.000Z", // using UTC time
         });
       },
-      action: { id: "milk", amount: 1.25, category: "SUPERMARKET" },
+      action: { id: "milk", modifiedAt: "2020-06-20T17:00:00.000-05:00" }, // using -05:00
       expect: {
-        transactions: [{ id: "milk", amount: 3.0, category: "GROCERIES" }],
-        categories: ["GROCERIES"],
+        transactions: [
+          { id: "milk", amount: 3.0, modifiedAt: "2020-06-14T21:00:00.000Z" },
+        ],
+        categories: [{}],
       },
-    },
-    {
-      name: "action with invalid amount is ignored",
-      action: { id: "invalidAmount", amount: -5 },
-      expect: { transactions: [], categories: [] },
     },
     {
       name:
-        "action with duplicate category is created, but no category is added",
+        "action with modifiedAt earlier than existing modifiedAt is ignored",
       setup: async (db) => {
-        await createTransaction(db, { category: "OFFICE" });
+        await createTransaction(db, {
+          id: "phone",
+          modifiedAt: "2020-06-14T18:00:00.000Z",
+        });
       },
-      action: { id: "buyingInk", category: "OFFICE" },
+      action: { id: "phone", modifiedAt: "2020-06-14T15:00:00.000Z" },
       expect: {
-        transactions: [
-          { category: "OFFICE" },
-          { id: "buyingInk", category: "OFFICE" },
-        ],
-        categories: ["OFFICE"],
+        transactions: [{ id: "phone", modifiedAt: "2020-06-14T18:00:00.000Z" }],
+        categories: [{}],
       },
-    },
-    {
-      name: "action with 'deleted: true' is ignored",
-      action: { id: "buyingLaptop", deleted: true },
-      expect: { transactions: [], categories: [] },
     },
   ];
 
@@ -104,7 +111,7 @@ describe("transactions/create", () => {
         }
 
         // run action
-        const action = new TransactionsCreateAction(test.action);
+        const action = new TransactionsDeleteAction(test.action);
         await localDB.processActions([action]);
 
         // run transactions assertions

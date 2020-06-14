@@ -184,10 +184,20 @@ function ByName(name) {
   function deleteTransaction({ payload }) {
     const { id, modifiedAt } = payload;
     return getExistingTransaction({ id })
+      .then((existing) => {
+        checkNoUpdateConflict(existing, payload);
+        return existing;
+      })
       .then((existing) => ({ ...existing, deleted: true, modifiedAt }))
+      .then((updated) => {
+        checkValidTransaction(updated);
+        return updated;
+      })
       .then((updated) => db.transactions.put(updated))
       .catch((err) => {
         switch (err.name) {
+          case ERR_INVALID_TRANSACTION:
+          case ERR_UPDATE_CONFLICT:
           case ERR_NO_EXISTING_TRANSACTION:
             console.warn(`${err.message}. deleteTransaction will be ignored`);
             return;
@@ -198,7 +208,11 @@ function ByName(name) {
   }
 
   function getTransactions({ from = 0, limit = 50 } = {}) {
-    return db.transactions.offset(from).limit(limit).toArray();
+    return db.transactions
+      .filter(({ deleted }) => deleted === false)
+      .offset(from)
+      .limit(limit)
+      .toArray();
   }
 
   function getCategories() {
