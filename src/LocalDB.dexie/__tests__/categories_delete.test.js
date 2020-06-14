@@ -19,21 +19,8 @@ function CategoriesDeleteAction(id) {
   };
 }
 
-function CategoriesUpdateAction({ from, to }) {
-  return {
-    version: 1,
-    type: "categories/update",
-    payload: { from, to },
-  };
-}
-
 function createCategory(db, id) {
   const action = new CategoriesCreateAction(id);
-  return db.processActions([action]);
-}
-
-function deleteCategory(db, id) {
-  const action = new CategoriesDeleteAction(id);
   return db.processActions([action]);
 }
 
@@ -68,54 +55,32 @@ function createTransaction(db, values) {
 
 /* --- test start --- */
 
-describe("categories/update", () => {
+describe("categories/delete", () => {
   const tests = [
     {
-      name: "category is renamed correctly",
+      name: "category is deleted correctly",
       setup: (db) => createCategory(db, "electronics"),
-      action: { from: "electronics", to: "ELECTRONICS" },
-      expect: { transactions: [], categories: ["ELECTRONICS"] },
-    },
-    {
-      name: "action with blank 'from' is renamed correctly",
-      setup: async (db) => {
-        await createTransaction(db, { id: "Shenaniganz", category: "food" });
-        await deleteCategory(db, "food");
-      },
-      action: { from: "", to: "restaurants" },
-      expect: {
-        transactions: [{ id: "Shenaniganz", category: "restaurants" }],
-        categories: ["restaurants"],
-      },
-    },
-    {
-      name: "action with blank 'to' is ignored",
-      setup: (db) => createCategory(db, "food"),
-      action: { from: "food", to: "" },
-      expect: { transactions: [], categories: ["food"] },
+      action: "electronics",
+      expect: { transactions: [], categories: [] },
     },
     {
       name: "action with new id is ignored",
-      setup: (db) => createCategory(db, "food"),
-      action: { from: "golf", to: "sports" },
-      expect: { transactions: [], categories: ["food"] },
+      action: "food",
+      expect: { transactions: [], categories: [] },
     },
     {
-      name: "updates transactions to match new category name",
+      name: "updates transactions to have blank category",
       setup: async (db) => {
-        await createTransaction(db, {
-          id: "computer",
-          category: "electronics",
-        });
-        await createTransaction(db, { id: "dinner", category: "food" });
+        await createTransaction(db, { id: "phone", category: "electronics" });
+        await createTransaction(db, { id: "shenaniganz", category: "food" });
       },
-      action: { from: "electronics", to: "work" },
+      action: "food",
       expect: {
         transactions: [
-          { id: "computer", category: "work" },
-          { id: "dinner", category: "food" },
+          { id: "phone", category: "electronics" },
+          { id: "shenaniganz", category: "" },
         ],
-        categories: ["food", "work"],
+        categories: ["electronics"],
       },
     },
   ];
@@ -130,7 +95,7 @@ describe("categories/update", () => {
         }
 
         // run action
-        const action = new CategoriesUpdateAction(test.action);
+        const action = new CategoriesDeleteAction(test.action);
         await localDB.processActions([action]);
 
         // run transactions assertions

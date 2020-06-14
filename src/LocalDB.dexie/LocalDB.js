@@ -190,8 +190,12 @@ function ByName(name) {
     const { from, to } = payload;
     return Promise.resolve()
       .then(() => checkValidCategory(to))
-      .then(() => getExistingCategory(from))
-      .then(() => db.categories.delete(from))
+      .then(() => {
+        if (from === "") {
+          return null;
+        }
+        return getExistingCategory(from).then(() => db.categories.delete(from));
+      })
       .then(() => createCategory(to))
       .then(() => updateTransactionCategories({ from, to }))
       .catch((err) => {
@@ -199,6 +203,21 @@ function ByName(name) {
           case ERR_INVALID_CATEGORY:
           case ERR_NO_EXISTING_CATEGORY:
             console.warn(`${err.message}. updateCategory will be ignored`);
+            return;
+          default:
+            throw err;
+        }
+      });
+  }
+
+  function deleteCategory(id) {
+    return getExistingCategory(id)
+      .then(() => db.categories.delete(id))
+      .then(() => updateTransactionCategories({ from: id, to: "" }))
+      .catch((err) => {
+        switch (err.name) {
+          case ERR_NO_EXISTING_CATEGORY:
+            console.warn(`${err.message}. deleteCategory will be ignored`);
             return;
           default:
             throw err;
@@ -317,6 +336,8 @@ function ByName(name) {
                   return createCategory(action.payload);
                 case "categories/update":
                   return updateCategory({ payload: action.payload });
+                case "categories/delete":
+                  return deleteCategory(action.payload);
                 default:
                   throw new Error(`Unknown action type: ${action.type}`);
               }
