@@ -2,11 +2,9 @@
 
 - [ ] switch from idb to dexie
 
+      - implement sync using dexie
       - see: https://dexie.org/docs/Tutorial/Design
       - remove idb from dependencies when done
-      - I'm writing tests for all dexie-based implementations. see: `./src/LocalDB.dexie/__tests__`
-      - missing action: `initialSavings/update`
-      - implement sync using dexie
 
 - [ ] find an way to automatically get rid of all the `*.sqlite` files that get generated when running tests
 - [ ] add tests for gdrive sync

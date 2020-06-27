@@ -314,6 +314,19 @@ function ByName(name) {
       .then((categories) => categories.map((cat) => cat.id));
   }
 
+  function updateInitialSavings(amount) {
+    return db.meta.put(amount, "initialSavings");
+  }
+
+  function getInitialSavings() {
+    return db.meta
+      .get("initialSavings")
+      .then(Number.parseFloat)
+      .then((savings) => {
+        return Number.isNaN(savings) ? 0 : savings;
+      });
+  }
+
   function processActions(actions) {
     return db.transaction(
       "rw",
@@ -338,6 +351,8 @@ function ByName(name) {
                   return updateCategory({ payload: action.payload });
                 case "categories/delete":
                   return deleteCategory(action.payload);
+                case "initialSavings/update":
+                  return updateInitialSavings(action.payload);
                 default:
                   throw new Error(`Unknown action type: ${action.type}`);
               }
@@ -351,6 +366,7 @@ function ByName(name) {
     deleteDB,
     getCategories,
     getTransactions,
+    getInitialSavings,
     processActions,
   };
 }

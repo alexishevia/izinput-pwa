@@ -75,6 +75,7 @@ Local DBs have the following stores:
   Keeps track of processing info, to be able to detect conflicts. Some of the documents found in this store are:
   - actionsCount: amount of actions that have been processed.
   - lastAction: the last action (the full string) that was processed.
+  - initialSavings: amount money you had before starting to use IZ.
 - transactions
   Financial transactions that have been processed by the app.
 - categories
