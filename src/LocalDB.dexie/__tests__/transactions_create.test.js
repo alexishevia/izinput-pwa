@@ -1,4 +1,5 @@
 import { v1 as uuidv1, v4 as uuidv4 } from "uuid";
+import { TransactionsCreateAction } from "../../actionCreators";
 import LocalDB from "../LocalDB";
 
 /* --- helper functions --- */
@@ -19,16 +20,8 @@ function Transaction(values) {
   };
 }
 
-function TransactionsCreateAction(values) {
-  return {
-    version: 1,
-    type: "transactions/create",
-    payload: new Transaction(values),
-  };
-}
-
 function createTransaction(db, values) {
-  const action = new TransactionsCreateAction(values);
+  const action = new TransactionsCreateAction(new Transaction(values));
   return db.processActions([action]);
 }
 
@@ -104,7 +97,9 @@ describe("transactions/create", () => {
         }
 
         // run action
-        const action = new TransactionsCreateAction(test.action);
+        const action = new TransactionsCreateAction(
+          new Transaction(test.action)
+        );
         await localDB.processActions([action]);
 
         // run transactions assertions

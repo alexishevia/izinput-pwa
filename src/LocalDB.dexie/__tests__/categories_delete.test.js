@@ -1,23 +1,12 @@
 import { v1 as uuidv1, v4 as uuidv4 } from "uuid";
+import {
+  TransactionsCreateAction,
+  CategoriesCreateAction,
+  CategoriesDeleteAction,
+} from "../../actionCreators";
 import LocalDB from "../LocalDB";
 
 /* --- helper functions --- */
-
-function CategoriesCreateAction(id) {
-  return {
-    version: 1,
-    type: "categories/create",
-    payload: id,
-  };
-}
-
-function CategoriesDeleteAction(id) {
-  return {
-    version: 1,
-    type: "categories/delete",
-    payload: id,
-  };
-}
 
 function createCategory(db, id) {
   const action = new CategoriesCreateAction(id);
@@ -40,16 +29,8 @@ function Transaction(values) {
   };
 }
 
-function TransactionsCreateAction(values) {
-  return {
-    version: 1,
-    type: "transactions/create",
-    payload: new Transaction(values),
-  };
-}
-
 function createTransaction(db, values) {
-  const action = new TransactionsCreateAction(values);
+  const action = new TransactionsCreateAction(new Transaction(values));
   return db.processActions([action]);
 }
 

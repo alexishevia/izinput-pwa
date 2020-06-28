@@ -1,15 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
+import { InitialSavingsUpdateAction } from "../../actionCreators";
 import LocalDB from "../LocalDB";
-
-/* --- helper functions --- */
-
-function InitialSavingsUpdateAction(value) {
-  return {
-    version: 1,
-    type: "initialSavings/update",
-    payload: value,
-  };
-}
 
 /* --- test start --- */
 

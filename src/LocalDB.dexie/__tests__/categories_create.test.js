@@ -1,15 +1,8 @@
 import { v4 as uuidv4 } from "uuid";
+import { CategoriesCreateAction } from "../../actionCreators";
 import LocalDB from "../LocalDB";
 
 /* --- helper functions --- */
-
-function CategoriesCreateAction(name) {
-  return {
-    version: 1,
-    type: "categories/create",
-    payload: name,
-  };
-}
 
 function createCategory(db, name) {
   const action = new CategoriesCreateAction(name);

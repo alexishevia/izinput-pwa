@@ -1,4 +1,9 @@
 import { v1 as uuidv1, v4 as uuidv4 } from "uuid";
+import {
+  TransactionsCreateAction,
+  TransactionsDeleteAction,
+  TransactionsUpdateAction,
+} from "../../actionCreators";
 import LocalDB from "../LocalDB";
 
 /* --- helper functions --- */
@@ -19,32 +24,8 @@ function Transaction(values) {
   };
 }
 
-function TransactionsCreateAction(values) {
-  return {
-    version: 1,
-    type: "transactions/create",
-    payload: new Transaction(values),
-  };
-}
-
-function TransactionsUpdateAction(values) {
-  return {
-    version: 1,
-    type: "transactions/update",
-    payload: values,
-  };
-}
-
-function TransactionsDeleteAction({ id, modifiedAt }) {
-  return {
-    version: 1,
-    type: "transactions/delete",
-    payload: { id, modifiedAt },
-  };
-}
-
 function createTransaction(db, values) {
-  const action = new TransactionsCreateAction(values);
+  const action = new TransactionsCreateAction(new Transaction(values));
   return db.processActions([action]);
 }
 
