@@ -2,9 +2,14 @@
 
 - [ ] switch from idb to dexie
 
-      - implement sync using dexie
-      - see: https://dexie.org/docs/Tutorial/Design
-      - remove idb from dependencies when done
+      - switch application code to use LocalDB.dexie and CloudReplica.dexie
+      - create an `AppendOnlyLog.google` implementation
+          I can probably copy some functions to download/upload to google from `src/redux/gdrive/sync.js`
+          I just need to expose the same interface as `src/AppendOnlyLog.memory`
+      - switch application code to use sync/sync.js instead of gdrive/sync.js
+          (will probably need to add some redux dispatches somewhere)
+      - remove `idb` from dependencies when done
+      - remove old LocalDB, old CloudReplica, and old gdrive/sync.js
 
 - [ ] find an way to automatically get rid of all the `*.sqlite` files that get generated when running tests
 - [ ] add tests for gdrive sync

@@ -113,7 +113,7 @@ function ByName(name) {
 
   // run migrations
   db.version(1).stores({
-    localActions: "++", // primary key hiddend and auto-incremented
+    localActions: "++", // primary key hidden and auto-incremented
     meta: "", // primary key hidden but not auto-incremented
     transactions: "id", // primary key: id
     categories: "id", // primary key: id
@@ -121,6 +121,14 @@ function ByName(name) {
 
   function deleteDB() {
     return db.delete();
+  }
+
+  function getActionsCount() {
+    return db.meta.get("actionsCount");
+  }
+
+  function getLastAction() {
+    return db.meta.get("lastAction");
   }
 
   function getTransaction(id) {
@@ -300,11 +308,12 @@ function ByName(name) {
       });
   }
 
-  function getTransactions({ from = 0, limit = 50 } = {}) {
+  // both `from` and `to` are inclusive
+  function getTransactions({ from, to }) {
     return db.transactions
       .filter(({ deleted }) => deleted === false)
       .offset(from)
-      .limit(limit)
+      .limit(to - from + 1)
       .toArray();
   }
 
@@ -327,46 +336,89 @@ function ByName(name) {
       });
   }
 
-  function processActions(actions) {
+  // both `from` and `to` are inclusive
+  function getLocalActions({ from, to }) {
+    return db.localActions
+      .offset(from)
+      .limit(to - from + 1)
+      .toArray();
+  }
+
+  function deleteLocalActions({ from, to }) {
+    return db.localActions
+      .offset(from)
+      .limit(to - from)
+      .delete();
+  }
+
+  // if `actionsAreRemote` is true:
+  // actions will be processed but not added to `localActions`
+  function processActions(actions, { actionsAreRemote } = {}) {
     return db.transaction(
       "rw",
       [db.localActions, db.meta, db.transactions, db.categories],
       () =>
-        actions.reduce(
-          (prevStep, action) =>
-            prevStep.then(() => {
-              if (action.version !== 1) {
-                throw new Error(`Unknown action.version: ${action.version}`);
-              }
-              switch (action.type) {
-                case "transactions/create":
-                  return createTransaction({ payload: action.payload });
-                case "transactions/update":
-                  return updateTransaction({ payload: action.payload });
-                case "transactions/delete":
-                  return deleteTransaction({ payload: action.payload });
-                case "categories/create":
-                  return createCategory(action.payload);
-                case "categories/update":
-                  return updateCategory({ payload: action.payload });
-                case "categories/delete":
-                  return deleteCategory(action.payload);
-                case "initialSavings/update":
-                  return updateInitialSavings(action.payload);
-                default:
-                  throw new Error(`Unknown action type: ${action.type}`);
-              }
-            }),
-          Promise.resolve()
-        )
+        actions
+          .reduce(
+            (prevStep, action) =>
+              prevStep
+                .then(() => {
+                  if (action.version !== 1) {
+                    throw new Error(
+                      `Unknown action.version: ${action.version}`
+                    );
+                  }
+                  switch (action.type) {
+                    case "transactions/create":
+                      return createTransaction({ payload: action.payload });
+                    case "transactions/update":
+                      return updateTransaction({ payload: action.payload });
+                    case "transactions/delete":
+                      return deleteTransaction({ payload: action.payload });
+                    case "categories/create":
+                      return createCategory(action.payload);
+                    case "categories/update":
+                      return updateCategory({ payload: action.payload });
+                    case "categories/delete":
+                      return deleteCategory(action.payload);
+                    case "initialSavings/update":
+                      return updateInitialSavings(action.payload);
+                    default:
+                      throw new Error(`Unknown action type: ${action.type}`);
+                  }
+                })
+                .then(() => {
+                  if (!actionsAreRemote) {
+                    return db.localActions.put(JSON.stringify(action));
+                  }
+                }),
+            Promise.resolve()
+          )
+          .then(function updateLastAction() {
+            const lastAction = actions[actions.length - 1];
+            if (lastAction) {
+              return db.meta.put(JSON.stringify(lastAction), "lastAction");
+            }
+          })
+          .then(function getCurrentActionsCount() {
+            return db.meta.get("actionsCount");
+          })
+          .then(function updateActionsCount(currentCount) {
+            const newCount = (currentCount || 0) + actions.length;
+            return db.meta.put(newCount, "actionsCount");
+          })
     );
   }
 
   return {
     deleteDB,
+    deleteLocalActions,
+    getActionsCount,
     getCategories,
-    getTransactions,
     getInitialSavings,
+    getLastAction,
+    getLocalActions,
+    getTransactions,
     processActions,
   };
 }

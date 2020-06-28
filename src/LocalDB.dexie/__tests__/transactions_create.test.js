@@ -103,7 +103,7 @@ describe("transactions/create", () => {
         await localDB.processActions([action]);
 
         // run transactions assertions
-        const gotTxs = await localDB.getTransactions();
+        const gotTxs = await localDB.getTransactions({ from: 0, to: 50 });
         expect(gotTxs).toHaveLength(test.expect.transactions.length);
         test.expect.transactions.forEach((expectTx, i) => {
           const gotTx = gotTxs[i];
