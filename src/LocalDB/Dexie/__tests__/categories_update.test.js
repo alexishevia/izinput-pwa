@@ -1,8 +1,23 @@
 import { v1 as uuidv1, v4 as uuidv4 } from "uuid";
-import { TransactionsCreateAction } from "../../actionCreators";
-import LocalDB from "../LocalDB";
+import {
+  TransactionsCreateAction,
+  CategoriesCreateAction,
+  CategoriesDeleteAction,
+  CategoriesUpdateAction,
+} from "../../../redux/actionCreators";
+import LocalDB from "..";
 
 /* --- helper functions --- */
+
+function createCategory(db, id) {
+  const action = new CategoriesCreateAction(id);
+  return db.processActions([action]);
+}
+
+function deleteCategory(db, id) {
+  const action = new CategoriesDeleteAction(id);
+  return db.processActions([action]);
+}
 
 function Transaction(values) {
   const now = new Date().toISOString();
@@ -27,63 +42,55 @@ function createTransaction(db, values) {
 
 /* --- test start --- */
 
-describe("transactions/create", () => {
+describe("categories/update", () => {
   const tests = [
     {
-      name: "new transaction and new category are created correctly",
-      action: { id: "buyingCandy", amount: 1.5, category: "CANDY" },
+      name: "category is renamed correctly",
+      setup: (db) => createCategory(db, "electronics"),
+      action: { from: "electronics", to: "ELECTRONICS" },
+      expect: { transactions: [], categories: ["ELECTRONICS"] },
+    },
+    {
+      name: "action with blank 'from' is renamed correctly",
+      setup: async (db) => {
+        await createTransaction(db, { id: "Shenaniganz", category: "food" });
+        await deleteCategory(db, "food");
+      },
+      action: { from: "", to: "restaurants" },
       expect: {
-        transactions: [{ id: "buyingCandy", amount: 1.5, category: "CANDY" }],
-        categories: ["CANDY"],
+        transactions: [{ id: "Shenaniganz", category: "restaurants" }],
+        categories: ["restaurants"],
       },
     },
     {
-      name: "using a timezone other than UTC is ignored",
-      action: { modifiedAt: "2020-06-20T17:00:00.000-05:00" }, // using -05:00
-      expect: {
-        transactions: [],
-        categories: [],
-      },
+      name: "action with blank 'to' is ignored",
+      setup: (db) => createCategory(db, "food"),
+      action: { from: "food", to: "" },
+      expect: { transactions: [], categories: ["food"] },
     },
     {
-      name: "action with duplicate id is ignored",
+      name: "action with new id is ignored",
+      setup: (db) => createCategory(db, "food"),
+      action: { from: "golf", to: "sports" },
+      expect: { transactions: [], categories: ["food"] },
+    },
+    {
+      name: "updates transactions to match new category name",
       setup: async (db) => {
         await createTransaction(db, {
-          id: "milk",
-          amount: 3.0,
-          category: "GROCERIES",
+          id: "computer",
+          category: "electronics",
         });
+        await createTransaction(db, { id: "dinner", category: "food" });
       },
-      action: { id: "milk", amount: 1.25, category: "SUPERMARKET" },
-      expect: {
-        transactions: [{ id: "milk", amount: 3.0, category: "GROCERIES" }],
-        categories: ["GROCERIES"],
-      },
-    },
-    {
-      name: "action with invalid amount is ignored",
-      action: { id: "invalidAmount", amount: -5 },
-      expect: { transactions: [], categories: [] },
-    },
-    {
-      name:
-        "action with duplicate category is created, but no category is added",
-      setup: async (db) => {
-        await createTransaction(db, { id: "buyingPaper", category: "OFFICE" });
-      },
-      action: { id: "buyingInk", category: "OFFICE" },
+      action: { from: "electronics", to: "work" },
       expect: {
         transactions: [
-          { id: "buyingInk", category: "OFFICE" },
-          { id: "buyingPaper", category: "OFFICE" },
+          { id: "computer", category: "work" },
+          { id: "dinner", category: "food" },
         ],
-        categories: ["OFFICE"],
+        categories: ["food", "work"],
       },
-    },
-    {
-      name: "action with 'deleted: true' is ignored",
-      action: { id: "buyingLaptop", deleted: true },
-      expect: { transactions: [], categories: [] },
     },
   ];
 
@@ -97,9 +104,7 @@ describe("transactions/create", () => {
         }
 
         // run action
-        const action = new TransactionsCreateAction(
-          new Transaction(test.action)
-        );
+        const action = new CategoriesUpdateAction(test.action);
         await localDB.processActions([action]);
 
         // run transactions assertions

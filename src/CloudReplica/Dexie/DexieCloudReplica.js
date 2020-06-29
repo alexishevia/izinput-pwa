@@ -1,12 +1,19 @@
+/*
+ * CloudReplica implementation backed up by Dexie.js
+ * https://dexie.org/
+ */
+
 import Dexie from "dexie";
 import shimIndexedDb from "indexeddbshim";
 
 // fix to get Dexie working in environments with no indexedDB support
-const shim = {};
-shimIndexedDb(shim, { checkOrigin: false });
-const { indexedDB, IDBKeyRange } = shim;
-Dexie.dependencies.indexedDB = indexedDB;
-Dexie.dependencies.IDBKeyRange = IDBKeyRange;
+if (!window.indexedDB) {
+  const shim = {};
+  shimIndexedDb(shim, { checkOrigin: false });
+  const { indexedDB, IDBKeyRange } = shim;
+  Dexie.dependencies.indexedDB = indexedDB;
+  Dexie.dependencies.IDBKeyRange = IDBKeyRange;
+}
 
 // ByName returns a new CloudReplica instance, backed by a Dexie db with name: `$name`.
 function ByName(name) {
@@ -17,7 +24,7 @@ function ByName(name) {
     actions: "++", // primary key hidden and auto-incremented
   });
 
-  function append(actions) {
+  function appendActions(actions) {
     return db.actions.bulkAdd(actions);
   }
 
@@ -42,7 +49,7 @@ function ByName(name) {
   }
 
   return {
-    append,
+    appendActions,
     deleteDB,
     getActions,
     getActionsCount,

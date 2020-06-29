@@ -41,7 +41,7 @@ async function updateCloudReplicaRecursive({
     return downloadCount;
   }
 
-  await cloudReplica.append(logActions);
+  await cloudReplica.appendActions(logActions);
   return updateCloudReplicaRecursive({
     cloudReplica,
     appendOnlyLog,
@@ -58,7 +58,7 @@ async function uploadLocalActionsRecursive({
   if (!actions || !actions.length) {
     return uploadCount; // done
   }
-  await appendOnlyLog.append(actions);
+  await appendOnlyLog.appendActions(actions);
   await localDB.deleteLocalActions({ from: 0, to: actions.length });
   return uploadLocalActionsRecursive({
     localDB,

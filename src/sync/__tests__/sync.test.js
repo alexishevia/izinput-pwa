@@ -1,9 +1,9 @@
 import { v1 as uuidv1, v4 as uuidv4 } from "uuid";
-import { TransactionsCreateAction } from "../../actionCreators";
+import { TransactionsCreateAction } from "../../redux/actionCreators";
 import sync from "../sync";
-import LocalDB from "../../LocalDB.dexie";
-import CloudReplica from "../../CloudReplica.dexie";
-import AppendOnlyLog from "../../AppendOnlyLog.memory";
+import LocalDB from "../../LocalDB/Dexie";
+import CloudReplica from "../../CloudReplica/Dexie";
+import AppendOnlyLog from "../../AppendOnlyLog/InMemoryLog";
 
 /* --- helper functions --- */
 

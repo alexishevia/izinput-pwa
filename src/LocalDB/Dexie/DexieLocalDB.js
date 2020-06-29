@@ -3,15 +3,17 @@
  */
 
 import Dexie from "dexie";
+import Validation from "../../helpers/Validation";
 import shimIndexedDb from "indexeddbshim";
-import Validation from "../helpers/Validation";
 
 // fix to get Dexie working in environments with no indexedDB support
-const shim = {};
-shimIndexedDb(shim, { checkOrigin: false });
-const { indexedDB, IDBKeyRange } = shim;
-Dexie.dependencies.indexedDB = indexedDB;
-Dexie.dependencies.IDBKeyRange = IDBKeyRange;
+if (!window.indexedDB) {
+  const shim = {};
+  shimIndexedDb(shim, { checkOrigin: false });
+  const { indexedDB, IDBKeyRange } = shim;
+  Dexie.dependencies.indexedDB = indexedDB;
+  Dexie.dependencies.IDBKeyRange = IDBKeyRange;
+}
 
 const ERR_NO_EXISTING_TRANSACTION = 'No transaction with id: "<ID>" exists';
 const ERR_EXISTING_TRANSACTION = 'A transaction with id: "<ID>" exists';

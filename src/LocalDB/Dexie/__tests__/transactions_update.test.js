@@ -3,8 +3,8 @@ import {
   TransactionsCreateAction,
   TransactionsDeleteAction,
   TransactionsUpdateAction,
-} from "../../actionCreators";
-import LocalDB from "../LocalDB";
+} from "../../../redux/actionCreators";
+import LocalDB from "..";
 
 /* --- helper functions --- */
 

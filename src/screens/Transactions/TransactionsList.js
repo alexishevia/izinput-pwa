@@ -1,16 +1,13 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
-import { transactions as transactionsSlice } from "izreducer";
-import { Icon } from 'semantic-ui-react';
+import { Icon } from "semantic-ui-react";
 import { selectors as txSelectors } from "../../redux/transactions";
 
-const { TYPES: transactionTypes } = transactionsSlice;
-
 const ICONS = {
-  [transactionTypes.CREDIT]: <Icon name="credit card outline" />,
-  [transactionTypes.CASH]: <Icon name="money bill alternate outline" />,
-  [transactionTypes.TRANSFER]: <Icon name="university" />
+  CREDIT: <Icon name="credit card outline" />,
+  CASH: <Icon name="money bill alternate outline" />,
+  TRANSFER: <Icon name="university" />,
 };
 
 function Transaction({
@@ -20,19 +17,21 @@ function Transaction({
   description,
   type,
   cashFlow,
-  onClick
+  onClick,
 }) {
   const prefix = amount < 0 ? "-" : "";
   const formatted = Math.abs(amount).toFixed(2);
-  const icon = ICONS[type] || '';
+  const icon = ICONS[type] || "";
   const title = `${prefix}$${formatted} ${category}`;
   const body = `${(
-        cashFlow || ""
-      ).toLowerCase()}: ${description}\n${transactionDate}`;
+    cashFlow || ""
+  ).toLowerCase()}: ${description}\n${transactionDate}`;
 
   return (
     <p onClick={onClick}>
-      {icon}{title}<br />
+      {icon}
+      {title}
+      <br />
       {body}
     </p>
   );
@@ -45,21 +44,19 @@ Transaction.propTypes = {
   transactionDate: PropTypes.string.isRequired,
   type: PropTypes.string.isRequired,
   cashFlow: PropTypes.string.isRequired,
-  onClick: PropTypes.func.isRequired
+  onClick: PropTypes.func.isRequired,
 };
 
 function TransactionsList({ transactions: txs, onSelectTransaction }) {
   return (
     <div>
-      {
-        txs.map(tx => (
-          <Transaction
-            key={tx.id}
-            onClick={() => onSelectTransaction(tx.id)}
-            { ...tx }
-          />
-        ))
-      }
+      {txs.map((tx) => (
+        <Transaction
+          key={tx.id}
+          onClick={() => onSelectTransaction(tx.id)}
+          {...tx}
+        />
+      ))}
     </div>
   );
 }
@@ -76,18 +73,15 @@ TransactionsList.propTypes = {
       type: PropTypes.string.isRequired,
       cashFlow: PropTypes.string.isRequired,
       description: PropTypes.string.isRequired,
-      transactionDate: PropTypes.string.isRequired
+      transactionDate: PropTypes.string.isRequired,
     })
-  ).isRequired
+  ).isRequired,
 };
 
-const mapStateToProps = state => ({
-  transactions: txSelectors.all(state)
+const mapStateToProps = (state) => ({
+  transactions: txSelectors.all(state),
 });
 
 const mapDispatchToProps = () => ({});
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(TransactionsList);
+export default connect(mapStateToProps, mapDispatchToProps)(TransactionsList);

@@ -9,13 +9,13 @@ export default function MemoryBasedAppendOnlyLog() {
     return Promise.resolve(actions.slice(from - 1, from + to));
   }
 
-  function append(newActions) {
+  function appendActions(newActions) {
     actions = [...actions, ...newActions];
     return Promise.resolve();
   }
 
   return {
     getActions,
-    append,
+    appendActions,
   };
 }

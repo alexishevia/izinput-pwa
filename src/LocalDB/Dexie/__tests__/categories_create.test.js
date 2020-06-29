@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
-import { CategoriesCreateAction } from "../../actionCreators";
-import LocalDB from "../LocalDB";
+import { CategoriesCreateAction } from "../../../redux/actionCreators";
+import LocalDB from "..";
 
 /* --- helper functions --- */
 
