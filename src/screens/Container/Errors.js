@@ -1,28 +1,38 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
-import { Modal } from 'semantic-ui-react';
+import React from "react";
+import PropTypes from "prop-types";
+import { connect } from "react-redux";
+import { Modal } from "semantic-ui-react";
 import {
   selectors as errSelectors,
   actions as errActions,
-} from '../../redux/errors'
+} from "../../redux/errors";
 
 function Error({ children }) {
-  return <p>{children}</p>
+  return <p>{children}</p>;
 }
 
-function ErrorsModal({ errors = [], resetErrors}) {
+Error.propTypes = {
+  children: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.node),
+    PropTypes.node,
+  ]).isRequired,
+};
+
+function ErrorsModal({ errors = [], resetErrors }) {
   const isOpen = !!(errors && errors.length);
   return (
-      <Modal open={isOpen} centered={false} onClose={resetErrors}>
-        <Modal.Content>
-          <Modal.Header>Error</Modal.Header>
-          <Modal.Description>{ errors.map(msg => <Error key={msg}>{msg}</Error>) }</Modal.Description>
-        </Modal.Content>
-      </Modal>
+    <Modal open={isOpen} centered={false} onClose={resetErrors}>
+      <Modal.Content>
+        <Modal.Header>Error</Modal.Header>
+        <Modal.Description>
+          {errors.map((msg) => (
+            <Error key={msg}>{msg}</Error>
+          ))}
+        </Modal.Description>
+      </Modal.Content>
+    </Modal>
   );
 }
-
 
 ErrorsModal.propTypes = {
   // redux props
@@ -30,15 +40,12 @@ ErrorsModal.propTypes = {
   errors: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   errors: errSelectors.all(state),
 });
 
-const mapDispatchToProps = dispatch => ({
+const mapDispatchToProps = (dispatch) => ({
   resetErrors: () => dispatch(errActions.reset()),
 });
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(ErrorsModal);
+export default connect(mapStateToProps, mapDispatchToProps)(ErrorsModal);

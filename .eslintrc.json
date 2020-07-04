@@ -1,13 +1,22 @@
 {
   "parser": "babel-eslint",
-  "env": { "jest": true, "browser": true },
+  "env": {
+    "jest": true,
+    "browser": true
+  },
   "extends": ["airbnb", "prettier", "prettier/react"],
   "plugins": ["prettier", "jest"],
   "rules": {
     "no-underscore-dangle": [0],
     "no-console": [0],
     "no-await-in-loop": [0],
-    "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],
+    "import/no-extraneous-dependencies": [0],
+    "react/jsx-filename-extension": [
+      1,
+      {
+        "extensions": [".js", ".jsx"]
+      }
+    ],
     "jest/no-disabled-tests": "error",
     "jest/no-focused-tests": "error",
     "jest/no-identical-title": "error",

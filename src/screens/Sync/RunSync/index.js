@@ -5,20 +5,16 @@ import { Button } from "semantic-ui-react";
 import { selectors as gSelectors } from "../../../redux/gdrive";
 import { actions as syncActions } from "../../../redux/sync";
 
-class RunSync extends React.Component {
-  render() {
-    const { isFileSelected, onRunSync } = this.props;
-
-    if (!isFileSelected) {
-      return null;
-    }
-
-    return (
-      <Button primary onClick={onRunSync}>
-        Run Sync
-      </Button>
-    );
+function RunSync({ isFileSelected, onRunSync }) {
+  if (!isFileSelected) {
+    return null;
   }
+
+  return (
+    <Button primary onClick={onRunSync}>
+      Run Sync
+    </Button>
+  );
 }
 
 const mapStateToProps = (state) => ({

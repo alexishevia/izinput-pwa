@@ -8,7 +8,7 @@ export default function LoggedIn({ openFilePicker, onLogout }) {
     <div>
       <p>
         You are connected to Google Drive, but you still need to select a file.
-        <br/>
+        <br />
         The file you select will be used to backup/sync your data.
       </p>
       <div
@@ -23,4 +23,5 @@ export default function LoggedIn({ openFilePicker, onLogout }) {
 
 LoggedIn.propTypes = {
   openFilePicker: PropTypes.func.isRequired,
+  onLogout: PropTypes.func.isRequired,
 };

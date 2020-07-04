@@ -1,7 +1,5 @@
 import React from "react";
 import PropTypes from "prop-types";
-import loadDir from "./api/loadDir";
-import FilePickerItem from "./FilePickerItem";
 import {
   Header,
   Segment,
@@ -9,21 +7,23 @@ import {
   Icon,
   Dimmer,
   Loader,
-  Menu
+  Menu,
 } from "semantic-ui-react";
+import loadDir from "./api/loadDir";
+import FilePickerItem from "./FilePickerItem";
 
-const isFile = node => node.fileType === "file";
-const isDir = node => node.fileType === "directory";
+const isFile = (node) => node.fileType === "file";
+const isDir = (node) => node.fileType === "directory";
 
 const styles = {
   title: {
     display: "inline-block",
     verticalAlign: "middle",
-    marginLeft: "3em"
+    marginLeft: "3em",
   },
   contents: {
-    minHeight: "20em"
-  }
+    minHeight: "20em",
+  },
 };
 
 const initialState = {
@@ -32,18 +32,15 @@ const initialState = {
   path: "",
   pathIDs: "root",
   contents: null,
-  fileSelected: false
+  fileSelected: false,
 };
 
 function getParentDir(path) {
-  return path
-    .split("/")
-    .slice(0, -1)
-    .join("/");
+  return path.split("/").slice(0, -1).join("/");
 }
 
 function getCurrentDir(path) {
-  return path.split("/").pop()
+  return path.split("/").pop();
 }
 
 class FilePicker extends React.Component {
@@ -80,13 +77,13 @@ class FilePicker extends React.Component {
 
   openNode(node) {
     const { onFilePick, onError } = this.props;
-    const { path, pathIDs } = this.state
+    const { path, pathIDs } = this.state;
     if (isDir(node)) {
       this.setState({
-          ...initialState,
-          path: `${path}/${node.name}`,
-          pathIDs: `${pathIDs}/${node.id}`,
-        });
+        ...initialState,
+        path: `${path}/${node.name}`,
+        pathIDs: `${pathIDs}/${node.id}`,
+      });
       return;
     }
     if (isFile(node)) {
@@ -159,7 +156,7 @@ class FilePicker extends React.Component {
 
     return (
       <Menu fluid vertical attached="bottom">
-        {contents.map(item => (
+        {contents.map((item) => (
           <FilePickerItem
             key={item.id}
             node={item}
@@ -183,7 +180,7 @@ class FilePicker extends React.Component {
 FilePicker.propTypes = {
   onCancel: PropTypes.func.isRequired,
   onError: PropTypes.func.isRequired,
-  onFilePick: PropTypes.func.isRequired
+  onFilePick: PropTypes.func.isRequired,
 };
 
 export default FilePicker;

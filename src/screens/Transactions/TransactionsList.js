@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
-import { Icon } from "semantic-ui-react";
+import { Icon, Container } from "semantic-ui-react";
 import { selectors as txSelectors } from "../../redux/transactions";
 
 const ICONS = {
@@ -28,12 +28,14 @@ function Transaction({
   ).toLowerCase()}: ${description}\n${transactionDate}`;
 
   return (
-    <p onClick={onClick}>
-      {icon}
-      {title}
-      <br />
-      {body}
-    </p>
+    <Container text onClick={onClick}>
+      <p>
+        {icon}
+        {title}
+        <br />
+        {body}
+      </p>
+    </Container>
   );
 }
 
@@ -53,8 +55,13 @@ function TransactionsList({ transactions: txs, onSelectTransaction }) {
       {txs.map((tx) => (
         <Transaction
           key={tx.id}
+          amount={tx.amount}
+          category={tx.category}
+          transactionDate={tx.transactionDate}
+          description={tx.description}
+          type={tx.type}
+          cashFlow={tx.cashFlow}
           onClick={() => onSelectTransaction(tx.id)}
-          {...tx}
         />
       ))}
     </div>

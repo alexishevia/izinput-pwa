@@ -80,7 +80,7 @@ async function processCloudReplicaEventsRecursive({
     to: upperBound,
   });
   if (!actions.length) {
-    return; // done
+    return Promise.resolve(); // done
   }
   await localDB.processActions(actions.map(JSON.parse), {
     actionsAreRemote: true,
@@ -101,7 +101,7 @@ async function copyLocalActionsRecursive({ fromDB, toDB, from }) {
     to: upperBound,
   });
   if (!localActions.length) {
-    return; // done
+    return Promise.resolve(); // done
   }
   await toDB.processActions(localActions);
   return copyLocalActionsRecursive({ fromDB, toDB, from: upperBound + 1 });

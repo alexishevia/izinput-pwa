@@ -7,6 +7,7 @@ const warningMsg =
 
 export default function ChangeFileButton({ onClick }) {
   function onBtnPress() {
+    /* eslint-disable no-alert */
     if (window.confirm(warningMsg)) {
       onClick();
     }
@@ -19,5 +20,5 @@ export default function ChangeFileButton({ onClick }) {
 }
 
 ChangeFileButton.propTypes = {
-  onClick: PropTypes.func.isRequired
+  onClick: PropTypes.func.isRequired,
 };

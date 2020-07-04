@@ -6,67 +6,65 @@ import FileSelected from "./FileSelected";
 import FilePicker from "./FilePicker";
 
 export default class Root extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            renderFilePicker: false
-        };
+  constructor(props) {
+    super(props);
+    this.state = {
+      renderFilePicker: false,
+    };
+  }
+
+  renderContent() {
+    const {
+      isLoggedIn,
+      file,
+      onFilePick,
+      onError,
+      onLogin,
+      onLogout,
+    } = this.props;
+    const { renderFilePicker } = this.state;
+
+    const isFileSelected = !!file;
+    const openFilePicker = () => this.setState({ renderFilePicker: true });
+    const closeFilePicker = () => this.setState({ renderFilePicker: false });
+
+    if (!isLoggedIn) {
+      return <LoggedOut onLogin={onLogin} />;
     }
 
-    renderContent() {
-        const {
-            isLoggedIn,
-            file,
-            onFilePick,
-            onError,
-            onLogin,
-            onLogout,
-        } = this.props;
-        const { renderFilePicker } = this.state;
-
-        const isFileSelected = !!file;
-        const openFilePicker = () => this.setState({ renderFilePicker: true });
-        const closeFilePicker = () => this.setState({ renderFilePicker: false });
-
-        if (!isLoggedIn) {
-          return <LoggedOut onLogin={onLogin} />;
-        }
-
-        if (renderFilePicker) {
-          return (
-            <FilePicker
-              onFilePick={path => {
-                closeFilePicker();
-                onFilePick(path);
-              }}
-              onError={onError}
-              onCancel={closeFilePicker}
-            />
-          );
-        }
-
-        if (isFileSelected) {
-          return (
-            <FileSelected
-              file={file}
-              openFilePicker={openFilePicker}
-              onLogout={onLogout}
-            />
-          );
-        }
-
-        return <LoggedIn openFilePicker={openFilePicker} onLogout={onLogout} />;
+    if (renderFilePicker) {
+      return (
+        <FilePicker
+          onFilePick={(path) => {
+            closeFilePicker();
+            onFilePick(path);
+          }}
+          onError={onError}
+          onCancel={closeFilePicker}
+        />
+      );
     }
 
-    render() {
-        return <div> { this.renderContent() } </div>;
+    if (isFileSelected) {
+      return (
+        <FileSelected
+          file={file}
+          openFilePicker={openFilePicker}
+          onLogout={onLogout}
+        />
+      );
     }
+
+    return <LoggedIn openFilePicker={openFilePicker} onLogout={onLogout} />;
+  }
+
+  render() {
+    return <div> {this.renderContent()} </div>;
+  }
 }
 
 Root.defaultProps = {
-    isLoggedIn: false,
-    file: null,
-    onError: () => false
+  file: null,
 };
 
 Root.propTypes = {

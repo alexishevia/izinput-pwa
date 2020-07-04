@@ -13,7 +13,7 @@ export default function GoogleSpreadsheet({ spreadsheetId }) {
 
   async function appendActions(actions) {
     const params = {
-      spreadsheetId: spreadsheetId,
+      spreadsheetId,
       range: "A1",
       valueInputOption: "RAW",
       insertDataOption: "INSERT_ROWS",

@@ -1,7 +1,8 @@
-import React from 'react';
-import MainMenu from './MainMenu';
-import Errors from './Errors';
-import { Container as SemanticContainer } from 'semantic-ui-react';
+import React from "react";
+import PropTypes from "prop-types";
+import { Container as SemanticContainer } from "semantic-ui-react";
+import MainMenu from "./MainMenu";
+import Errors from "./Errors";
 
 export default function Container(props) {
   const {
@@ -12,9 +13,17 @@ export default function Container(props) {
     <div>
       <MainMenu location={location} />
       <Errors />
-      <SemanticContainer>
-        { children }
-      </SemanticContainer>
+      <SemanticContainer>{children}</SemanticContainer>
     </div>
   );
 }
+
+Container.propTypes = {
+  children: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.node),
+    PropTypes.node,
+  ]).isRequired,
+  location: PropTypes.shape({
+    pathname: PropTypes.string.isRequired,
+  }).isRequired,
+};

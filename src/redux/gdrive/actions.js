@@ -52,7 +52,7 @@ export function init() {
       });
 
       // add listener for login status
-      const onLoginChange = function (isSignedIn) {
+      const onLoginChange = function dispatchOnLoginChange(isSignedIn) {
         return isSignedIn ? dispatch(_login()) : dispatch(_logout());
       };
       window.gapi.auth2.getAuthInstance().isSignedIn.listen(onLoginChange);
@@ -82,14 +82,14 @@ export function init() {
 }
 
 export function logout() {
-  return async function (dispatch) {
+  return async function logoutThunk() {
     await window.gapi.auth2.getAuthInstance().signOut();
     localStorage.removeItem(STORAGE_KEY_SELECTED_FILE);
   };
 }
 
 export function login() {
-  return async function (dispatch) {
+  return async function loginThunk() {
     await window.gapi.auth2.getAuthInstance().signIn();
   };
 }

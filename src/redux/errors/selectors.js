@@ -1,3 +1,5 @@
-export function all(state){
+export function all(state) {
   return state.errors;
 }
+
+export default {};

@@ -42,7 +42,7 @@ async function getNewLocalDBName() {
 
 async function getActiveLocalDB() {
   const name = localStorage.getItem(STORAGE_KEY_ACTIVE_DB);
-  return name ? await new LocalDB.ByName(name) : null;
+  return name ? new LocalDB.ByName(name) : null;
 }
 
 async function getLatestLocalDB() {

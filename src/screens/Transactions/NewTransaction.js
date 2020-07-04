@@ -116,7 +116,6 @@ class NewTransaction extends React.Component {
           />
         </Form.Group>
         <Form.Group inline style={{ justifyContent: "center" }}>
-          <label>Type</label>
           {["CASH", "CREDIT", "TRANSFER"].map((txType) => (
             <Form.Radio
               style={{ textTransform: "capitalize" }}

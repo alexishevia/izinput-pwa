@@ -1,9 +1,10 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
-import GDriveFilePicker from './GDriveFilePicker';
-import RunSync from './RunSync';
-import { selectors as gdriveSelectors, actions } from '../../redux/gdrive';
+import React from "react";
+import PropTypes from "prop-types";
+import { connect } from "react-redux";
+import GDriveFilePicker from "./GDriveFilePicker";
+import RunSync from "./RunSync";
+import { selectors as gdriveSelectors, actions } from "../../redux/gdrive";
+import { actions as errActions } from "../../redux/errors";
 
 const { login, logout, selectFile } = actions;
 
@@ -14,7 +15,7 @@ function Login({
   onLogin,
   onLogout,
   onFilePick,
-  onError
+  onError,
 }) {
   if (!isGDriveReady) {
     return <div>Connecting to Google Drive...</div>;
@@ -35,33 +36,33 @@ function Login({
   );
 }
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   file: gdriveSelectors.getFile(state),
   isLoggedIn: gdriveSelectors.isLoggedIn(state),
   isGDriveReady: gdriveSelectors.isInitialized(state),
 });
 
-const mapDispatchToProps = dispatch => ({
-  onLogin: accessToken => {
+const mapDispatchToProps = (dispatch) => ({
+  onLogin: (accessToken) => {
     dispatch(login(accessToken));
   },
   onLogout: () => {
-    dispatch(logout())
+    dispatch(logout());
   },
-  onFilePick: file => {
+  onFilePick: (file) => {
     dispatch(selectFile(file));
   },
-  onError: err => window.alert(err.msg)
+  onError: (err) => dispatch(errActions.add(err)),
 });
 
 Login.defaultProps = {
-  accessToken: null,
-  file: null
+  file: null,
 };
 
 Login.propTypes = {
   // redux props
-  accessToken: PropTypes.string,
+  isGDriveReady: PropTypes.bool.isRequired,
+  isLoggedIn: PropTypes.bool.isRequired,
   file: PropTypes.shape({
     name: PropTypes.string.isRequired,
     fileType: PropTypes.string.isRequired,
@@ -70,10 +71,7 @@ Login.propTypes = {
   onLogin: PropTypes.func.isRequired,
   onLogout: PropTypes.func.isRequired,
   onFilePick: PropTypes.func.isRequired,
-  onError: PropTypes.func.isRequired
+  onError: PropTypes.func.isRequired,
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Login);
+export default connect(mapStateToProps, mapDispatchToProps)(Login);

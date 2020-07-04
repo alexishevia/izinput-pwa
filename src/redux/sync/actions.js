@@ -1,7 +1,7 @@
 import { actions as errActions } from "../errors";
 import getLocalDB from "../../LocalDB/get";
 import setLocalDB from "../../LocalDB/set";
-import { actions as localDBActions } from "../../redux/localDB";
+import { actions as localDBActions } from "../localDB";
 import getCloudReplica from "../../CloudReplica/get";
 import GoogleSpreadsheet from "../../AppendOnlyLog/GoogleSpreadsheet";
 import syncRecursive from "../../sync";
@@ -38,7 +38,9 @@ export function runSync() {
     } catch (err) {
       syncLock = false;
       console.error(err);
-      dispatch(errActions.add("Sync failed: " + err.message));
+      dispatch(errActions.add(`Sync failed: ${err.message}`));
     }
   };
 }
+
+export default {};

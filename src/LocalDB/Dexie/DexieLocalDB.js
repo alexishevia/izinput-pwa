@@ -3,8 +3,8 @@
  */
 
 import Dexie from "dexie";
-import Validation from "../../helpers/Validation";
 import shimIndexedDb from "indexeddbshim";
+import Validation from "../../helpers/Validation";
 
 // fix to get Dexie working in environments with no indexedDB support
 if (!window.indexedDB) {
@@ -401,7 +401,7 @@ function ByName(name) {
                 })
                 .then((success) => {
                   if (!success) {
-                    return;
+                    return Promise.resolve();
                   }
                   const actionStr = JSON.stringify(action);
                   return Promise.all(

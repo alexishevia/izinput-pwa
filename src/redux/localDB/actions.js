@@ -7,28 +7,33 @@ import { set as setCategories } from "../categories/actions";
 import getLocalDB from "../../LocalDB/get";
 import { PAGE_SIZE } from "../../constants";
 
+async function readTransactionsRecursive({ localDB, dispatch, from }) {
+  const lowerBound = from || 0;
+  const upperBound = lowerBound + PAGE_SIZE;
+  const transactions = await localDB.getTransactions({
+    from: lowerBound,
+    to: upperBound,
+  });
+  if (!transactions.length) {
+    return Promise.resolve(); // done
+  }
+  dispatch(addTransactions(transactions));
+  return readTransactionsRecursive({
+    localDB,
+    dispatch,
+    from: upperBound + 1,
+  });
+}
+
 // load reads transactions and categories from indexedDB into Redux store
 export function load({ deleteOldDBs } = {}) {
-  return async function (dispatch) {
+  return async function reloadDBThunk(dispatch) {
     try {
       dispatch(resetTransactions());
       const localDB = await getLocalDB({ deleteOldDBs });
 
       // load transactions
-      async function readTransactionsRecursive({ from } = {}) {
-        const lowerBound = from || 0;
-        const upperBound = lowerBound + PAGE_SIZE;
-        const transactions = await localDB.getTransactions({
-          from: lowerBound,
-          to: upperBound,
-        });
-        if (!transactions.length) {
-          return; // done
-        }
-        dispatch(addTransactions(transactions));
-        return readTransactionsRecursive({ from: upperBound + 1 });
-      }
-      await readTransactionsRecursive();
+      await readTransactionsRecursive({ localDB, dispatch });
 
       // load categories
       const categories = await localDB.getCategories();
@@ -39,3 +44,5 @@ export function load({ deleteOldDBs } = {}) {
     }
   };
 }
+
+export default {};
