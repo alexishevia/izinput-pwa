@@ -3,7 +3,7 @@
 This app works as a stand-alone application. Once the code is loaded, it can
 work completely offline, storing data locally in indexedDB.
 
-It also allows syncing the indexedDB data to a Google Drive spreadsheet.
+It also allows syncing the indexedDB data to a [Google Drive spreadsheet](https://developers.google.com/sheets/api/).
 
 However, it takes a rather "unique" approach to syncing.
 
