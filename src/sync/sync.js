@@ -191,6 +191,7 @@ export default async function syncRecursive({
     const newDB = await newLocalDB();
     await processCloudReplicaEventsRecursive({ cloudReplica, localDB: newDB });
     await copyLocalActionsRecursive({ fromDB: localDB, toDB: newDB });
+    console.log("New localDB was created. Sync succeeded.");
     return newDB;
   }
 

@@ -8,11 +8,11 @@ import getLocalDB from "../../LocalDB/get";
 import { PAGE_SIZE } from "../../constants";
 
 // load reads transactions and categories from indexedDB into Redux store
-export function load() {
+export function load({ deleteOldDBs } = {}) {
   return async function (dispatch) {
     try {
       dispatch(resetTransactions());
-      const localDB = await getLocalDB();
+      const localDB = await getLocalDB({ deleteOldDBs });
 
       // load transactions
       async function readTransactionsRecursive({ from } = {}) {

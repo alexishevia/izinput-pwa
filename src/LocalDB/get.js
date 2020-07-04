@@ -65,12 +65,14 @@ async function deleteLocalDBs({ except }) {
   );
 }
 
-export default async function getLocalDB({ forceNew } = {}) {
+export default async function getLocalDB({ forceNew, deleteOldDBs } = {}) {
   if (forceNew) {
     return getNewLocalDB();
   }
   const localDB = (await getActiveLocalDB()) || (await getLatestLocalDB());
   setLocalDB(localDB);
-  await deleteLocalDBs({ except: localDB.name });
+  if (deleteOldDBs) {
+    await deleteLocalDBs({ except: localDB.name });
+  }
   return localDB;
 }

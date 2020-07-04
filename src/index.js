@@ -14,7 +14,7 @@ import "semantic-ui-css/semantic.min.css";
 const store = configureStore({ reducer: rootReducer });
 
 store.dispatch(gdriveInit());
-store.dispatch(loadDBData());
+store.dispatch(loadDBData({ deleteOldDBs: true }));
 
 ReactDOM.render(
   <ReduxProvider store={store}>

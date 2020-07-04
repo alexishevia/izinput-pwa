@@ -34,7 +34,7 @@ export function runSync() {
       });
       setLocalDB(newLocalDB);
       syncLock = false;
-      dispatch(localDBActions.load());
+      dispatch(localDBActions.load({ deleteOldDBs: false }));
     } catch (err) {
       syncLock = false;
       console.error(err);
