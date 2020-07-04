@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "uuid";
 import { TransactionsCreateAction } from "../actionCreators";
 import { actions as localDBActions } from "../localDB";
 import { actions as errActions } from "../errors";
@@ -18,11 +19,29 @@ export function add(tx) {
 
 // --- thunk creators --- //
 
-// put creates a new transaction, and saves it to indexedDB
-export function put(data) {
-  return async function putThunk(dispatch) {
+// create saves a new transaction to indexedDB
+export function create(data) {
+  return async function createThunk(dispatch) {
     try {
-      const action = new TransactionsCreateAction(data);
+      const {
+        amount,
+        cashFlow,
+        category,
+        description,
+        transactionDate,
+        type,
+      } = data;
+      const action = new TransactionsCreateAction({
+        amount,
+        cashFlow,
+        category,
+        deleted: false,
+        description,
+        id: uuidv4(),
+        modifiedAt: new Date().toISOString(),
+        transactionDate,
+        type,
+      });
       const localDB = await getLocalDB();
       await localDB.processActions([action]);
       dispatch(localDBActions.load());

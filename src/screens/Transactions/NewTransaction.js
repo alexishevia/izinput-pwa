@@ -124,7 +124,7 @@ class NewTransaction extends React.Component {
               label={txType.toLowerCase()}
               value={txType}
               checked={type === txType}
-              onChange={(evt) => {
+              onChange={() => {
                 this.setState({ type: txType });
               }}
             />
@@ -158,7 +158,7 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = (dispatch) => ({
-  onAdd: (tx) => dispatch(txActions.put(tx)),
+  onAdd: (tx) => dispatch(txActions.create(tx)),
   newError: (err) => dispatch(errActions.add(err)),
 });
 
