@@ -35,6 +35,8 @@ describe("transactions/create", () => {
       expect: {
         transactions: [{ id: "buyingCandy", amount: 1.5, category: "CANDY" }],
         categories: ["CANDY"],
+        actionsCount: 1,
+        lastAction: { id: "buyingCandy", amount: 1.5, category: "CANDY" },
       },
     },
     {
@@ -43,6 +45,7 @@ describe("transactions/create", () => {
       expect: {
         transactions: [],
         categories: [],
+        actionsCount: 0,
       },
     },
     {
@@ -58,12 +61,15 @@ describe("transactions/create", () => {
       expect: {
         transactions: [{ id: "milk", amount: 3.0, category: "GROCERIES" }],
         categories: ["GROCERIES"],
+        actionsCount: 1,
+        lastAction: { id: "milk", amount: 3.0, category: "GROCERIES" },
       },
     },
     {
       name: "action with invalid amount is ignored",
       action: { id: "invalidAmount", amount: -5 },
-      expect: { transactions: [], categories: [] },
+      expect: { transactions: [], categories: [], actionsCount: 0 },
+      actionsCount: 0,
     },
     {
       name:
@@ -78,12 +84,18 @@ describe("transactions/create", () => {
           { id: "buyingPaper", category: "OFFICE" },
         ],
         categories: ["OFFICE"],
+        actionsCount: 2,
+        lastAction: { id: "buyingInk", category: "OFFICE" },
       },
     },
     {
       name: "action with 'deleted: true' is ignored",
       action: { id: "buyingLaptop", deleted: true },
-      expect: { transactions: [], categories: [] },
+      expect: {
+        transactions: [],
+        categories: [],
+        actionsCount: 0,
+      },
     },
   ];
 
@@ -121,6 +133,22 @@ describe("transactions/create", () => {
             expect(gotCat[key]).toEqual(val);
           });
         });
+
+        // run actionsCount assertions
+        const gotActionsCount = await localDB.getActionsCount();
+        expect(gotActionsCount).toEqual(test.expect.actionsCount);
+
+        // run lastAction assertions
+        const lastActionStr = await localDB.getLastAction();
+        if (lastActionStr && !test.expect.lastAction) {
+          throw new Error(`expected no lastAction. got: ${lastActionStr}`);
+        }
+        if (test.expect.lastAction) {
+          const gotLastAction = JSON.parse(lastActionStr);
+          Object.entries(test.expect.lastAction).forEach(([key, val]) => {
+            expect(gotLastAction.payload[key]).toEqual(val);
+          });
+        }
       } catch (err) {
         if (localDB) {
           localDB.deleteDB();

@@ -126,7 +126,10 @@ function ByName(name) {
   }
 
   function getActionsCount() {
-    return db.meta.get("actionsCount");
+    return db.meta.get("actionsCount").then((count) => {
+      const asNum = Number.parseInt(count, 10);
+      return Number.isNaN(asNum) ? 0 : asNum;
+    });
   }
 
   function getLastAction() {
@@ -179,13 +182,14 @@ function ByName(name) {
     return Promise.resolve()
       .then(() => checkValidCategory(id))
       .then(() => db.categories.put({ id }))
+      .then(() => true /* success */)
       .catch((err) => {
         switch (err.name) {
           case ERR_INVALID_CATEGORY:
             console.warn(`${err.message}. createCategory will be ignored`);
-            return;
+            return false; // expected failure
           default:
-            throw err;
+            throw err; // unexpected failure
         }
       });
   }
@@ -208,14 +212,15 @@ function ByName(name) {
       })
       .then(() => createCategory(to))
       .then(() => updateTransactionCategories({ from, to }))
+      .then(() => true /* success */)
       .catch((err) => {
         switch (err.name) {
           case ERR_INVALID_CATEGORY:
           case ERR_NO_EXISTING_CATEGORY:
             console.warn(`${err.message}. updateCategory will be ignored`);
-            return;
+            return; // expected failure
           default:
-            throw err;
+            throw err; // unexpected failure
         }
       });
   }
@@ -224,13 +229,14 @@ function ByName(name) {
     return getExistingCategory(id)
       .then(() => db.categories.delete(id))
       .then(() => updateTransactionCategories({ from: id, to: "" }))
+      .then(() => true /* success */)
       .catch((err) => {
         switch (err.name) {
           case ERR_NO_EXISTING_CATEGORY:
             console.warn(`${err.message}. deleteCategory will be ignored`);
-            return;
+            return false; // expected failure
           default:
-            throw err;
+            throw err; // unexpected failure
         }
       });
   }
@@ -242,15 +248,16 @@ function ByName(name) {
       .then(() => checkNoExistingTransaction(payload))
       .then(() => db.transactions.add(payload))
       .then(() => (payload.category ? createCategory(payload.category) : null))
+      .then(() => true /* success */)
       .catch((err) => {
         switch (err.name) {
           case ERR_EXISTING_TRANSACTION:
           case ERR_INVALID_TRANSACTION:
           case ERR_NO_DELETE_ALLOWED:
             console.warn(`${err.message}. createTransaction will be ignored`);
-            return;
+            return false; // expected failure
           default:
-            throw err;
+            throw err; // unexpected failure
         }
       });
   }
@@ -270,6 +277,7 @@ function ByName(name) {
       })
       .then((updated) => db.transactions.put(updated))
       .then(() => (payload.category ? createCategory(payload.category) : null))
+      .then(() => true /* success */)
       .catch((err) => {
         switch (err.name) {
           case ERR_NO_EXISTING_TRANSACTION:
@@ -277,9 +285,9 @@ function ByName(name) {
           case ERR_INVALID_TRANSACTION:
           case ERR_NO_DELETE_ALLOWED:
             console.warn(`${err.message}. updateTransaction will be ignored`);
-            return;
+            return false; // expected failure
           default:
-            throw err;
+            throw err; // unexpected failure
         }
       });
   }
@@ -297,15 +305,16 @@ function ByName(name) {
         return updated;
       })
       .then((updated) => db.transactions.put(updated))
+      .then(() => true /* success */)
       .catch((err) => {
         switch (err.name) {
           case ERR_INVALID_TRANSACTION:
           case ERR_UPDATE_CONFLICT:
           case ERR_NO_EXISTING_TRANSACTION:
             console.warn(`${err.message}. deleteTransaction will be ignored`);
-            return;
+            return false; // expected failure
           default:
-            throw err;
+            throw err; // unexpected failure
         }
       });
   }
@@ -326,7 +335,7 @@ function ByName(name) {
   }
 
   function updateInitialSavings(amount) {
-    return db.meta.put(amount, "initialSavings");
+    return db.meta.put(amount, "initialSavings").then(() => true /* success */);
   }
 
   function getInitialSavings() {
@@ -360,8 +369,9 @@ function ByName(name) {
       "rw",
       [db.localActions, db.meta, db.transactions, db.categories],
       () =>
-        actions
-          .reduce(
+        getActionsCount().then((initialActionsCount) => {
+          let actionsCount = initialActionsCount;
+          return actions.reduce(
             (prevStep, action) =>
               prevStep
                 .then(() => {
@@ -389,30 +399,38 @@ function ByName(name) {
                       throw new Error(`Unknown action type: ${action.type}`);
                   }
                 })
-                .then(() => {
-                  if (!actionsAreRemote) {
-                    return db.localActions.put(JSON.stringify(action));
+                .then((success) => {
+                  if (!success) {
+                    return;
                   }
+                  const actionStr = JSON.stringify(action);
+                  return Promise.all(
+                    [
+                      function updateLocalActions() {
+                        if (actionsAreRemote) {
+                          // no need to update localActions when processing "remote" actions
+                          return Promise.resolve();
+                        }
+                        return db.localActions.put(actionStr);
+                      },
+                      function updateLastAction() {
+                        return db.meta.put(actionStr, "lastAction");
+                      },
+                      function updateActionsCount() {
+                        actionsCount += 1;
+                        return db.meta.put(actionsCount, "actionsCount");
+                      },
+                    ].map((func) => func())
+                  );
                 }),
             Promise.resolve()
-          )
-          .then(function updateLastAction() {
-            const lastAction = actions[actions.length - 1];
-            if (lastAction) {
-              return db.meta.put(JSON.stringify(lastAction), "lastAction");
-            }
-          })
-          .then(function getCurrentActionsCount() {
-            return db.meta.get("actionsCount");
-          })
-          .then(function updateActionsCount(currentCount) {
-            const newCount = (currentCount || 0) + actions.length;
-            return db.meta.put(newCount, "actionsCount");
-          })
+          );
+        })
     );
   }
 
   return {
+    name,
     deleteDB,
     deleteLocalActions,
     getActionsCount,

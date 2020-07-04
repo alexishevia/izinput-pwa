@@ -41,19 +41,22 @@ describe("transactions/delete", () => {
           modifiedAt: "2020-06-14T17:00:00.000Z",
         });
       },
-      action: {
-        id: "game",
-        modifiedAt: "2020-06-14T17:50:00.000Z",
-      },
+      action: { id: "game", modifiedAt: "2020-06-14T17:50:00.000Z" },
       expect: {
         transactions: [],
         categories: [{}],
+        actionsCount: 2,
+        lastAction: { id: "game", modifiedAt: "2020-06-14T17:50:00.000Z" },
       },
     },
     {
       name: "transaction with new id is ignored",
       action: { id: "computer", modifiedAt: "2020-06-14T17:50:00.000Z" },
-      expect: { transactions: [], categories: [] },
+      expect: {
+        transactions: [],
+        categories: [],
+        actionsCount: 0,
+      },
     },
     {
       name: "action using a timezone other than UTC is ignored",
@@ -70,6 +73,8 @@ describe("transactions/delete", () => {
           { id: "milk", amount: 3.0, modifiedAt: "2020-06-14T21:00:00.000Z" },
         ],
         categories: [{}],
+        actionsCount: 1,
+        lastAction: { id: "milk", amount: 3.0 },
       },
     },
     {
@@ -78,6 +83,7 @@ describe("transactions/delete", () => {
       setup: async (db) => {
         await createTransaction(db, {
           id: "phone",
+          amount: 350,
           modifiedAt: "2020-06-14T18:00:00.000Z",
         });
       },
@@ -85,6 +91,8 @@ describe("transactions/delete", () => {
       expect: {
         transactions: [{ id: "phone", modifiedAt: "2020-06-14T18:00:00.000Z" }],
         categories: [{}],
+        actionsCount: 1,
+        lastAction: { id: "phone", amount: 350 },
       },
     },
   ];
@@ -121,6 +129,22 @@ describe("transactions/delete", () => {
             expect(gotCat[key]).toEqual(val);
           });
         });
+
+        // run actionsCount assertions
+        const gotActionsCount = await localDB.getActionsCount();
+        expect(gotActionsCount).toEqual(test.expect.actionsCount);
+
+        // run lastAction assertions
+        const lastActionStr = await localDB.getLastAction();
+        if (lastActionStr && !test.expect.lastAction) {
+          throw new Error(`expected no lastAction. got: ${lastActionStr}`);
+        }
+        if (test.expect.lastAction) {
+          const gotLastAction = JSON.parse(lastActionStr);
+          Object.entries(test.expect.lastAction).forEach(([key, val]) => {
+            expect(gotLastAction.payload[key]).toEqual(val);
+          });
+        }
       } catch (err) {
         if (localDB) {
           localDB.deleteDB();

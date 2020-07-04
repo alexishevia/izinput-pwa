@@ -42,12 +42,21 @@ describe("categories/delete", () => {
       name: "category is deleted correctly",
       setup: (db) => createCategory(db, "electronics"),
       action: "electronics",
-      expect: { transactions: [], categories: [] },
+      expect: {
+        transactions: [],
+        categories: [],
+        actionsCount: 2,
+        lastAction: "electronics",
+      },
     },
     {
       name: "action with new id is ignored",
       action: "food",
-      expect: { transactions: [], categories: [] },
+      expect: {
+        transactions: [],
+        categories: [],
+        actionsCount: 0,
+      },
     },
     {
       name: "updates transactions to have blank category",
@@ -62,6 +71,8 @@ describe("categories/delete", () => {
           { id: "shenaniganz", category: "" },
         ],
         categories: ["electronics"],
+        actionsCount: 3,
+        lastAction: "food",
       },
     },
   ];
@@ -98,6 +109,20 @@ describe("categories/delete", () => {
             expect(gotCat[key]).toEqual(val);
           });
         });
+
+        // run actionsCount assertions
+        const gotActionsCount = await localDB.getActionsCount();
+        expect(gotActionsCount).toEqual(test.expect.actionsCount);
+
+        // run lastAction assertions
+        const lastActionStr = await localDB.getLastAction();
+        if (lastActionStr && !test.expect.lastAction) {
+          throw new Error(`expected no lastAction. got: ${lastActionStr}`);
+        }
+        if (test.expect.lastAction) {
+          const gotLastAction = JSON.parse(lastActionStr);
+          expect(gotLastAction.payload).toEqual(test.expect.lastAction);
+        }
       } catch (err) {
         if (localDB) {
           localDB.deleteDB();

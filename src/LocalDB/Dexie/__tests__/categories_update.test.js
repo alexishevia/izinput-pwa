@@ -48,7 +48,12 @@ describe("categories/update", () => {
       name: "category is renamed correctly",
       setup: (db) => createCategory(db, "electronics"),
       action: { from: "electronics", to: "ELECTRONICS" },
-      expect: { transactions: [], categories: ["ELECTRONICS"] },
+      expect: {
+        transactions: [],
+        categories: ["ELECTRONICS"],
+        actionsCount: 2,
+        lastAction: { from: "electronics", to: "ELECTRONICS" },
+      },
     },
     {
       name: "action with blank 'from' is renamed correctly",
@@ -60,19 +65,31 @@ describe("categories/update", () => {
       expect: {
         transactions: [{ id: "Shenaniganz", category: "restaurants" }],
         categories: ["restaurants"],
+        actionsCount: 3,
+        lastAction: { from: "", to: "restaurants" },
       },
     },
     {
       name: "action with blank 'to' is ignored",
       setup: (db) => createCategory(db, "food"),
       action: { from: "food", to: "" },
-      expect: { transactions: [], categories: ["food"] },
+      expect: {
+        transactions: [],
+        categories: ["food"],
+        actionsCount: 1,
+        lastAction: "food",
+      },
     },
     {
       name: "action with new id is ignored",
       setup: (db) => createCategory(db, "food"),
       action: { from: "golf", to: "sports" },
-      expect: { transactions: [], categories: ["food"] },
+      expect: {
+        transactions: [],
+        categories: ["food"],
+        actionsCount: 1,
+        lastAction: "food",
+      },
     },
     {
       name: "updates transactions to match new category name",
@@ -90,6 +107,8 @@ describe("categories/update", () => {
           { id: "dinner", category: "food" },
         ],
         categories: ["food", "work"],
+        actionsCount: 3,
+        lastAction: { from: "electronics", to: "work" },
       },
     },
   ];
@@ -126,6 +145,22 @@ describe("categories/update", () => {
             expect(gotCat[key]).toEqual(val);
           });
         });
+
+        // run actionsCount assertions
+        const gotActionsCount = await localDB.getActionsCount();
+        expect(gotActionsCount).toEqual(test.expect.actionsCount);
+
+        // run lastAction assertions
+        const lastActionStr = await localDB.getLastAction();
+        if (lastActionStr && !test.expect.lastAction) {
+          throw new Error(`expected no lastAction. got: ${lastActionStr}`);
+        }
+        if (test.expect.lastAction) {
+          const gotLastAction = JSON.parse(lastActionStr);
+          Object.entries(test.expect.lastAction).forEach(([key, val]) => {
+            expect(gotLastAction.payload[key]).toEqual(val);
+          });
+        }
       } catch (err) {
         if (localDB) {
           localDB.deleteDB();

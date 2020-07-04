@@ -1,11 +1,15 @@
 # To-Do
 
 - [ ] switch from idb to dexie
-      get app running with new implemenation.
-      I tried hooking everything up, but there are some errors thrown when trying to create a transaction.
-      Need to do some debugging to figure out what is going on.
+
+  - get app running with new implemenation.
+    I tried hooking everything up, but there are some errors thrown when trying to create a transaction.
+    Need to do some debugging to figure out what is going on.
+
+    transaction actions are being created without an ID
 
 - [ ] run sync.js when app is loaded, or after a transaction is added
+- [ ] make sure `npm run lint` does not throw errors
 - [ ] find an way to automatically get rid of all the `*.sqlite` files that get generated when running tests
 - [ ] display categories
 - [ ] only display latest transactions in the Transactions screen

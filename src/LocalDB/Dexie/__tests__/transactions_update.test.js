@@ -63,6 +63,8 @@ describe("transactions/update", () => {
           },
         ],
         categories: ["GROCERIES"],
+        actionsCount: 2,
+        lastAction: { id: "milk", amount: 2.5 },
       },
     },
     {
@@ -88,6 +90,8 @@ describe("transactions/update", () => {
           },
         ],
         categories: [{}],
+        actionsCount: 1,
+        lastAction: { id: "milk", amount: 3.0 },
       },
     },
     {
@@ -97,7 +101,11 @@ describe("transactions/update", () => {
         amount: 1500,
         modifiedAt: "2020-06-14T17:50:00.000Z",
       },
-      expect: { transactions: [], categories: [] },
+      expect: {
+        transactions: [],
+        categories: [],
+        actionsCount: 0,
+      },
     },
     {
       name: "action without valid modifiedAt is ignored",
@@ -108,6 +116,8 @@ describe("transactions/update", () => {
       expect: {
         transactions: [{ id: "computer", amount: 1800 }],
         categories: [{}],
+        actionsCount: 1,
+        lastAction: { id: "computer", amount: 1800 },
       },
     },
     {
@@ -130,6 +140,8 @@ describe("transactions/update", () => {
           { id: "phone", amount: 400, modifiedAt: "2020-06-14T18:00:00.000Z" },
         ],
         categories: [{}],
+        actionsCount: 1,
+        lastAction: { id: "phone", amount: 400 },
       },
     },
     {
@@ -149,11 +161,13 @@ describe("transactions/update", () => {
       expect: {
         transactions: [{ id: "phone", deleted: false }],
         categories: [{}],
+        actionsCount: 1,
+        lastAction: { id: "phone", modifiedAt: "2020-06-14T18:00:00.000Z" },
       },
     },
     {
       name:
-        "running an update on a deleted transaction 'undeletes' the transaction",
+        "running an update on a deleted transaction 'un-deletes' the transaction",
       setup: async (db) => {
         await createTransaction(db, {
           id: "phone",
@@ -180,6 +194,8 @@ describe("transactions/update", () => {
           },
         ],
         categories: [{}],
+        actionsCount: 3,
+        lastAction: { id: "phone", amount: 500 },
       },
     },
   ];
@@ -216,6 +232,22 @@ describe("transactions/update", () => {
             expect(gotCat[key]).toEqual(val);
           });
         });
+
+        // run actionsCount assertions
+        const gotActionsCount = await localDB.getActionsCount();
+        expect(gotActionsCount).toEqual(test.expect.actionsCount);
+
+        // run lastAction assertions
+        const lastActionStr = await localDB.getLastAction();
+        if (lastActionStr && !test.expect.lastAction) {
+          throw new Error(`expected no lastAction. got: ${lastActionStr}`);
+        }
+        if (test.expect.lastAction) {
+          const gotLastAction = JSON.parse(lastActionStr);
+          Object.entries(test.expect.lastAction).forEach(([key, val]) => {
+            expect(gotLastAction.payload[key]).toEqual(val);
+          });
+        }
       } catch (err) {
         if (localDB) {
           localDB.deleteDB();
