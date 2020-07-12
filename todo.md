@@ -1,6 +1,5 @@
 # To-Do
 
-- [ ] add tests for "transfers" actions
 - [ ] remove all references to "categories", "transactions", and "initialBalance"
 - [ ] get rid of circular dependencies
       create a middleware that runs `localDB/actions#load()` automatically after:
