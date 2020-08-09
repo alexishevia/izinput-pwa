@@ -1,8 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { connect } from "react-redux";
 import { Icon, Container } from "semantic-ui-react";
-import { selectors as txSelectors } from "../../redux/transactions";
 
 const ICONS = {
   CREDIT: <Icon name="credit card outline" />,
@@ -85,10 +83,4 @@ TransactionsList.propTypes = {
   ).isRequired,
 };
 
-const mapStateToProps = (state) => ({
-  transactions: txSelectors.all(state),
-});
-
-const mapDispatchToProps = () => ({});
-
-export default connect(mapStateToProps, mapDispatchToProps)(TransactionsList);
+export default TransactionsList;

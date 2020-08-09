@@ -5,7 +5,7 @@
 - [ ] allow deleting transactions
 - [ ] allow editing accounts
 - [ ] allow deleting accounts
-- [ ] make sure `npm run lint` does not throw errors
+- [ ] allow syncing with gdrive
 - [ ] find an way to automatically get rid of all the `*.sqlite` files that get generated when running tests
 - [ ] add indicator to show when sync is running/failed/done
 - [ ] run sync.js when app is loaded, or after a transaction is added

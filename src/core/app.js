@@ -1,5 +1,5 @@
-import getLocalDB from "./LocalDB/get";
 import { v4 as uuidv4 } from "uuid";
+import getLocalDB from "./LocalDB/get";
 import { AccountsCreateAction } from "./actionCreators";
 
 // import {promisify} from "util";

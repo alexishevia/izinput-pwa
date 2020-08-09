@@ -1,12 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { connect } from "react-redux";
 import GDriveFilePicker from "./GDriveFilePicker";
 import RunSync from "./RunSync";
-import { selectors as gdriveSelectors, actions } from "../../redux/gdrive";
-import { actions as errActions } from "../../redux/errors";
-
-const { login, logout, selectFile } = actions;
 
 function Login({
   isGDriveReady,
@@ -36,25 +31,6 @@ function Login({
   );
 }
 
-const mapStateToProps = (state) => ({
-  file: gdriveSelectors.getFile(state),
-  isLoggedIn: gdriveSelectors.isLoggedIn(state),
-  isGDriveReady: gdriveSelectors.isInitialized(state),
-});
-
-const mapDispatchToProps = (dispatch) => ({
-  onLogin: (accessToken) => {
-    dispatch(login(accessToken));
-  },
-  onLogout: () => {
-    dispatch(logout());
-  },
-  onFilePick: (file) => {
-    dispatch(selectFile(file));
-  },
-  onError: (err) => dispatch(errActions.add(err)),
-});
-
 Login.defaultProps = {
   file: null,
 };
@@ -74,4 +50,4 @@ Login.propTypes = {
   onError: PropTypes.func.isRequired,
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Login);
+export default Login;
