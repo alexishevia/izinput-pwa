@@ -380,6 +380,14 @@ function ByName(name) {
       .toArray();
   }
 
+  // both `from` and `to` are inclusive
+  function getTransfers({ from, to }) {
+    return db.transfers
+      .offset(from)
+      .limit(to - from + 1)
+      .toArray();
+  }
+
   function deleteLocalActions({ from, to }) {
     return db.localActions
       .offset(from)
@@ -458,6 +466,7 @@ function ByName(name) {
     getActionsCount,
     getLastAction,
     getLocalActions,
+    getTransfers,
     name,
     processActions,
   };

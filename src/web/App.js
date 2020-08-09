@@ -2,10 +2,8 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Router } from "@reach/router";
 import Container from "./screens/Container";
-import Transactions from "./screens/Transactions";
+import Transfers from "./screens/Transfers";
 import Accounts from "./screens/Accounts";
-
-function doNothing() {}
 
 export default class App extends React.Component {
   constructor(props) {
@@ -14,6 +12,7 @@ export default class App extends React.Component {
     this.state = {
       errors: [],
       accounts: [],
+      transfers: [],
     };
 
     // bind functions
@@ -21,6 +20,7 @@ export default class App extends React.Component {
     this.resetErrors = this.resetErrors.bind(this);
     this.reloadCoreAppData = this.reloadCoreAppData.bind(this);
     this.createAccount = this.createAccount.bind(this);
+    this.createTransfer = this.createTransfer.bind(this);
 
     this.reloadCoreAppData();
   }
@@ -29,7 +29,8 @@ export default class App extends React.Component {
     const { coreApp } = this.props;
     try {
       const accounts = await coreApp.getAccounts({ from: 0, to: 1000 });
-      this.setState({ accounts });
+      const transfers = await coreApp.getTransfers({ from: 0, to: 1000 });
+      this.setState({ accounts, transfers });
     } catch (err) {
       this.newError(err);
     }
@@ -61,17 +62,24 @@ export default class App extends React.Component {
     this.reloadCoreAppData();
   }
 
+  async createTransfer(transferData) {
+    const { coreApp } = this.props;
+    await coreApp.createTransfer(transferData);
+    this.reloadCoreAppData();
+  }
+
   render() {
-    const { errors, accounts } = this.state;
+    const { errors, accounts, transfers } = this.state;
 
     return (
       <Router>
         <Container path="/" errors={errors} resetErrors={this.resetErrors}>
-          <Transactions
+          <Transfers
             path="/"
             newError={this.newError}
             accounts={accounts}
-            newTransaction={doNothing}
+            newTransfer={this.createTransfer}
+            transfers={transfers}
           />
           <Accounts
             path="/accounts"

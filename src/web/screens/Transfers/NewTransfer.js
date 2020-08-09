@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Form, Icon } from "semantic-ui-react";
 import { dateToDayStr, isValidDayStr } from "../../../helpers/date";
+import Validation from "../../../helpers/Validation";
 
 function today() {
   return dateToDayStr(new Date());
@@ -17,39 +18,49 @@ const initialState = () => ({
   from: null,
   to: null,
   description: "",
-  transactionDate: today(),
+  transferDate: today(),
 });
 
-class NewTransaction extends React.Component {
+function buildTransferData({ from, to, amount, description, transferDate }) {
+  const transferData = {
+    from,
+    to,
+    amount: parseFloat(amount, 10),
+    description,
+    transferDate: isValidDayStr(transferDate) ? transferDate : today(),
+  };
+
+  new Validation(transferData, "from").required().string().notEmpty();
+  new Validation(transferData, "to").required().string().notEmpty();
+  new Validation(transferData, "amount").required().number().biggerThan(0);
+  new Validation(transferData, "description").required().string();
+  new Validation(transferData, "transferDate").required().dayString();
+
+  return transferData;
+}
+
+class NewTransfer extends React.Component {
   constructor(props) {
     super(props);
     this.state = initialState();
   }
 
-  save(evt) {
+  async save(evt) {
     preventDefault(evt);
-    const { amount, from, to, description, transactionDate } = this.state;
-    const { newTransaction, newError } = this.props;
-    const amountAsFloat = parseFloat(amount, 10);
-    if (amountAsFloat === 0 || Number.isNaN(amountAsFloat)) {
-      newError("Amount must be a number bigger than 0.");
-      return;
+    const { newTransfer, newError } = this.props;
+
+    try {
+      const transferData = buildTransferData(this.state);
+      await newTransfer(transferData);
+      this.setState(initialState());
+    } catch (err) {
+      newError(err);
     }
-    newTransaction({
-      amount: amountAsFloat,
-      from,
-      to,
-      description,
-      transactionDate: isValidDayStr(transactionDate)
-        ? transactionDate
-        : today(),
-    });
-    this.setState(initialState());
   }
 
   render() {
     const { accounts } = this.props;
-    const { amount, from, to, description, transactionDate } = this.state;
+    const { amount, from, to, description, transferDate } = this.state;
 
     const defaultAccount = { id: null, name: "" };
     const accountOptions = [defaultAccount, ...accounts].map((account) => ({
@@ -60,29 +71,6 @@ class NewTransaction extends React.Component {
 
     return (
       <Form onSubmit={preventDefault}>
-        <Form.Group style={{ justifyContent: "center" }}>
-          <Form.Input
-            width={4}
-            label="Amount"
-            placeholder="Amount"
-            type="text"
-            icon="dollar"
-            iconPosition="left"
-            value={amount}
-            onChange={(_, { value }) => this.setState({ amount: value })}
-          />
-          <Form.Input
-            width={4}
-            type="date"
-            label="Date"
-            icon="calendar"
-            iconPosition="left"
-            value={transactionDate}
-            onChange={(_, { value }) =>
-              this.setState({ transactionDate: value })
-            }
-          />
-        </Form.Group>
         <Form.Group style={{ justifyContent: "center" }}>
           <Form.Select
             width={4}
@@ -103,6 +91,27 @@ class NewTransaction extends React.Component {
         </Form.Group>
         <Form.Group style={{ justifyContent: "center" }}>
           <Form.Input
+            width={4}
+            label="Amount"
+            placeholder="Amount"
+            type="text"
+            icon="dollar"
+            iconPosition="left"
+            value={amount}
+            onChange={(_, { value }) => this.setState({ amount: value })}
+          />
+          <Form.Input
+            width={4}
+            type="date"
+            label="Date"
+            icon="calendar"
+            iconPosition="left"
+            value={transferDate}
+            onChange={(_, { value }) => this.setState({ transferDate: value })}
+          />
+        </Form.Group>
+        <Form.Group style={{ justifyContent: "center" }}>
+          <Form.Input
             width={8}
             type="text"
             label="Description"
@@ -119,7 +128,7 @@ class NewTransaction extends React.Component {
             onClick={(evt) => this.save(evt)}
           >
             <Icon name="dollar" />
-            Add Transaction
+            Add Transfer
           </Form.Button>
         </Form.Group>
       </Form>
@@ -127,8 +136,8 @@ class NewTransaction extends React.Component {
   }
 }
 
-NewTransaction.propTypes = {
-  newTransaction: PropTypes.func.isRequired,
+NewTransfer.propTypes = {
+  newTransfer: PropTypes.func.isRequired,
   newError: PropTypes.func.isRequired,
   accounts: PropTypes.arrayOf(
     PropTypes.shape({
@@ -138,4 +147,4 @@ NewTransaction.propTypes = {
   ).isRequired,
 };
 
-export default NewTransaction;
+export default NewTransfer;

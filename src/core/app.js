@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import getLocalDB from "./LocalDB/get";
-import { AccountsCreateAction } from "./actionCreators";
+import { AccountsCreateAction, TransfersCreateAction } from "./actionCreators";
 
 // import {promisify} from "util";
 // import {GOOGLE_API_KEY, GOOGLE_CLIENT_ID} from "../constants";
@@ -52,6 +52,12 @@ export default function InvoiceZero() {
     return localDB.getAccounts({ from, to });
   }
 
+  // both `from` and `to` are inclusive
+  async function getTransfers({ from, to }) {
+    const localDB = await getLocalDB();
+    return localDB.getTransfers({ from, to });
+  }
+
   async function createAccount(accountProps) {
     const { name, type, initialBalance } = accountProps;
     const action = new AccountsCreateAction({
@@ -66,8 +72,26 @@ export default function InvoiceZero() {
     await localDB.processActions([action]);
   }
 
+  async function createTransfer(transferProps) {
+    const { from, to, amount, description, transferDate } = transferProps;
+    const action = new TransfersCreateAction({
+      id: uuidv4(),
+      amount,
+      from,
+      to,
+      description,
+      transferDate,
+      modifiedAt: new Date().toISOString(),
+      deleted: false,
+    });
+    const localDB = await getLocalDB();
+    await localDB.processActions([action]);
+  }
+
   return {
     getAccounts,
+    getTransfers,
     createAccount,
+    createTransfer,
   };
 }

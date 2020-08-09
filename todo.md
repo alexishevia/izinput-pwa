@@ -1,17 +1,15 @@
 # To-Do
 
-- [ ] allow creating transactions
-- [ ] allow editing transactions
-- [ ] allow deleting transactions
+- [ ] allow editing transfers
+- [ ] allow deleting transfers
 - [ ] allow editing accounts
 - [ ] allow deleting accounts
 - [ ] allow syncing with gdrive
-- [ ] find an way to automatically get rid of all the `*.sqlite` files that get generated when running tests
 - [ ] add indicator to show when sync is running/failed/done
-- [ ] run sync.js when app is loaded, or after a transaction is added
-- [ ] only display latest transactions in the Transactions screen
-- [ ] allow creating "Income" transactions
-- [ ] allow editing transactions
+- [ ] run sync.js when app is loaded, or after a transfer is added
+- [ ] only display latest transfers in the transfers screen
+- [ ] allow creating "Income" transfers
+- [ ] allow editing transfers
 - [ ] display the full path to Google Spreadsheet file in `Sync` screen
 - [ ] think about how to detect change of rules versions
 - [ ] add recursive limit
