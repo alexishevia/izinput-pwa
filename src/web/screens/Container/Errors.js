@@ -1,11 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { connect } from "react-redux";
 import { Modal } from "semantic-ui-react";
-import {
-  selectors as errSelectors,
-  actions as errActions,
-} from "../../redux/errors";
 
 function Error({ children }) {
   return <p>{children}</p>;
@@ -40,12 +35,4 @@ ErrorsModal.propTypes = {
   errors: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
-const mapStateToProps = (state) => ({
-  errors: errSelectors.all(state),
-});
-
-const mapDispatchToProps = (dispatch) => ({
-  resetErrors: () => dispatch(errActions.reset()),
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(ErrorsModal);
+export default ErrorsModal;

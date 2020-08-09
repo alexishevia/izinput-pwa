@@ -11,7 +11,7 @@ const styles = {
 
 const routes = [
   { label: "Transactions", path: "/" },
-  { label: "Categories", path: "/categories" },
+  { label: "Accounts", path: "/accounts" },
   { label: "Sync", path: "/sync" },
 ];
 
@@ -39,7 +39,7 @@ MenuItem.propTypes = {
 export default function MainMenu({ location }) {
   return (
     <Menu attached="top" text style={styles.navbar}>
-      <Menu.Item>IZ Input</Menu.Item>
+      <Menu.Item>Invoice Zero</Menu.Item>
       <Menu.Menu position="right">
         <Dropdown item icon="bars">
           <Dropdown.Menu>

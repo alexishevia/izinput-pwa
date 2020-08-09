@@ -1,14 +1,12 @@
 # To-Do
 
-- [ ] remove all references to "categories", "transactions", and "initialBalance"
-- [ ] get rid of circular dependencies
-      create a middleware that runs `localDB/actions#load()` automatically after:
-  - a transaction is created/updated/deleted
-  - sync is done running
-    instead of having to call it manually
+- [ ] allow creating transactions
+- [ ] allow editing transactions
+- [ ] allow deleting transactions
+- [ ] allow editing accounts
+- [ ] allow deleting accounts
 - [ ] make sure `npm run lint` does not throw errors
 - [ ] find an way to automatically get rid of all the `*.sqlite` files that get generated when running tests
-- [ ] allow editing categories
 - [ ] add indicator to show when sync is running/failed/done
 - [ ] run sync.js when app is loaded, or after a transaction is added
 - [ ] only display latest transactions in the Transactions screen

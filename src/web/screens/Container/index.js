@@ -8,15 +8,21 @@ export default function Container(props) {
   const {
     children,
     location, // location prop comes from @reach/router
+    errors,
+    resetErrors,
   } = props;
   return (
     <div>
       <MainMenu location={location} />
-      <Errors />
+      <Errors errors={errors} resetErrors={resetErrors} />
       <SemanticContainer>{children}</SemanticContainer>
     </div>
   );
 }
+
+Container.defaultProps = {
+  location: { pathname: "" },
+};
 
 Container.propTypes = {
   children: PropTypes.oneOfType([
@@ -25,5 +31,7 @@ Container.propTypes = {
   ]).isRequired,
   location: PropTypes.shape({
     pathname: PropTypes.string.isRequired,
-  }).isRequired,
+  }),
+  errors: PropTypes.arrayOf(PropTypes.string).isRequired,
+  resetErrors: PropTypes.func.isRequired,
 };

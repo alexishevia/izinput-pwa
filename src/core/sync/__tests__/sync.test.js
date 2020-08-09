@@ -52,19 +52,19 @@ function createTransfer(db, values) {
 
 describe("sync", () => {
   const tests = [
-    // {
-    //   name: "sync a new localDB to an empty cloudReplica",
-    //   setup: async () => {
-    //     return {
-    //       localDB: await new LocalDB.ByName(uuidv4()),
-    //       cloudReplica: await new CloudReplica.ByName(uuidv4()),
-    //       appendOnlyLog: await new AppendOnlyLog(),
-    //     };
-    //   },
-    //   expect: {
-    //     balances: {},
-    //   },
-    // },
+    {
+      name: "sync a new localDB to an empty cloudReplica",
+      setup: async () => {
+        return {
+          localDB: await new LocalDB.ByName(uuidv4()),
+          cloudReplica: await new CloudReplica.ByName(uuidv4()),
+          appendOnlyLog: await new AppendOnlyLog(),
+        };
+      },
+      expect: {
+        balances: {},
+      },
+    },
     {
       name: "sync existing app to a new app",
       setup: async () => {

@@ -1,11 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { Form, Icon } from "semantic-ui-react";
-import { connect } from "react-redux";
-import { actions as txActions } from "../../redux/transactions";
-import { actions as errActions } from "../../redux/errors";
-import { selectors as categorySelectors } from "../../redux/categories";
-import { dateToDayStr, isValidDayStr } from "../../helpers/date";
+import { dateToDayStr, isValidDayStr } from "../../../helpers/date";
 
 function today() {
   return dateToDayStr(new Date());
@@ -18,10 +14,9 @@ function preventDefault(evt) {
 
 const initialState = () => ({
   amount: "",
-  category: "",
+  from: null,
+  to: null,
   description: "",
-  type: "CASH",
-  cashFlow: "EXPENSE",
   transactionDate: today(),
 });
 
@@ -33,26 +28,18 @@ class NewTransaction extends React.Component {
 
   save(evt) {
     preventDefault(evt);
-    const {
-      amount,
-      category,
-      description,
-      type,
-      transactionDate,
-      cashFlow,
-    } = this.state;
-    const { onAdd, newError } = this.props;
+    const { amount, from, to, description, transactionDate } = this.state;
+    const { newTransaction, newError } = this.props;
     const amountAsFloat = parseFloat(amount, 10);
     if (amountAsFloat === 0 || Number.isNaN(amountAsFloat)) {
       newError("Amount must be a number bigger than 0.");
       return;
     }
-    onAdd({
+    newTransaction({
       amount: amountAsFloat,
-      category,
+      from,
+      to,
       description,
-      type: type || "CASH",
-      cashFlow: cashFlow || "EXPENSE",
       transactionDate: isValidDayStr(transactionDate)
         ? transactionDate
         : today(),
@@ -61,13 +48,16 @@ class NewTransaction extends React.Component {
   }
 
   render() {
-    const { amount, category, description, type, transactionDate } = this.state;
-    const { categories } = this.props;
-    const categoryOptions = ["", ...categories].map((cat) => ({
-      key: cat,
-      text: cat,
-      value: cat,
+    const { accounts } = this.props;
+    const { amount, from, to, description, transactionDate } = this.state;
+
+    const defaultAccount = { id: null, name: "" };
+    const accountOptions = [defaultAccount, ...accounts].map((account) => ({
+      key: account.id,
+      text: account.name,
+      value: account.id,
     }));
+
     return (
       <Form onSubmit={preventDefault}>
         <Form.Group style={{ justifyContent: "center" }}>
@@ -79,7 +69,7 @@ class NewTransaction extends React.Component {
             icon="dollar"
             iconPosition="left"
             value={amount}
-            onChange={(evt) => this.setState({ amount: evt.target.value })}
+            onChange={(_, { value }) => this.setState({ amount: value })}
           />
           <Form.Input
             width={4}
@@ -88,21 +78,27 @@ class NewTransaction extends React.Component {
             icon="calendar"
             iconPosition="left"
             value={transactionDate}
-            onChange={(evt) =>
-              this.setState({ transactionDate: evt.target.value })
+            onChange={(_, { value }) =>
+              this.setState({ transactionDate: value })
             }
           />
         </Form.Group>
         <Form.Group style={{ justifyContent: "center" }}>
           <Form.Select
-            width={8}
-            label="Category"
-            placeholder="Category"
-            options={categoryOptions}
-            value={category}
-            onChange={(evt) => {
-              this.setState({ category: evt.target.textContent });
-            }}
+            width={4}
+            label="From"
+            placeholder="Account"
+            options={accountOptions}
+            value={from}
+            onChange={(_, { value }) => this.setState({ from: value })}
+          />
+          <Form.Select
+            width={4}
+            label="To"
+            placeholder="Account"
+            options={accountOptions}
+            value={to}
+            onChange={(_, { value }) => this.setState({ to: value })}
           />
         </Form.Group>
         <Form.Group style={{ justifyContent: "center" }}>
@@ -112,22 +108,8 @@ class NewTransaction extends React.Component {
             label="Description"
             placeholder="Description"
             value={description}
-            onChange={(evt) => this.setState({ description: evt.target.value })}
+            onChange={(_, { value }) => this.setState({ description: value })}
           />
-        </Form.Group>
-        <Form.Group inline style={{ justifyContent: "center" }}>
-          {["CASH", "CREDIT", "TRANSFER"].map((txType) => (
-            <Form.Radio
-              style={{ textTransform: "capitalize" }}
-              key={txType}
-              label={txType.toLowerCase()}
-              value={txType}
-              checked={type === txType}
-              onChange={() => {
-                this.setState({ type: txType });
-              }}
-            />
-          ))}
         </Form.Group>
         <Form.Group style={{ justifyContent: "center" }}>
           <Form.Button
@@ -137,7 +119,7 @@ class NewTransaction extends React.Component {
             onClick={(evt) => this.save(evt)}
           >
             <Icon name="dollar" />
-            Add Expense
+            Add Transaction
           </Form.Button>
         </Form.Group>
       </Form>
@@ -146,19 +128,14 @@ class NewTransaction extends React.Component {
 }
 
 NewTransaction.propTypes = {
-  // redux props
-  onAdd: PropTypes.func.isRequired,
+  newTransaction: PropTypes.func.isRequired,
   newError: PropTypes.func.isRequired,
-  categories: PropTypes.arrayOf(PropTypes.string).isRequired,
+  accounts: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+    })
+  ).isRequired,
 };
 
-const mapStateToProps = (state) => ({
-  categories: categorySelectors.sorted(state),
-});
-
-const mapDispatchToProps = (dispatch) => ({
-  onAdd: (tx) => dispatch(txActions.create(tx)),
-  newError: (err) => dispatch(errActions.add(err)),
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(NewTransaction);
+export default NewTransaction;
