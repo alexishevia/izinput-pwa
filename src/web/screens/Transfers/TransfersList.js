@@ -7,7 +7,7 @@ function Transfer({ amount, from, to, transferDate, description, onClick }) {
   const formattedAmount = `${prefix} $${Math.abs(amount).toFixed(2)}`;
 
   return (
-    <Container text onClick={onClick}>
+    <Container text onClick={onClick} style={{ cursor: "pointer" }}>
       <p>
         {formattedAmount}
         <br />

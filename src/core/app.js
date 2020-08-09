@@ -1,6 +1,10 @@
 import { v4 as uuidv4 } from "uuid";
 import getLocalDB from "./LocalDB/get";
-import { AccountsCreateAction, TransfersCreateAction } from "./actionCreators";
+import {
+  AccountsCreateAction,
+  TransfersCreateAction,
+  TransfersUpdateAction,
+} from "./actionCreators";
 
 // import {promisify} from "util";
 // import {GOOGLE_API_KEY, GOOGLE_CLIENT_ID} from "../constants";
@@ -88,10 +92,27 @@ export default function InvoiceZero() {
     await localDB.processActions([action]);
   }
 
+  async function updateTransfer(transferProps) {
+    const data = {};
+    ["id", "from", "to", "amount", "description", "transferDate"].forEach(
+      (key) => {
+        if (Object.prototype.hasOwnProperty.call(transferProps, key)) {
+          data[key] = transferProps[key];
+        }
+      }
+    );
+    data.modifiedAt = new Date().toISOString();
+    data.deleted = false;
+    const action = new TransfersUpdateAction(data);
+    const localDB = await getLocalDB();
+    await localDB.processActions([action]);
+  }
+
   return {
     getAccounts,
     getTransfers,
     createAccount,
     createTransfer,
+    updateTransfer,
   };
 }

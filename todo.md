@@ -1,6 +1,5 @@
 # To-Do
 
-- [ ] allow editing transfers
 - [ ] allow deleting transfers
 - [ ] allow editing accounts
 - [ ] allow deleting accounts
