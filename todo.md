@@ -1,6 +1,5 @@
 # To-Do
 
-- [ ] allow deleting transfers
 - [ ] allow editing accounts
 - [ ] allow deleting accounts
 - [ ] allow syncing with gdrive

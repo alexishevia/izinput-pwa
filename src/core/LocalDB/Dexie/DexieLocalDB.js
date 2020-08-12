@@ -383,6 +383,7 @@ function ByName(name) {
   // both `from` and `to` are inclusive
   function getTransfers({ from, to }) {
     return db.transfers
+      .filter((transfer) => !transfer.deleted)
       .offset(from)
       .limit(to - from + 1)
       .toArray();

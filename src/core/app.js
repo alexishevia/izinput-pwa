@@ -4,6 +4,7 @@ import {
   AccountsCreateAction,
   TransfersCreateAction,
   TransfersUpdateAction,
+  TransfersDeleteAction,
 } from "./actionCreators";
 
 // import {promisify} from "util";
@@ -108,11 +109,21 @@ export default function InvoiceZero() {
     await localDB.processActions([action]);
   }
 
+  async function deleteTransfer(id) {
+    const action = new TransfersDeleteAction({
+      id,
+      modifiedAt: new Date().toISOString(),
+    });
+    const localDB = await getLocalDB();
+    await localDB.processActions([action]);
+  }
+
   return {
     getAccounts,
     getTransfers,
     createAccount,
     createTransfer,
     updateTransfer,
+    deleteTransfer,
   };
 }

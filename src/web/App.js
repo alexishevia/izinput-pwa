@@ -22,6 +22,7 @@ export default class App extends React.Component {
     this.createAccount = this.createAccount.bind(this);
     this.createTransfer = this.createTransfer.bind(this);
     this.updateTransfer = this.updateTransfer.bind(this);
+    this.deleteTransfer = this.deleteTransfer.bind(this);
 
     this.reloadCoreAppData();
   }
@@ -75,6 +76,12 @@ export default class App extends React.Component {
     this.reloadCoreAppData();
   }
 
+  async deleteTransfer(id) {
+    const { coreApp } = this.props;
+    await coreApp.deleteTransfer(id);
+    this.reloadCoreAppData();
+  }
+
   render() {
     const { errors, accounts, transfers } = this.state;
 
@@ -87,6 +94,7 @@ export default class App extends React.Component {
             accounts={accounts}
             newTransfer={this.createTransfer}
             updateTransfer={this.updateTransfer}
+            deleteTransfer={this.deleteTransfer}
             transfers={transfers}
           />
           <Accounts

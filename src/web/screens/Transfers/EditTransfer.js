@@ -62,12 +62,26 @@ class EditTransfer extends React.Component {
     this.state = initialState();
     this.onSave = this.onSave.bind(this);
     this.onCancel = this.onCancel.bind(this);
+    this.onDelete = this.onDelete.bind(this);
   }
 
   onCancel(evt) {
     preventDefault(evt);
     const { onCancel } = this.props;
     onCancel();
+  }
+
+  onDelete(evt) {
+    preventDefault(evt);
+    /* eslint no-alert: [0] */
+    const userConfirmed = window.confirm(
+      "Are you sure you want to delete this transfer?"
+    );
+    if (!userConfirmed) {
+      return;
+    }
+    const { onDelete } = this.props;
+    onDelete();
   }
 
   async onSave(evt) {
@@ -169,9 +183,13 @@ class EditTransfer extends React.Component {
         <Form.Group style={{ justifyContent: "center" }}>
           <Form.Button primary width={4} fluid onClick={this.onSave}>
             <Icon name="edit" />
-            Update Transfer
+            Update
           </Form.Button>
-          <Form.Button width={4} fluid onClick={this.onCancel}>
+          <Form.Button color="red" width={2} fluid onClick={this.onDelete}>
+            <Icon name="trash" />
+            Delete
+          </Form.Button>
+          <Form.Button width={2} fluid onClick={this.onCancel}>
             <Icon name="cancel" />
             Cancel
           </Form.Button>
@@ -193,6 +211,7 @@ EditTransfer.propTypes = {
   editTransfer: PropTypes.func.isRequired,
   newError: PropTypes.func.isRequired,
   onCancel: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
   accounts: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.string.isRequired,
