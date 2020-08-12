@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import getLocalDB from "./LocalDB/get";
 import {
   AccountsCreateAction,
+  AccountsUpdateAction,
   TransfersCreateAction,
   TransfersUpdateAction,
   TransfersDeleteAction,
@@ -77,6 +78,20 @@ export default function InvoiceZero() {
     await localDB.processActions([action]);
   }
 
+  async function updateAccount(accountProps) {
+    const data = {};
+    ["id", "name", "type", "initialBalance"].forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(accountProps, key)) {
+        data[key] = accountProps[key];
+      }
+    });
+    data.modifiedAt = new Date().toISOString();
+    data.active = true;
+    const action = new AccountsUpdateAction(data);
+    const localDB = await getLocalDB();
+    await localDB.processActions([action]);
+  }
+
   async function createTransfer(transferProps) {
     const { from, to, amount, description, transferDate } = transferProps;
     const action = new TransfersCreateAction({
@@ -122,6 +137,7 @@ export default function InvoiceZero() {
     getAccounts,
     getTransfers,
     createAccount,
+    updateAccount,
     createTransfer,
     updateTransfer,
     deleteTransfer,

@@ -2,12 +2,12 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Container } from "semantic-ui-react";
 
-function Account({ name, type, initialBalance }) {
+function Account({ name, type, initialBalance, onClick }) {
   return (
-    <Container text>
+    <Container text onClick={onClick} style={{ cursor: "pointer" }}>
       <p>
-        {name} | Type: {type}{" "}
-        {type === "INTERNAL" ? `| Initial Balance: ${initialBalance}` : ""}
+        Name: {name}, Type: {type}{" "}
+        {type === "INTERNAL" ? `, Initial Balance: ${initialBalance}` : ""}
       </p>
     </Container>
   );
@@ -21,6 +21,7 @@ Account.propTypes = {
   name: PropTypes.string.isRequired,
   type: PropTypes.string.isRequired,
   initialBalance: PropTypes.number,
+  onClick: PropTypes.func.isRequired,
 };
 
 function sortByModifiedAt(a, b) {
@@ -33,7 +34,7 @@ function sortByModifiedAt(a, b) {
   return 0;
 }
 
-export default function AccountsList({ accounts }) {
+export default function AccountsList({ accounts, onSelect }) {
   return (
     <div>
       {accounts
@@ -44,6 +45,7 @@ export default function AccountsList({ accounts }) {
             name={name}
             type={type}
             initialBalance={initialBalance}
+            onClick={() => onSelect(id)}
           />
         ))}
     </div>
@@ -51,6 +53,7 @@ export default function AccountsList({ accounts }) {
 }
 
 AccountsList.propTypes = {
+  onSelect: PropTypes.func.isRequired,
   accounts: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.string.isRequired,

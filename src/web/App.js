@@ -20,6 +20,7 @@ export default class App extends React.Component {
     this.resetErrors = this.resetErrors.bind(this);
     this.reloadCoreAppData = this.reloadCoreAppData.bind(this);
     this.createAccount = this.createAccount.bind(this);
+    this.updateAccount = this.updateAccount.bind(this);
     this.createTransfer = this.createTransfer.bind(this);
     this.updateTransfer = this.updateTransfer.bind(this);
     this.deleteTransfer = this.deleteTransfer.bind(this);
@@ -64,6 +65,12 @@ export default class App extends React.Component {
     this.reloadCoreAppData();
   }
 
+  async updateAccount(accountData) {
+    const { coreApp } = this.props;
+    await coreApp.updateAccount(accountData);
+    this.reloadCoreAppData();
+  }
+
   async createTransfer(transferData) {
     const { coreApp } = this.props;
     await coreApp.createTransfer(transferData);
@@ -100,6 +107,7 @@ export default class App extends React.Component {
           <Accounts
             path="/accounts"
             accounts={accounts}
+            updateAccount={this.updateAccount}
             newError={this.newError}
             newAccount={this.createAccount}
           />

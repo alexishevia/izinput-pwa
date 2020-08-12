@@ -1,6 +1,5 @@
 # To-Do
 
-- [ ] allow editing accounts
 - [ ] allow deleting accounts
 - [ ] allow syncing with gdrive
 - [ ] add indicator to show when sync is running/failed/done

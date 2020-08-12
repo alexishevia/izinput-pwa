@@ -8,9 +8,7 @@ export default class Transfers extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = {
-      editing: null,
-    };
+    this.state = { editing: null };
 
     this.updateTransfer = this.updateTransfer.bind(this);
   }

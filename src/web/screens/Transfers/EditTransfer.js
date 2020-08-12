@@ -41,7 +41,6 @@ function buildTransferData({
 }
 
 const initialState = () => ({
-  id: null,
   amount: null,
   from: null,
   to: null,
@@ -99,9 +98,9 @@ class EditTransfer extends React.Component {
 
   getData() {
     const { transfer } = this.props;
-    const { id, amount, from, to, description, transferDate } = this.state;
+    const { amount, from, to, description, transferDate } = this.state;
     const data = {
-      id: notNull(id, transfer.id),
+      id: transfer.id,
       amount: notNull(amount, transfer.amount),
       from: notNull(from, transfer.from),
       to: notNull(to, transfer.to),
