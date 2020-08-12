@@ -49,6 +49,13 @@ const initialState = () => ({
   transferDate: null,
 });
 
+function notNull(val, fallback) {
+  if (val !== null) {
+    return val;
+  }
+  return fallback;
+}
+
 class EditTransfer extends React.Component {
   constructor(props) {
     super(props);
@@ -77,22 +84,16 @@ class EditTransfer extends React.Component {
   }
 
   getData() {
-    const state = this.state || {};
-    const { transfer } = this.props || {};
-    const data = [
-      "id",
-      "amount",
-      "from",
-      "to",
-      "description",
-      "transferDate",
-    ].reduce(
-      (memo, field) => ({
-        ...memo,
-        [field]: state[field] === null ? memo[field] : state[field],
-      }),
-      transfer || {}
-    );
+    const { transfer } = this.props;
+    const { id, amount, from, to, description, transferDate } = this.state;
+    const data = {
+      id: notNull(id, transfer.id),
+      amount: notNull(amount, transfer.amount),
+      from: notNull(from, transfer.from),
+      to: notNull(to, transfer.to),
+      description: notNull(description, transfer.description),
+      transferDate: notNull(transferDate, transfer.transferDate),
+    };
 
     data.amount = parseFloat(data.amount, 10);
     if (Number.isNaN(data.amount)) {
