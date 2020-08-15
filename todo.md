@@ -1,7 +1,6 @@
 # To-Do
 
-- [ ] remove on delete for accounts
-- [ ] allow syncing with gdrive
+- [ ] import transfers from old invoice zero
 - [ ] add indicator to show when sync is running/failed/done
 - [ ] run sync.js when app is loaded, or after a transfer is added
 - [ ] only display latest transfers in the transfers screen

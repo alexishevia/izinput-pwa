@@ -85,15 +85,11 @@ class EditTransfer extends React.Component {
 
   async onSave(evt) {
     preventDefault(evt);
-    const { editTransfer, newError } = this.props;
+    const { editTransfer } = this.props;
 
-    try {
-      const transferData = buildTransferData(this.getData());
-      await editTransfer(transferData);
-      this.setState(initialState());
-    } catch (err) {
-      newError(err);
-    }
+    const transferData = buildTransferData(this.getData());
+    await editTransfer(transferData);
+    this.setState(initialState());
   }
 
   getData() {
@@ -208,7 +204,6 @@ EditTransfer.propTypes = {
     transferDate: PropTypes.string.isRequired,
   }).isRequired,
   editTransfer: PropTypes.func.isRequired,
-  newError: PropTypes.func.isRequired,
   onCancel: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
   accounts: PropTypes.arrayOf(

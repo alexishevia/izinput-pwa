@@ -20,13 +20,7 @@ export default class Transfers extends React.Component {
   }
 
   render() {
-    const {
-      newError,
-      newTransfer,
-      accounts,
-      transfers,
-      deleteTransfer,
-    } = this.props;
+    const { newTransfer, accounts, transfers, deleteTransfer } = this.props;
     const { editing } = this.state;
     let transferToEdit;
     if (editing) {
@@ -38,17 +32,12 @@ export default class Transfers extends React.Component {
           <EditTransfer
             transfer={transferToEdit}
             editTransfer={this.updateTransfer}
-            newError={newError}
             accounts={accounts}
             onDelete={() => deleteTransfer(transferToEdit.id)}
             onCancel={() => this.setState({ editing: null })}
           />
         ) : (
-          <NewTransfer
-            newError={newError}
-            newTransfer={newTransfer}
-            accounts={accounts}
-          />
+          <NewTransfer newTransfer={newTransfer} accounts={accounts} />
         )}
         <TransfersList
           accounts={accounts}
@@ -64,7 +53,6 @@ Transfers.propTypes = {
   newTransfer: PropTypes.func.isRequired,
   updateTransfer: PropTypes.func.isRequired,
   deleteTransfer: PropTypes.func.isRequired,
-  newError: PropTypes.func.isRequired,
   accounts: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.string.isRequired,

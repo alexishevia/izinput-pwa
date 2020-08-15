@@ -3,18 +3,15 @@ import PropTypes from "prop-types";
 import GDriveFilePicker from "./GDriveFilePicker";
 import RunSync from "./RunSync";
 
-function Login({
-  isGDriveReady,
+function Sync({
   isLoggedIn,
   file,
   onLogin,
   onLogout,
   onFilePick,
+  onRunSync,
   onError,
 }) {
-  if (!isGDriveReady) {
-    return <div>Connecting to Google Drive...</div>;
-  }
   return (
     <div>
       <GDriveFilePicker
@@ -26,18 +23,16 @@ function Login({
         onError={onError}
       />
       <hr />
-      <RunSync />
+      <RunSync isFileSelected={!!file} onRunSync={onRunSync} />
     </div>
   );
 }
 
-Login.defaultProps = {
+Sync.defaultProps = {
   file: null,
 };
 
-Login.propTypes = {
-  // redux props
-  isGDriveReady: PropTypes.bool.isRequired,
+Sync.propTypes = {
   isLoggedIn: PropTypes.bool.isRequired,
   file: PropTypes.shape({
     name: PropTypes.string.isRequired,
@@ -47,7 +42,8 @@ Login.propTypes = {
   onLogin: PropTypes.func.isRequired,
   onLogout: PropTypes.func.isRequired,
   onFilePick: PropTypes.func.isRequired,
+  onRunSync: PropTypes.func.isRequired,
   onError: PropTypes.func.isRequired,
 };
 
-export default Login;
+export default Sync;

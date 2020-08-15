@@ -44,15 +44,11 @@ class NewAccount extends React.Component {
 
   async save(evt) {
     preventDefault(evt);
-    const { newError, newAccount } = this.props;
+    const { newAccount } = this.props;
 
-    try {
-      const accountData = buildAccountData(this.state);
-      await newAccount(accountData);
-      this.setState(initialState());
-    } catch (err) {
-      newError(err);
-    }
+    const accountData = buildAccountData(this.state);
+    await newAccount(accountData);
+    this.setState(initialState());
   }
 
   render() {
@@ -107,7 +103,6 @@ class NewAccount extends React.Component {
 }
 
 NewAccount.propTypes = {
-  newError: PropTypes.func.isRequired,
   newAccount: PropTypes.func.isRequired,
 };
 

@@ -9,6 +9,9 @@ export const PAGE_SIZE = 50;
 // the "active" local db name is kept on Local Storage, using this key
 export const STORAGE_KEY_ACTIVE_DB = "activeLocalDB";
 
+// data aobut the gDrive file to use for syncing is kept on Local Storage, using this key
+export const STORAGE_KEY_SELECTED_FILE = "gDriveSelectedFile";
+
 if (!RULES_VERSION) {
   throw new Error("missing RULES_VERSION. Cannot start.");
 }

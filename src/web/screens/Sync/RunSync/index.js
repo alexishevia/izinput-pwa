@@ -19,7 +19,6 @@ RunSync.defaultProps = {
 };
 
 RunSync.propTypes = {
-  // redux props
   isFileSelected: PropTypes.bool,
   onRunSync: PropTypes.func.isRequired,
 };

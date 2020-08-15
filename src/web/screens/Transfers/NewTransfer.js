@@ -47,15 +47,11 @@ class NewTransfer extends React.Component {
 
   async save(evt) {
     preventDefault(evt);
-    const { newTransfer, newError } = this.props;
+    const { newTransfer } = this.props;
 
-    try {
-      const transferData = buildTransferData(this.state);
-      await newTransfer(transferData);
-      this.setState(initialState());
-    } catch (err) {
-      newError(err);
-    }
+    const transferData = buildTransferData(this.state);
+    await newTransfer(transferData);
+    this.setState(initialState());
   }
 
   render() {
@@ -138,7 +134,6 @@ class NewTransfer extends React.Component {
 
 NewTransfer.propTypes = {
   newTransfer: PropTypes.func.isRequired,
-  newError: PropTypes.func.isRequired,
   accounts: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.string.isRequired,

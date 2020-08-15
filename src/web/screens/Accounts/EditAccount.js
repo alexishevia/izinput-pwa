@@ -60,15 +60,11 @@ class EditAccount extends React.Component {
 
   async onSave(evt) {
     preventDefault(evt);
-    const { newError, editAccount } = this.props;
+    const { editAccount } = this.props;
 
-    try {
-      const accountData = buildAccountData(this.getData());
-      await editAccount(accountData);
-      this.setState(initialState());
-    } catch (err) {
-      newError(err);
-    }
+    const accountData = buildAccountData(this.getData());
+    await editAccount(accountData);
+    this.setState(initialState());
   }
 
   getData() {
@@ -148,7 +144,6 @@ EditAccount.propTypes = {
     type: PropTypes.string.isRequired,
     initialBalance: PropTypes.number.isRequired,
   }).isRequired,
-  newError: PropTypes.func.isRequired,
   editAccount: PropTypes.func.isRequired,
   onCancel: PropTypes.func.isRequired,
 };
