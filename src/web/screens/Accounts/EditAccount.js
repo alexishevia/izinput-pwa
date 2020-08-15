@@ -58,19 +58,6 @@ class EditAccount extends React.Component {
     onCancel();
   }
 
-  onDelete(evt) {
-    preventDefault(evt);
-    /* eslint no-alert: [0] */
-    const userConfirmed = window.confirm(
-      "Are you sure you want to delete this account?"
-    );
-    if (!userConfirmed) {
-      return;
-    }
-    const { onDelete } = this.props;
-    onDelete();
-  }
-
   async onSave(evt) {
     preventDefault(evt);
     const { newError, editAccount } = this.props;
@@ -140,15 +127,11 @@ class EditAccount extends React.Component {
           </Form.Group>
         ) : null}
         <Form.Group style={{ justifyContent: "center" }}>
-          <Form.Button primary width={4} fluid onClick={this.onSave}>
+          <Form.Button primary width={5} fluid onClick={this.onSave}>
             <Icon name="edit" />
             Update
           </Form.Button>
-          <Form.Button color="red" width={2} fluid onClick={this.onDelete}>
-            <Icon name="trash" />
-            Delete
-          </Form.Button>
-          <Form.Button width={2} fluid onClick={this.onCancel}>
+          <Form.Button width={3} fluid onClick={this.onCancel}>
             <Icon name="cancel" />
             Cancel
           </Form.Button>
@@ -168,7 +151,6 @@ EditAccount.propTypes = {
   newError: PropTypes.func.isRequired,
   editAccount: PropTypes.func.isRequired,
   onCancel: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired,
 };
 
 export default EditAccount;

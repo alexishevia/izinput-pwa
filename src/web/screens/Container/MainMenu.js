@@ -10,7 +10,7 @@ const styles = {
 };
 
 const routes = [
-  { label: "Transactions", path: "/" },
+  { label: "Transfers", path: "/" },
   { label: "Accounts", path: "/accounts" },
   { label: "Sync", path: "/sync" },
 ];
