@@ -1,7 +1,20 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Router } from "@reach/router";
-import Container from "./screens/Container";
+import {
+  IonApp,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonButtons,
+  IonMenuButton,
+  IonPage,
+  IonRouterOutlet,
+} from "@ionic/react";
+import { IonReactRouter } from "@ionic/react-router";
+import { Route, Redirect } from "react-router-dom";
+import Errors from "./Errors";
+import MainMenu from "./MainMenu";
 import Transfers from "./screens/Transfers";
 import Accounts from "./screens/Accounts";
 import Sync from "./screens/Sync";
@@ -183,41 +196,66 @@ export default class App extends React.Component {
     } = this.state;
 
     return (
-      <Router>
-        <Container
-          path="/"
-          errors={errors}
-          resetErrors={this.resetErrors}
-          isSyncRunning={isSyncRunning}
-        >
-          <Transfers
-            path="/"
-            newError={this.newError}
-            accounts={accounts}
-            newTransfer={this.createTransfer}
-            updateTransfer={this.updateTransfer}
-            deleteTransfer={this.deleteTransfer}
-            transfers={transfers}
-          />
-          <Accounts
-            path="/accounts"
-            accounts={accounts}
-            updateAccount={this.updateAccount}
-            newError={this.newError}
-            newAccount={this.createAccount}
-          />
-          <Sync
-            path="/sync"
-            isLoggedIn={isGDriveLoggedIn}
-            onLogin={this.loginToGDrive}
-            onLogout={this.logoutFromGDrive}
-            onError={this.newError}
-            file={gDriveFile}
-            onFilePick={this.selectGDriveFile}
-            onRunSync={this.runSync}
-          />
-        </Container>
-      </Router>
+      <IonApp>
+        <IonReactRouter>
+          <MainMenu />
+
+          <IonPage id="main-content">
+            <IonHeader>
+              <IonToolbar color="primary">
+                <IonButtons slot="start">
+                  <IonMenuButton />
+                </IonButtons>
+                <IonTitle>Invoice Zero</IonTitle>
+              </IonToolbar>
+            </IonHeader>
+            <IonContent className="ion-padding">
+              {isSyncRunning ? (
+                <div style={{ backgroundColor: "#eee", marginBottom: "1em" }}>
+                  syncing...
+                </div>
+              ) : null}
+              <Errors errors={errors} resetErrors={this.resetErrors} />
+              <IonRouterOutlet>
+                <Route path="/transfers">
+                  <Transfers
+                    newError={this.newError}
+                    accounts={accounts}
+                    newTransfer={this.createTransfer}
+                    updateTransfer={this.updateTransfer}
+                    deleteTransfer={this.deleteTransfer}
+                    transfers={transfers}
+                  />
+                </Route>
+                <Route path="/accounts">
+                  <Accounts
+                    accounts={accounts}
+                    updateAccount={this.updateAccount}
+                    newError={this.newError}
+                    newAccount={this.createAccount}
+                  />
+                </Route>
+                <Route path="/sync">
+                  <Sync
+                    isLoggedIn={isGDriveLoggedIn}
+                    onLogin={this.loginToGDrive}
+                    onLogout={this.logoutFromGDrive}
+                    onError={this.newError}
+                    file={gDriveFile}
+                    onFilePick={this.selectGDriveFile}
+                    onRunSync={this.runSync}
+                  />
+                </Route>
+                <Route
+                  exact
+                  path="/"
+                  render={() => <Redirect to="/transfers" />}
+                />
+              </IonRouterOutlet>
+            </IonContent>
+          </IonPage>
+        </IonReactRouter>
+      </IonApp>
     );
   }
 }

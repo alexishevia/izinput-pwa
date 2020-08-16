@@ -41,7 +41,7 @@ This app allows syncing data to a Google Drive Spreadsheet. [Read More](./docs/g
 
 ## UI Library
 
-This project was built using [Semantic UI React](https://react.semantic-ui.com). No particular reason, other than it looked nice and easy to use.
+This project uses UI components from [@ionic/react](https://ionicframework.com/react). No particular reason, other than it looked nice and easy to use.
 
 ## Available Scripts
 
