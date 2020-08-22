@@ -15,7 +15,7 @@ function newLocalDBName(num) {
 }
 
 async function getLatestLocalDBNumber() {
-  const dbs = await window.indexedDB.databases();
+  const dbs = await Dexie.getDatabaseNames();
   const val =
     dbs
       .map((db) => db.name)
