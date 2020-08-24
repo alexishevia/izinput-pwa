@@ -33,6 +33,7 @@ export default class Accounts extends React.Component {
             account={accountToEdit}
             editAccount={this.updateAccount}
             onCancel={() => this.setState({ editing: null })}
+            newError={newError}
           />
         ) : (
           <NewAccount newAccount={newAccount} newError={newError} />
