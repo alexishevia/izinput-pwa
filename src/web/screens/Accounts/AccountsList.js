@@ -1,28 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Container } from "semantic-ui-react";
-
-function Account({ name, type, initialBalance, onClick }) {
-  return (
-    <Container text onClick={onClick} style={{ cursor: "pointer" }}>
-      <p>
-        Name: {name}, Type: {type}{" "}
-        {type === "INTERNAL" ? `, Initial Balance: ${initialBalance}` : ""}
-      </p>
-    </Container>
-  );
-}
-
-Account.defaultProps = {
-  initialBalance: 0,
-};
-
-Account.propTypes = {
-  name: PropTypes.string.isRequired,
-  type: PropTypes.string.isRequired,
-  initialBalance: PropTypes.number,
-  onClick: PropTypes.func.isRequired,
-};
+import { IonList, IonListHeader, IonItem, IonLabel } from "@ionic/react";
 
 function sortByModifiedAt(a, b) {
   if (a.modifiedAt > b.modifiedAt) {
@@ -34,21 +12,42 @@ function sortByModifiedAt(a, b) {
   return 0;
 }
 
+function capitalize([initialChar, ...rest]) {
+  return [initialChar.toUpperCase(), ...rest.map((c) => c.toLowerCase())].join(
+    ""
+  );
+}
+
 export default function AccountsList({ accounts, onSelect }) {
+  if (!accounts.length) {
+    return null;
+  }
   return (
-    <div>
+    <IonList>
+      <IonListHeader>
+        <IonLabel>
+          <h1>Accounts</h1>
+        </IonLabel>
+      </IonListHeader>
       {accounts
         .sort(sortByModifiedAt)
-        .map(({ id, name, type, initialBalance }) => (
-          <Account
-            key={id}
-            name={name}
-            type={type}
-            initialBalance={initialBalance}
-            onClick={() => onSelect(id)}
-          />
-        ))}
-    </div>
+        .map(({ id, name, type, initialBalance }) => {
+          const typeLabel = capitalize(type);
+          return (
+            <IonItem key={id} onClick={() => onSelect(id)}>
+              <IonLabel>
+                <h2>{name}</h2>
+                <p>
+                  {typeLabel}
+                  {type === "INTERNAL"
+                    ? `, Initial Balance: ${initialBalance}`
+                    : ""}
+                </p>
+              </IonLabel>
+            </IonItem>
+          );
+        })}
+    </IonList>
   );
 }
 
