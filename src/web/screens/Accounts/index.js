@@ -20,7 +20,7 @@ export default class Accounts extends React.Component {
   }
 
   render() {
-    const { accounts, newAccount } = this.props;
+    const { accounts, newAccount, newError } = this.props;
     const { editing } = this.state;
     let accountToEdit;
     if (editing) {
@@ -35,7 +35,7 @@ export default class Accounts extends React.Component {
             onCancel={() => this.setState({ editing: null })}
           />
         ) : (
-          <NewAccount newAccount={newAccount} />
+          <NewAccount newAccount={newAccount} newError={newError} />
         )}
         <AccountsList
           accounts={accounts}
@@ -57,4 +57,5 @@ Accounts.propTypes = {
     })
   ).isRequired,
   newAccount: PropTypes.func.isRequired,
+  newError: PropTypes.func.isRequired,
 };

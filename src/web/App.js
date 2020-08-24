@@ -41,6 +41,7 @@ export default class App extends React.Component {
     this.newError = this.newError.bind(this);
     this.reloadCoreAppData = this.reloadCoreAppData.bind(this);
     this.reloadGDriveData = this.reloadGDriveData.bind(this);
+    this.removeError = this.removeError.bind(this);
     this.resetErrors = this.resetErrors.bind(this);
     this.runSync = this.runSync.bind(this);
     this.selectGDriveFile = this.selectGDriveFile.bind(this);
@@ -65,6 +66,11 @@ export default class App extends React.Component {
 
     const { errors } = this.state;
     this.setState({ errors: [...errors, msg] });
+  }
+
+  removeError(oldErr) {
+    const { errors } = this.state;
+    this.setState({ errors: errors.filter((err) => err !== oldErr) });
   }
 
   resetErrors() {
@@ -215,7 +221,7 @@ export default class App extends React.Component {
                   syncing...
                 </div>
               ) : null}
-              <Errors errors={errors} resetErrors={this.resetErrors} />
+              <Errors errors={errors} removeError={this.removeError} />
               <IonRouterOutlet>
                 <Route path="/transfers">
                   <Transfers

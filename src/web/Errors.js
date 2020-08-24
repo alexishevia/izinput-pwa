@@ -1,38 +1,30 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Modal } from "semantic-ui-react";
+import { IonToast } from "@ionic/react";
 
-function Error({ children }) {
-  return <p>{children}</p>;
-}
+function Errors({ errors = [], removeError }) {
+  if (!errors.length) {
+    return null;
+  }
 
-Error.propTypes = {
-  children: PropTypes.oneOfType([
-    PropTypes.arrayOf(PropTypes.node),
-    PropTypes.node,
-  ]).isRequired,
-};
+  const msg = errors[errors.length - 1];
 
-function ErrorsModal({ errors = [], resetErrors }) {
-  const isOpen = !!(errors && errors.length);
   return (
-    <Modal open={isOpen} centered={false} onClose={resetErrors}>
-      <Modal.Content>
-        <Modal.Header>Error</Modal.Header>
-        <Modal.Description>
-          {errors.map((msg) => (
-            <Error key={msg}>{msg}</Error>
-          ))}
-        </Modal.Description>
-      </Modal.Content>
-    </Modal>
+    <IonToast
+      key={msg}
+      isOpen
+      message={msg}
+      position="bottom"
+      buttons={[{ text: "X", role: "cancel" }]}
+      onDidDismiss={() => removeError(msg)}
+    />
   );
 }
 
-ErrorsModal.propTypes = {
+Errors.propTypes = {
   // redux props
-  resetErrors: PropTypes.func.isRequired,
+  removeError: PropTypes.func.isRequired,
   errors: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
-export default ErrorsModal;
+export default Errors;
