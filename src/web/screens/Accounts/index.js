@@ -1,50 +1,41 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import NewAccount from "./NewAccount";
 import EditAccount from "./EditAccount";
 import AccountsList from "./AccountsList";
 
-export default class Accounts extends React.Component {
-  constructor(props) {
-    super(props);
+export default function Accounts({
+  accounts,
+  newAccount,
+  newError,
+  updateAccount,
+}) {
+  const [editing, setEditing] = useState(null);
 
-    this.state = { editing: null };
-
-    this.updateAccount = this.updateAccount.bind(this);
-  }
-
-  async updateAccount(data) {
-    const { updateAccount } = this.props;
+  async function onUpdateAccount(data) {
     await updateAccount(data);
-    this.setState({ editing: null });
+    setEditing(null);
   }
 
-  render() {
-    const { accounts, newAccount, newError } = this.props;
-    const { editing } = this.state;
-    let accountToEdit;
-    if (editing) {
-      accountToEdit = accounts.find((account) => account.id === editing);
-    }
-    return (
-      <div>
-        {accountToEdit ? (
-          <EditAccount
-            account={accountToEdit}
-            editAccount={this.updateAccount}
-            onCancel={() => this.setState({ editing: null })}
-            newError={newError}
-          />
-        ) : (
-          <NewAccount newAccount={newAccount} newError={newError} />
-        )}
-        <AccountsList
-          accounts={accounts}
-          onSelect={(id) => this.setState({ editing: id })}
-        />
-      </div>
-    );
+  let accountToEdit;
+  if (editing) {
+    accountToEdit = accounts.find((account) => account.id === editing);
   }
+  return (
+    <div>
+      {accountToEdit ? (
+        <EditAccount
+          account={accountToEdit}
+          editAccount={onUpdateAccount}
+          onCancel={() => setEditing(null)}
+          newError={newError}
+        />
+      ) : (
+        <NewAccount newAccount={newAccount} newError={newError} />
+      )}
+      <AccountsList accounts={accounts} onSelect={(id) => setEditing(id)} />
+    </div>
+  );
 }
 
 Accounts.propTypes = {
