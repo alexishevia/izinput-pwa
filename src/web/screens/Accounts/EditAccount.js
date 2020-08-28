@@ -107,8 +107,9 @@ export default function NewAccount({
         <IonItem>
           <IonLabel position="stacked">Initial Balance:</IonLabel>
           <IonInput
-            type="text"
+            type="number"
             value={balanceVal}
+            step="0.01"
             onIonChange={(evt) => {
               setInitialBalance(evt.detail.value);
             }}

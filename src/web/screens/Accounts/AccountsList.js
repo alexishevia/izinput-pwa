@@ -12,12 +12,6 @@ function sortByModifiedAt(a, b) {
   return 0;
 }
 
-function capitalize([initialChar, ...rest]) {
-  return [initialChar.toUpperCase(), ...rest.map((c) => c.toLowerCase())].join(
-    ""
-  );
-}
-
 export default function AccountsList({ accounts, onSelect }) {
   if (!accounts.length) {
     return null;
@@ -32,16 +26,18 @@ export default function AccountsList({ accounts, onSelect }) {
       {accounts
         .sort(sortByModifiedAt)
         .map(({ id, name, type, initialBalance }) => {
-          const typeLabel = capitalize(type);
           return (
-            <IonItem key={id} onClick={() => onSelect(id)}>
+            <IonItem
+              key={id}
+              onClick={() => onSelect(id)}
+              style={{ cursor: "pointer" }}
+            >
               <IonLabel>
                 <h2>{name}</h2>
                 <p>
-                  {typeLabel}
                   {type === "INTERNAL"
-                    ? `, Initial Balance: ${initialBalance}`
-                    : ""}
+                    ? `Initial Balance: $${initialBalance}`
+                    : "External"}
                 </p>
               </IonLabel>
             </IonItem>

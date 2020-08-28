@@ -43,7 +43,7 @@ export default function NewAccount({ newAccount, newError }) {
       await newAccount(accountData);
       setName("");
       setType("");
-      setInitialBalance("");
+      setInitialBalance(0);
     } catch (err) {
       newError(err);
     }
@@ -80,7 +80,8 @@ export default function NewAccount({ newAccount, newError }) {
         <IonItem>
           <IonLabel position="stacked">Initial Balance:</IonLabel>
           <IonInput
-            type="text"
+            type="number"
+            step="0.01"
             value={initialBalance}
             onIonChange={(evt) => {
               setInitialBalance(evt.detail.value);
