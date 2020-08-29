@@ -1,16 +1,20 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import PropTypes from "prop-types";
-import { Form, Icon } from "semantic-ui-react";
+import {
+  IonItem,
+  IonLabel,
+  IonInput,
+  IonSelect,
+  IonSelectOption,
+  IonButton,
+  IonDatetime,
+  IonAlert,
+} from "@ionic/react";
 import { dateToDayStr, isValidDayStr } from "../../../helpers/date";
 import Validation from "../../../helpers/Validation";
 
 function today() {
   return dateToDayStr(new Date());
-}
-
-function preventDefault(evt) {
-  evt.preventDefault();
-  return false;
 }
 
 function buildTransferData({
@@ -30,7 +34,6 @@ function buildTransferData({
     transferDate: isValidDayStr(transferDate) ? transferDate : today(),
   };
 
-  new Validation(transferData, "id").required().string().notEmpty();
   new Validation(transferData, "from").required().string().notEmpty();
   new Validation(transferData, "to").required().string().notEmpty();
   new Validation(transferData, "amount").required().number().biggerThan(0);
@@ -40,158 +43,152 @@ function buildTransferData({
   return transferData;
 }
 
-const initialState = () => ({
-  amount: null,
-  from: null,
-  to: null,
-  description: null,
-  transferDate: null,
-});
+export default function EditTransfer({
+  transfer,
+  editTransfer,
+  accounts,
+  onDelete,
+  onCancel,
+  newError,
+}) {
+  const [amount, setAmount] = useState(null);
+  const [from, setFrom] = useState(null);
+  const [to, setTo] = useState(null);
+  const [description, setDescription] = useState(null);
+  const [transferDate, setTransferDate] = useState(null);
+  const [isDeleteAlertOpen, setDeleteAlertOpen] = useState(false);
 
-function notNull(val, fallback) {
-  if (val !== null) {
-    return val;
-  }
-  return fallback;
-}
+  useMemo(
+    function resetState() {
+      setAmount(null);
+      setFrom(null);
+      setTo(null);
+      setDescription(null);
+      setTransferDate(null);
+    },
+    [transfer.id]
+  );
 
-class EditTransfer extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = initialState();
-    this.onSave = this.onSave.bind(this);
-    this.onCancel = this.onCancel.bind(this);
-    this.onDelete = this.onDelete.bind(this);
-  }
+  const amountVal = amount === null ? transfer.amount : amount;
+  const fromVal = from === null ? transfer.from : from;
+  const toVal = to === null ? transfer.to : to;
+  const descriptionVal =
+    description === null ? transfer.description : description;
+  const transferDateVal =
+    transferDate === null ? transfer.transferDate : transferDate;
 
-  onCancel(evt) {
-    preventDefault(evt);
-    const { onCancel } = this.props;
+  function handleCancel(evt) {
+    evt.preventDefault();
     onCancel();
   }
 
-  onDelete(evt) {
-    preventDefault(evt);
-    /* eslint no-alert: [0] */
-    const userConfirmed = window.confirm(
-      "Are you sure you want to delete this transfer?"
-    );
-    if (!userConfirmed) {
-      return;
+  function handleDelete(evt) {
+    evt.preventDefault();
+    setDeleteAlertOpen(true);
+  }
+
+  async function handleSubmit(evt) {
+    evt.preventDefault();
+    try {
+      const transferData = buildTransferData({
+        id: transfer.id,
+        from: fromVal,
+        to: toVal,
+        amount: amountVal,
+        description: descriptionVal,
+        transferDate: transferDateVal,
+      });
+      await editTransfer(transferData);
+    } catch (err) {
+      newError(err);
     }
-    const { onDelete } = this.props;
-    onDelete();
   }
 
-  async onSave(evt) {
-    preventDefault(evt);
-    const { editTransfer } = this.props;
-
-    const transferData = buildTransferData(this.getData());
-    await editTransfer(transferData);
-    this.setState(initialState());
-  }
-
-  getData() {
-    const { transfer } = this.props;
-    const { amount, from, to, description, transferDate } = this.state;
-    const data = {
-      id: transfer.id,
-      amount: notNull(amount, transfer.amount),
-      from: notNull(from, transfer.from),
-      to: notNull(to, transfer.to),
-      description: notNull(description, transfer.description),
-      transferDate: notNull(transferDate, transfer.transferDate),
-    };
-
-    data.amount = parseFloat(data.amount, 10);
-    if (Number.isNaN(data.amount)) {
-      data.amount = 0;
-    }
-
-    return data;
-  }
-
-  render() {
-    const { accounts } = this.props;
-    const data = this.getData();
-    const { amount, from, to, description, transferDate } = data;
-
-    const defaultAccount = { id: null, name: "" };
-    const accountOptions = [defaultAccount, ...accounts].map((account) => ({
-      key: account.id,
-      text: account.name,
-      value: account.id,
-    }));
-
-    return (
-      <Form onSubmit={preventDefault}>
-        <Form.Group style={{ justifyContent: "center" }}>
-          <Form.Select
-            width={4}
-            label="From"
-            placeholder="Account"
-            options={accountOptions}
-            value={from}
-            onChange={(_, { value }) => this.setState({ from: value })}
-          />
-          <Form.Select
-            width={4}
-            label="To"
-            placeholder="Account"
-            options={accountOptions}
-            value={to}
-            onChange={(_, { value }) => this.setState({ to: value })}
-          />
-        </Form.Group>
-        <Form.Group style={{ justifyContent: "center" }}>
-          <Form.Input
-            width={4}
-            label="Amount"
-            placeholder="Amount"
-            type="text"
-            icon="dollar"
-            iconPosition="left"
-            value={amount}
-            onChange={(_, { value }) => this.setState({ amount: value })}
-          />
-          <Form.Input
-            width={4}
-            type="date"
-            label="Date"
-            icon="calendar"
-            iconPosition="left"
-            value={transferDate}
-            onChange={(_, { value }) => this.setState({ transferDate: value })}
-          />
-        </Form.Group>
-        <Form.Group style={{ justifyContent: "center" }}>
-          <Form.Input
-            width={8}
-            type="text"
-            label="Description"
-            placeholder="Description"
-            value={description}
-            onChange={(_, { value }) => this.setState({ description: value })}
-          />
-        </Form.Group>
-        <Form.Group style={{ justifyContent: "center" }}>
-          <Form.Button primary width={4} fluid onClick={this.onSave}>
-            <Icon name="edit" />
-            Update
-          </Form.Button>
-          <Form.Button color="red" width={2} fluid onClick={this.onDelete}>
-            <Icon name="trash" />
-            Delete
-          </Form.Button>
-          <Form.Button width={2} fluid onClick={this.onCancel}>
-            <Icon name="cancel" />
-            Cancel
-          </Form.Button>
-        </Form.Group>
-      </Form>
-    );
-  }
+  return (
+    <form onSubmit={handleSubmit}>
+      <IonAlert
+        isOpen={isDeleteAlertOpen}
+        onDidDismiss={() => setDeleteAlertOpen(false)}
+        header="Delete Transfer"
+        message="Are you sure you want to delete this transfer?"
+        buttons={[
+          { text: "Cancel", role: "cancel" },
+          { text: "Delete", handler: onDelete },
+        ]}
+      />
+      <IonItem>
+        <IonLabel position="stacked">From:</IonLabel>
+        <IonSelect
+          value={fromVal}
+          onIonChange={(evt) => {
+            setFrom(evt.detail.value);
+          }}
+          placeholder="Account"
+        >
+          {accounts.map(({ id, name }) => (
+            <IonSelectOption key={id} value={id}>
+              {name}
+            </IonSelectOption>
+          ))}
+        </IonSelect>
+      </IonItem>
+      <IonItem>
+        <IonLabel position="stacked">To:</IonLabel>
+        <IonSelect
+          value={toVal}
+          onIonChange={(evt) => {
+            setTo(evt.detail.value);
+          }}
+          placeholder="Account"
+        >
+          {accounts.map(({ id, name }) => (
+            <IonSelectOption key={id} value={id}>
+              {name}
+            </IonSelectOption>
+          ))}
+        </IonSelect>
+      </IonItem>
+      <IonItem>
+        <IonLabel position="stacked">Amount:</IonLabel>
+        <IonInput
+          type="number"
+          step="0.01"
+          value={amountVal}
+          placeholder="$"
+          onIonChange={(evt) => {
+            setAmount(evt.detail.value);
+          }}
+          required
+        />
+      </IonItem>
+      <IonItem>
+        <IonLabel position="stacked">Date:</IonLabel>
+        <IonDatetime
+          value={transferDateVal}
+          onIonChange={(evt) => {
+            setTransferDate(evt.detail.value);
+          }}
+        />
+      </IonItem>
+      <IonItem>
+        <IonLabel position="stacked">Description:</IonLabel>
+        <IonInput
+          type="text"
+          value={descriptionVal}
+          onIonChange={(evt) => {
+            setDescription(evt.detail.value);
+          }}
+        />
+      </IonItem>
+      <IonButton type="submit">Update</IonButton>
+      <IonButton color="danger" onClick={handleDelete}>
+        Delete
+      </IonButton>
+      <IonButton color="medium" onClick={handleCancel}>
+        Cancel
+      </IonButton>
+    </form>
+  );
 }
 
 EditTransfer.propTypes = {
@@ -206,6 +203,7 @@ EditTransfer.propTypes = {
   editTransfer: PropTypes.func.isRequired,
   onCancel: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
+  newError: PropTypes.func.isRequired,
   accounts: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.string.isRequired,
@@ -213,5 +211,3 @@ EditTransfer.propTypes = {
     })
   ).isRequired,
 };
-
-export default EditTransfer;

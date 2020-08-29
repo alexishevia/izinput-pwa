@@ -22,7 +22,6 @@ function Errors({ errors = [], removeError }) {
 }
 
 Errors.propTypes = {
-  // redux props
   removeError: PropTypes.func.isRequired,
   errors: PropTypes.arrayOf(PropTypes.string).isRequired,
 };

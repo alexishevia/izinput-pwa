@@ -1,20 +1,9 @@
 import React from "react";
 import PropTypes from "prop-types";
-import {
-  IonApp,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonButtons,
-  IonMenuButton,
-  IonPage,
-  IonRouterOutlet,
-} from "@ionic/react";
+import { IonApp, IonRouterOutlet } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
 import { Route, Redirect } from "react-router-dom";
-import Errors from "./Errors";
-import MainMenu from "./MainMenu";
+import Page from "./Page";
 import Transfers from "./screens/Transfers";
 import Accounts from "./screens/Accounts";
 import Sync from "./screens/Sync";
@@ -204,62 +193,56 @@ export default class App extends React.Component {
     return (
       <IonApp>
         <IonReactRouter>
-          <MainMenu />
-
-          <IonPage id="main-content">
-            <IonHeader>
-              <IonToolbar color="primary">
-                <IonButtons slot="start">
-                  <IonMenuButton />
-                </IonButtons>
-                <IonTitle>Invoice Zero</IonTitle>
-              </IonToolbar>
-            </IonHeader>
-            <IonContent className="ion-padding">
-              {isSyncRunning ? (
-                <div style={{ backgroundColor: "#eee", marginBottom: "1em" }}>
-                  syncing...
-                </div>
-              ) : null}
-              <Errors errors={errors} removeError={this.removeError} />
-              <IonRouterOutlet>
-                <Route path="/transfers">
-                  <Transfers
-                    newError={this.newError}
-                    accounts={accounts}
-                    newTransfer={this.createTransfer}
-                    updateTransfer={this.updateTransfer}
-                    deleteTransfer={this.deleteTransfer}
-                    transfers={transfers}
-                  />
-                </Route>
-                <Route path="/accounts">
-                  <Accounts
-                    accounts={accounts}
-                    updateAccount={this.updateAccount}
-                    newError={this.newError}
-                    newAccount={this.createAccount}
-                  />
-                </Route>
-                <Route path="/sync">
-                  <Sync
-                    isLoggedIn={isGDriveLoggedIn}
-                    onLogin={this.loginToGDrive}
-                    onLogout={this.logoutFromGDrive}
-                    onError={this.newError}
-                    file={gDriveFile}
-                    onFilePick={this.selectGDriveFile}
-                    onRunSync={this.runSync}
-                  />
-                </Route>
-                <Route
-                  exact
-                  path="/"
-                  render={() => <Redirect to="/transfers" />}
+          <IonRouterOutlet>
+            <Route path="/transfers">
+              <Page
+                isSyncRunning={isSyncRunning}
+                errors={errors}
+                removeError={this.removeError}
+              >
+                <Transfers
+                  newError={this.newError}
+                  accounts={accounts}
+                  newTransfer={this.createTransfer}
+                  updateTransfer={this.updateTransfer}
+                  deleteTransfer={this.deleteTransfer}
+                  transfers={transfers}
                 />
-              </IonRouterOutlet>
-            </IonContent>
-          </IonPage>
+              </Page>
+            </Route>
+            <Route path="/accounts">
+              <Page
+                isSyncRunning={isSyncRunning}
+                errors={errors}
+                removeError={this.removeError}
+              >
+                <Accounts
+                  accounts={accounts}
+                  updateAccount={this.updateAccount}
+                  newError={this.newError}
+                  newAccount={this.createAccount}
+                />
+              </Page>
+            </Route>
+            <Route path="/sync">
+              <Page
+                isSyncRunning={isSyncRunning}
+                errors={errors}
+                removeError={this.removeError}
+              >
+                <Sync
+                  isLoggedIn={isGDriveLoggedIn}
+                  onLogin={this.loginToGDrive}
+                  onLogout={this.logoutFromGDrive}
+                  onError={this.newError}
+                  file={gDriveFile}
+                  onFilePick={this.selectGDriveFile}
+                  onRunSync={this.runSync}
+                />
+              </Page>
+            </Route>
+            <Route exact path="/" render={() => <Redirect to="/transfers" />} />
+          </IonRouterOutlet>
         </IonReactRouter>
       </IonApp>
     );
