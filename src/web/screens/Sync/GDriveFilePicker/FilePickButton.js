@@ -1,13 +1,9 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Button } from "semantic-ui-react";
+import { IonButton } from "@ionic/react";
 
 export default function FilePickButton({ onClick }) {
-  return (
-    <Button style={{ marginRight: 20 }} onClick={onClick} primary>
-      Select File
-    </Button>
-  );
+  return <IonButton onClick={onClick}>Select File</IonButton>;
 }
 
 FilePickButton.propTypes = {

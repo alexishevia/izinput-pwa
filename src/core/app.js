@@ -64,26 +64,31 @@ async function initGDrive() {
 
 async function isGDriveLoggedIn() {
   await initGDrive();
-  return window.gapi.auth2.getAuthInstance().isSignedIn.get();
+  const isLoggedIn = await window.gapi.auth2.getAuthInstance().isSignedIn.get();
+  return isLoggedIn;
 }
 
 async function gDriveLogin() {
-  if (isGDriveLoggedIn()) {
+  let isLoggedIn = await isGDriveLoggedIn();
+  if (isLoggedIn) {
     return;
   }
   await window.gapi.auth2.getAuthInstance().signIn();
-  if (isGDriveLoggedIn()) {
+  isLoggedIn = await isGDriveLoggedIn();
+  if (isLoggedIn) {
     return;
   }
   throw new Error("Login to GDrive failed.");
 }
 
 async function gDriveLogout() {
-  if (!isGDriveLoggedIn()) {
+  let isLoggedIn = await isGDriveLoggedIn();
+  if (!isLoggedIn) {
     return;
   }
   await window.gapi.auth2.getAuthInstance().signOut();
-  if (!isGDriveLoggedIn()) {
+  isLoggedIn = await isGDriveLoggedIn();
+  if (!isLoggedIn) {
     return;
   }
   throw new Error("Logout from GDrive failed.");

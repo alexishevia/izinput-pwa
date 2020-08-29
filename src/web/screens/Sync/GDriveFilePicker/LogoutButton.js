@@ -1,17 +1,30 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
-import { Button } from "semantic-ui-react";
+import { IonButton, IonAlert } from "@ionic/react";
 
-const warningMsg = "Are you sure you want to disconnect from Google Drive?";
+const header = "Disconnect";
+const message = "Are you sure you want to disconnect from Google Drive?";
 
 export default function LogoutButton({ onClick }) {
-  function onBtnPress() {
-    /* eslint-disable no-alert */
-    if (window.confirm(warningMsg)) {
-      onClick();
-    }
-  }
-  return <Button onClick={onBtnPress}>Disconnect</Button>;
+  const [isAlertOpen, setAlertOpen] = useState(false);
+
+  return (
+    <>
+      <IonAlert
+        isOpen={isAlertOpen}
+        onDidDismiss={() => setAlertOpen(false)}
+        header={header}
+        message={message}
+        buttons={[
+          { text: "Cancel", role: "cancel" },
+          { text: header, handler: onClick },
+        ]}
+      />
+      <IonButton color="danger" onClick={() => setAlertOpen(true)}>
+        Disconnect
+      </IonButton>
+    </>
+  );
 }
 
 LogoutButton.propTypes = {

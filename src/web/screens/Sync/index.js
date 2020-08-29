@@ -13,7 +13,7 @@ function Sync({
   onError,
 }) {
   return (
-    <div>
+    <>
       <GDriveFilePicker
         isLoggedIn={isLoggedIn}
         file={file}
@@ -24,7 +24,7 @@ function Sync({
       />
       <hr />
       <RunSync isFileSelected={!!file} onRunSync={onRunSync} />
-    </div>
+    </>
   );
 }
 

@@ -13,7 +13,7 @@ export default class Root extends React.Component {
     };
   }
 
-  renderContent() {
+  render() {
     const {
       isLoggedIn,
       file,
@@ -26,7 +26,9 @@ export default class Root extends React.Component {
 
     const isFileSelected = !!file;
     const openFilePicker = () => this.setState({ renderFilePicker: true });
-    const closeFilePicker = () => this.setState({ renderFilePicker: false });
+    const closeFilePicker = () => {
+      this.setState({ renderFilePicker: false });
+    };
 
     if (!isLoggedIn) {
       return <LoggedOut onLogin={onLogin} />;
@@ -56,10 +58,6 @@ export default class Root extends React.Component {
     }
 
     return <LoggedIn openFilePicker={openFilePicker} onLogout={onLogout} />;
-  }
-
-  render() {
-    return <div> {this.renderContent()} </div>;
   }
 }
 

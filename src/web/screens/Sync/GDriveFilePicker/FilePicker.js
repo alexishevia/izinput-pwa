@@ -1,39 +1,33 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
-  Header,
-  Segment,
-  Button,
-  Icon,
-  Dimmer,
-  Loader,
-  Menu,
-} from "semantic-ui-react";
+  IonModal,
+  IonTitle,
+  IonToolbar,
+  IonLabel,
+  IonButtons,
+  IonButton,
+  IonIcon,
+  IonLoading,
+  IonList,
+  IonItem,
+  IonContent,
+} from "@ionic/react";
+import {
+  chevronBackOutline,
+  documentOutline,
+  folderOutline,
+  alertCircleOutline,
+} from "ionicons/icons";
 import loadDir from "./api/loadDir";
-import FilePickerItem from "./FilePickerItem";
 
-const isFile = (node) => node.fileType === "file";
-const isDir = (node) => node.fileType === "directory";
+function isFile(node) {
+  return node.fileType === "file";
+}
 
-const styles = {
-  title: {
-    display: "inline-block",
-    verticalAlign: "middle",
-    marginLeft: "3em",
-  },
-  contents: {
-    minHeight: "20em",
-  },
-};
-
-const initialState = {
-  isLoading: false,
-  hasError: false,
-  path: "",
-  pathIDs: "root",
-  contents: null,
-  fileSelected: false,
-};
+function isDir(node) {
+  return node.fileType === "directory";
+}
 
 function getParentDir(path) {
   return path.split("/").slice(0, -1).join("/");
@@ -43,138 +37,125 @@ function getCurrentDir(path) {
   return path.split("/").pop();
 }
 
-class FilePicker extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = initialState;
-  }
+function getName(node) {
+  return isDir(node) ? `${node.name}/` : node.name;
+}
 
-  componentDidMount() {
-    this.setState(initialState, () => this.load());
-  }
+function getIcon(node) {
+  if (isFile(node)) return documentOutline;
+  if (isDir(node)) return folderOutline;
+  return alertCircleOutline;
+}
 
-  componentDidUpdate() {
-    const { fileSelected } = this.state;
-    if (!fileSelected) {
-      this.load();
+function FilePickerHeader({ onGoBack, path }) {
+  return (
+    <IonToolbar color="secondary">
+      <IonButtons slot="start">
+        <IonButton onClick={onGoBack}>
+          <IonIcon icon={chevronBackOutline} />
+        </IonButton>
+      </IonButtons>
+      <IonTitle>Select File</IonTitle>
+      <IonLabel>{path}</IonLabel>
+    </IonToolbar>
+  );
+}
+
+FilePickerHeader.propTypes = {
+  path: PropTypes.string.isRequired,
+  onGoBack: PropTypes.func.isRequired,
+};
+
+export default function FilePicker({ onCancel, onFilePick, onError }) {
+  const [path, setPath] = useState("");
+  const [pathIDs, setPathIDs] = useState("root");
+  const [contents, setContents] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [isFileSelected, setIsFileSelected] = useState(false);
+
+  useEffect(() => {
+    async function loadDirContents() {
+      if (isLoading || hasError || contents !== null) return;
+      setIsLoading(true);
+      setHasError(false);
+      try {
+        const result = await loadDir({ id: getCurrentDir(pathIDs) });
+        setIsLoading(false);
+        setContents(result.contents);
+      } catch (err) {
+        onError(err);
+        setIsLoading(false);
+        setHasError(true);
+      }
     }
-  }
+    loadDirContents();
+  }, [isFileSelected, pathIDs]);
 
-  onGoBack() {
-    const { path, pathIDs } = this.state;
-    const { onCancel } = this.props;
+  function onGoBack(evt) {
+    evt.preventDefault();
     if (path === "") {
       onCancel();
       return;
     }
-
-    this.setState({
-      ...initialState,
-      path: getParentDir(path),
-      pathIDs: getParentDir(pathIDs),
-    });
+    setIsLoading(false);
+    setHasError(false);
+    setContents(null);
+    setIsFileSelected(false);
+    setPath(getParentDir(path));
+    setPathIDs(getParentDir(pathIDs));
   }
 
-  openNode(node) {
-    const { onFilePick, onError } = this.props;
-    const { path, pathIDs } = this.state;
+  function openNode(evt, node) {
+    evt.preventDefault();
     if (isDir(node)) {
-      this.setState({
-        ...initialState,
-        path: `${path}/${node.name}`,
-        pathIDs: `${pathIDs}/${node.id}`,
-      });
+      setIsLoading(false);
+      setHasError(false);
+      setPath(`${path}/${node.name}`);
+      setPathIDs(`${pathIDs}/${node.id}`);
+      setContents(null);
+      setIsFileSelected(false);
       return;
     }
     if (isFile(node)) {
-      this.setState({ fileSelected: true }, () => onFilePick(node));
+      setIsFileSelected(true);
+      onFilePick(node);
       return;
     }
     onError(new Error(`Filepicker: Unkown node type: ${node.type}`));
   }
 
-  load() {
-    const { onError } = this.props;
-    const { isLoading, hasError, pathIDs, contents } = this.state;
-    if (isLoading || hasError || contents !== null) return;
-    this.setState({ isLoading: true, hasError: false });
-    loadDir({ id: getCurrentDir(pathIDs) })
-      .then((result) => {
-        this.setState({ isLoading: false, contents: result.contents });
-      })
-      .catch((err) => {
-        onError(err);
-        this.setState({ isLoading: false, hasError: true });
-      });
-  }
-
-  renderHeader() {
-    const { path } = this.state;
-    return (
-      <div>
-        <Button icon onClick={() => this.onGoBack()}>
-          <Icon name="angle left" />
-        </Button>
-        <div style={styles.title}>
-          <Header size="small" style={{ marginBottom: 0 }}>
-            Select File
-          </Header>
-          <span>{path}</span>
-        </div>
-      </div>
-    );
-  }
-
-  renderLoading() {
-    const { isLoading } = this.state;
-    return (
-      <Dimmer active={isLoading} inverted>
-        <Loader inverted>Loading</Loader>
-      </Dimmer>
-    );
-  }
-
-  renderContents() {
-    const { contents } = this.state;
-
-    if (!contents) {
-      return (
-        <Segment attached="bottom" style={styles.contents}>
-          {this.renderLoading()}
-        </Segment>
-      );
-    }
-
-    if (!contents.length) {
-      return (
-        <Segment attached="bottom" style={styles.contents}>
-          {this.renderLoading()}
+  return (
+    <IonModal isOpen>
+      <FilePickerHeader path={path} onGoBack={onGoBack} />
+      {contents && !contents.length ? (
+        <IonItem>
           <p>The directory is empty.</p>
-        </Segment>
-      );
-    }
-
-    return (
-      <Menu fluid vertical attached="bottom">
-        {contents.map((item) => (
-          <FilePickerItem
-            key={item.id}
-            node={item}
-            onClick={() => this.openNode(item)}
-          />
-        ))}
-      </Menu>
-    );
-  }
-
-  render() {
-    return (
-      <div>
-        <Segment attached="top">{this.renderHeader()}</Segment>
-        {this.renderContents()}
-      </div>
-    );
-  }
+        </IonItem>
+      ) : null}
+      {contents && contents.length ? (
+        <IonContent>
+          <IonList>
+            {contents.map((item) => {
+              return (
+                <IonItem
+                  key={item.id}
+                  style={{ cursor: "pointer" }}
+                  onClick={(evt) => openNode(evt, item)}
+                >
+                  <IonIcon icon={getIcon(item)} />
+                  <IonLabel>
+                    <p style={{ paddingLeft: "0.5em" }}>{getName(item)}</p>
+                  </IonLabel>
+                </IonItem>
+              );
+            })}
+          </IonList>
+        </IonContent>
+      ) : null}
+      <IonLoading isOpen={isLoading} />
+    </IonModal>
+  );
 }
 
 FilePicker.propTypes = {
@@ -182,5 +163,3 @@ FilePicker.propTypes = {
   onError: PropTypes.func.isRequired,
   onFilePick: PropTypes.func.isRequired,
 };
-
-export default FilePicker;

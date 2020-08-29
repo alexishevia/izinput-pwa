@@ -1,21 +1,30 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
-import { Button } from "semantic-ui-react";
+import { IonButton, IonAlert } from "@ionic/react";
 
-const warningMsg =
+const header = "Change File";
+const message =
   "If you change the sync file, all local data will be merged with the new file.\n\nAre you sure you want to change the sync file?";
 
 export default function ChangeFileButton({ onClick }) {
-  function onBtnPress() {
-    /* eslint-disable no-alert */
-    if (window.confirm(warningMsg)) {
-      onClick();
-    }
-  }
+  const [isAlertOpen, setAlertOpen] = useState(false);
+
   return (
-    <Button style={{ marginRight: 20 }} onClick={onBtnPress}>
-      Change File
-    </Button>
+    <>
+      <IonAlert
+        isOpen={isAlertOpen}
+        onDidDismiss={() => setAlertOpen(false)}
+        header={header}
+        message={message}
+        buttons={[
+          { text: "Cancel", role: "cancel" },
+          { text: header, handler: onClick },
+        ]}
+      />
+      <IonButton color="medium" onClick={() => setAlertOpen(true)}>
+        Change File
+      </IonButton>
+    </>
   );
 }
 

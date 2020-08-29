@@ -1,17 +1,13 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Button } from "semantic-ui-react";
+import { IonButton } from "@ionic/react";
 
 function RunSync({ isFileSelected, onRunSync }) {
   if (!isFileSelected) {
     return null;
   }
 
-  return (
-    <Button primary onClick={onRunSync}>
-      Run Sync
-    </Button>
-  );
+  return <IonButton onClick={onRunSync}>Run Sync</IonButton>;
 }
 
 RunSync.defaultProps = {
