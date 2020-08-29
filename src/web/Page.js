@@ -7,11 +7,11 @@ import Errors from "./Errors";
 
 export default function Page({ isSyncRunning, errors, removeError, children }) {
   return (
-    <div>
+    <>
       <MainMenu />
       <IonPage id="main-content">
         <MainHeader />
-        <IonContent className="ion-padding">
+        <IonContent>
           {isSyncRunning ? (
             <div style={{ backgroundColor: "#eee", marginBottom: "1em" }}>
               syncing...
@@ -21,7 +21,7 @@ export default function Page({ isSyncRunning, errors, removeError, children }) {
           {children}
         </IonContent>
       </IonPage>
-    </div>
+    </>
   );
 }
 

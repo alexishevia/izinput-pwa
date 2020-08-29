@@ -22,7 +22,7 @@ export default function Accounts({
     accountToEdit = accounts.find((account) => account.id === editing);
   }
   return (
-    <div>
+    <>
       {accountToEdit ? (
         <EditAccount
           account={accountToEdit}
@@ -34,7 +34,7 @@ export default function Accounts({
         <NewAccount newAccount={newAccount} newError={newError} />
       )}
       <AccountsList accounts={accounts} onSelect={(id) => setEditing(id)} />
-    </div>
+    </>
   );
 }
 

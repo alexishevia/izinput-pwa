@@ -1,63 +1,53 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import NewTransfer from "./NewTransfer";
 import EditTransfer from "./EditTransfer";
 import TransfersList from "./TransfersList";
 
-export default class Transfers extends React.Component {
-  constructor(props) {
-    super(props);
+export default function Transfers({
+  newTransfer,
+  updateTransfer,
+  newError,
+  accounts,
+  transfers,
+  deleteTransfer,
+}) {
+  const [editing, setEditing] = useState(null);
 
-    this.state = { editing: null };
-
-    this.updateTransfer = this.updateTransfer.bind(this);
-  }
-
-  async updateTransfer(data) {
-    const { updateTransfer } = this.props;
+  async function onUpdateTransfer(data) {
     await updateTransfer(data);
-    this.setState({ editing: null });
+    setEditing(null);
   }
 
-  render() {
-    const {
-      newTransfer,
-      newError,
-      accounts,
-      transfers,
-      deleteTransfer,
-    } = this.props;
-    const { editing } = this.state;
-    let transferToEdit;
-    if (editing) {
-      transferToEdit = transfers.find((transfer) => transfer.id === editing);
-    }
-    return (
-      <div>
-        {transferToEdit ? (
-          <EditTransfer
-            transfer={transferToEdit}
-            editTransfer={this.updateTransfer}
-            accounts={accounts}
-            onDelete={() => deleteTransfer(transferToEdit.id)}
-            onCancel={() => this.setState({ editing: null })}
-            newError={newError}
-          />
-        ) : (
-          <NewTransfer
-            newTransfer={newTransfer}
-            newError={newError}
-            accounts={accounts}
-          />
-        )}
-        <TransfersList
-          accounts={accounts}
-          transfers={transfers}
-          onSelectTransfer={(id) => this.setState({ editing: id })}
-        />
-      </div>
-    );
+  let transferToEdit;
+  if (editing) {
+    transferToEdit = transfers.find((transfer) => transfer.id === editing);
   }
+  return (
+    <>
+      {transferToEdit ? (
+        <EditTransfer
+          transfer={transferToEdit}
+          editTransfer={onUpdateTransfer}
+          accounts={accounts}
+          onDelete={() => deleteTransfer(transferToEdit.id)}
+          onCancel={() => setEditing(null)}
+          newError={newError}
+        />
+      ) : (
+        <NewTransfer
+          newTransfer={newTransfer}
+          newError={newError}
+          accounts={accounts}
+        />
+      )}
+      <TransfersList
+        accounts={accounts}
+        transfers={transfers}
+        onSelectTransfer={(id) => setEditing(id)}
+      />
+    </>
+  );
 }
 
 Transfers.propTypes = {

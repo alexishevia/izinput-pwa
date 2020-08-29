@@ -1,22 +1,15 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Container } from "semantic-ui-react";
+import { IonList, IonListHeader, IonItem, IonLabel } from "@ionic/react";
 
-function Transfer({ amount, from, to, transferDate, description, onClick }) {
-  const prefix = amount < 0 ? "-" : "";
-  const formattedAmount = `${prefix} $${Math.abs(amount).toFixed(2)}`;
-
-  return (
-    <Container text onClick={onClick} style={{ cursor: "pointer" }}>
-      <p>
-        {formattedAmount}
-        <br />
-        {from} =&gt; {to}
-        <br />
-        {description} {transferDate}
-      </p>
-    </Container>
-  );
+function sortByModifiedAt(a, b) {
+  if (a.modifiedAt > b.modifiedAt) {
+    return -1;
+  }
+  if (b.modifiedAt > a.modifiedAt) {
+    return 1;
+  }
+  return 0;
 }
 
 function getAccountName(accounts, id) {
@@ -24,34 +17,45 @@ function getAccountName(accounts, id) {
   return account && account.name ? account.name : "";
 }
 
-Transfer.propTypes = {
-  amount: PropTypes.number.isRequired,
-  description: PropTypes.string.isRequired,
-  transferDate: PropTypes.string.isRequired,
-  from: PropTypes.string.isRequired,
-  to: PropTypes.string.isRequired,
-  onClick: PropTypes.func.isRequired,
-};
-
 function TransfersList({ transfers, accounts, onSelectTransfer }) {
+  if (!transfers.length) {
+    return null;
+  }
+
   return (
-    <div>
-      {transfers.map((transfer) => {
-        const from = getAccountName(accounts, transfer.from);
-        const to = getAccountName(accounts, transfer.to);
-        return (
-          <Transfer
-            key={transfer.id}
-            amount={transfer.amount}
-            from={from}
-            to={to}
-            transferDate={transfer.transferDate}
-            description={transfer.description}
-            onClick={() => onSelectTransfer(transfer.id)}
-          />
-        );
-      })}
-    </div>
+    <IonList>
+      <IonListHeader>
+        <IonLabel>
+          <h1>Transfers</h1>
+        </IonLabel>
+      </IonListHeader>
+      {transfers
+        .sort(sortByModifiedAt)
+        .map(({ id, amount, description, transferDate, from, to }) => {
+          const fromLabel = getAccountName(accounts, from);
+          const toLabel = getAccountName(accounts, to);
+          const prefix = amount < 0 ? "-" : "";
+          const formattedAmount = `${prefix} $${Math.abs(amount).toFixed(2)}`;
+
+          return (
+            <IonItem
+              key={id}
+              onClick={() => onSelectTransfer(id)}
+              style={{ cursor: "pointer" }}
+            >
+              <IonLabel>
+                <p>
+                  {formattedAmount}
+                  <br />
+                  {fromLabel} =&gt; {toLabel}
+                  <br />
+                  {description} {transferDate}
+                </p>
+              </IonLabel>
+            </IonItem>
+          );
+        })}
+    </IonList>
   );
 }
 
