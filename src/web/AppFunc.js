@@ -17,7 +17,7 @@ function getErrorMsg(err) {
 }
 
 export default function App({ coreApp }) {
-  const [isSyncRunning, setIsSyncRunning] = useState(false);
+  const [isSyncRunning] = useState(false);
   const [accounts, setAccounts] = useState([]);
   const [errors, setErrors] = useState([]);
 

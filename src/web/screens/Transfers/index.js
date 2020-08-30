@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import NewTransfer from "./NewTransfer";
-import EditTransfer from "./EditTransfer";
-import TransfersList from "./TransfersList";
+import NewTransfer from "../../Transfers/NewTransfer";
+import EditTransfer from "../../Transfers/EditTransfer";
+import TransfersList from "../../Transfers/TransfersList";
 
 export default function Transfers({
   newTransfer,
