@@ -119,11 +119,11 @@ function ByName(name) {
   const db = new Dexie(name);
 
   // run migrations
-  db.version(1).stores({
+  db.version(2).stores({
     localActions: "++", // primary key hidden and auto-incremented
     meta: "", // primary key hidden but not auto-incremented
     accounts: "id", // primary key: id
-    transfers: "id", // primary key: id
+    transfers: "id,modifiedAt", // primary key: id, index of modifiedAt
   });
 
   function deleteDB() {
@@ -408,8 +408,9 @@ function ByName(name) {
   // `from` and `to` are inclusive
   function getRecentTransfers({ from, to }) {
     return db.transfers
-      .reverse()
+      .orderBy("modifiedAt")
       .filter((transfer) => !transfer.deleted)
+      .reverse()
       .offset(from)
       .limit(to - from + 1)
       .toArray();

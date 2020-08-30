@@ -1,5 +1,6 @@
 # To-Do
 
+- [ ] finish implementation for IonFab modals on Page.js
 - [ ] finish converting web/App to web/AppFunc
 - [ ] only display latest transfers in the transfers screen
 - [ ] add indicator to show when sync is running/failed/done

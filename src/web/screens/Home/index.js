@@ -93,7 +93,7 @@ export default function Home({ coreApp, accounts, onError }) {
   async function handleEditTransfer(transferData) {
     try {
       setEditing(null);
-      coreApp.updateTransfer(transferData);
+      await coreApp.updateTransfer(transferData);
     } catch (err) {
       onError(err);
     }

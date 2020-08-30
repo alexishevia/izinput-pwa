@@ -53,7 +53,10 @@ export default function App({ coreApp }) {
         <IonRouterOutlet>
           <Route path="/">
             <Page
+              coreApp={coreApp}
+              accounts={accounts}
               isSyncRunning={isSyncRunning}
+              onError={onError}
               errors={errors}
               removeError={removeError}
             >
