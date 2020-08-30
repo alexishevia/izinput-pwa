@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
   IonItem,
@@ -36,13 +36,29 @@ function buildTransferData({ from, to, amount, description, transferDate }) {
   return transferData;
 }
 
-export default function NewExpense({ coreApp, accounts, onClose }) {
-  const [amount, setAmount] = useState("");
+export default function NewExpense({ coreApp, onClose }) {
+  const [accounts, setAccounts] = useState(null);
+  const [amount, setAmount] = useState(null);
   const [from, setFrom] = useState(null);
   const [to, setTo] = useState(null);
-  const [description, setDescription] = useState("");
+  const [description, setDescription] = useState(null);
   const [transferDate, setTransferDate] = useState(today());
   const [errors, addError, dismissErrors] = useErrors([]);
+
+  useEffect(() => {
+    if (accounts !== null) {
+      return;
+    }
+    async function loadAccounts() {
+      try {
+        const allAccounts = await coreApp.getAccounts();
+        setAccounts(allAccounts);
+      } catch (err) {
+        addError(err);
+      }
+    }
+    loadAccounts();
+  });
 
   async function handleSubmit(evt) {
     evt.preventDefault();
@@ -79,7 +95,7 @@ export default function NewExpense({ coreApp, accounts, onClose }) {
             }}
             placeholder="Account"
           >
-            {accounts.map(({ id, name }) => (
+            {(accounts || []).map(({ id, name }) => (
               <IonSelectOption key={id} value={id}>
                 {name}
               </IonSelectOption>
@@ -95,7 +111,7 @@ export default function NewExpense({ coreApp, accounts, onClose }) {
             }}
             placeholder="Account"
           >
-            {accounts.map(({ id, name }) => (
+            {(accounts || []).map(({ id, name }) => (
               <IonSelectOption key={id} value={id}>
                 {name}
               </IonSelectOption>
@@ -146,12 +162,7 @@ export default function NewExpense({ coreApp, accounts, onClose }) {
 NewExpense.propTypes = {
   coreApp: PropTypes.shape({
     createTransfer: PropTypes.func.isRequired,
+    getAccounts: PropTypes.func.isRequired,
   }).isRequired,
-  accounts: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-    })
-  ).isRequired,
   onClose: PropTypes.func.isRequired,
 };

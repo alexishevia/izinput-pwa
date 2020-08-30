@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { promisify } from "util";
+import { EventEmitter } from "events";
 import syncRecursive from "./sync/sync";
 import getLocalDB from "./LocalDB/get";
 import setLocalDB from "./LocalDB/set";
@@ -157,9 +158,24 @@ async function getRecentTransfers() {
 }
 
 export default function InvoiceZero() {
+  const eventEmitter = new EventEmitter();
+
+  function on(event, listener) {
+    return eventEmitter.on(event, listener);
+  }
+
+  function off(event, listener) {
+    return eventEmitter.off(event, listener);
+  }
+
+  function emitChange() {
+    return eventEmitter.emit(CHANGE_EVENT);
+  }
+
   async function processActions(actions) {
     const localDB = await getLocalDB();
     await localDB.processActions(actions);
+    emitChange();
   }
 
   async function createAccount(accountProps) {
@@ -235,6 +251,7 @@ export default function InvoiceZero() {
     await window.gapi.auth2.getAuthInstance().signIn();
     isLoggedIn = await isGDriveLoggedIn();
     if (isLoggedIn) {
+      emitChange();
       return;
     }
     throw new Error("Login to GDrive failed.");
@@ -248,6 +265,7 @@ export default function InvoiceZero() {
     await window.gapi.auth2.getAuthInstance().signOut();
     isLoggedIn = await isGDriveLoggedIn();
     if (!isLoggedIn) {
+      emitChange();
       return;
     }
     throw new Error("Logout from GDrive failed.");
@@ -255,6 +273,7 @@ export default function InvoiceZero() {
 
   function gDriveSelectFile(file) {
     localStorage.setItem(STORAGE_KEY_SELECTED_FILE, JSON.stringify(file));
+    emitChange();
   }
 
   let syncLock = null;
@@ -277,6 +296,7 @@ export default function InvoiceZero() {
       });
       setLocalDB(newLocalDB);
       syncLock = false;
+      emitChange();
     } catch (err) {
       syncLock = false;
       console.error(err);
@@ -304,8 +324,10 @@ export default function InvoiceZero() {
   return {
     ...oldExportedFuncs,
     CHANGE_EVENT,
-    getAccounts,
     extendAccounts,
+    getAccounts,
     getRecentTransfers,
+    off,
+    on,
   };
 }

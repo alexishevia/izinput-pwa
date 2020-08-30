@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { IonLabel, IonItem } from "@ionic/react";
 import AccountsChart from "./AccountsChart";
 import TransfersList from "../../Transfers/TransfersList";
 import EditTransfer from "../../Transfers/EditTransfer";
 import useErrors from "../../hooks/useErrors";
+import useCoreAppData from "../../hooks/useCoreAppData";
 import Errors from "../../Errors";
 
 function isInternal(account) {
@@ -16,16 +17,11 @@ function isExternal(account) {
 }
 
 export default function Home({ coreApp }) {
-  const [accounts, setAccounts] = useState(null);
-  const [recentTransfers, setRecentTransfers] = useState(null);
   const [editing, setEditing] = useState(null);
   const [errors, addError, dismissErrors] = useErrors([]);
 
-  useEffect(() => {
-    if (accounts !== null) {
-      return;
-    }
-    async function loadAccounts() {
+  const accounts =
+    useCoreAppData(coreApp, async (setAccounts) => {
       try {
         const allAccounts = await coreApp.getAccounts();
         setAccounts(allAccounts);
@@ -43,24 +39,17 @@ export default function Home({ coreApp }) {
       } catch (err) {
         addError(err);
       }
-    }
-    loadAccounts();
-  });
+    }) || [];
 
-  useEffect(() => {
-    if (recentTransfers !== null) {
-      return;
-    }
-    async function loadRecentTransfers() {
+  const recentTransfers =
+    useCoreAppData(coreApp, async (setRecentTransfers) => {
       try {
         const transfers = await coreApp.getRecentTransfers();
         setRecentTransfers(transfers);
       } catch (err) {
         addError(err);
       }
-    }
-    loadRecentTransfers();
-  });
+    }) || [];
 
   let transferToEdit;
   if (editing) {
@@ -95,24 +84,22 @@ export default function Home({ coreApp }) {
           <h3>Accounts</h3>
         </IonLabel>
       </IonItem>
-      {accounts ? (
-        <AccountsChart accounts={accounts.filter(isInternal)} />
-      ) : null}
+      <AccountsChart accounts={accounts.filter(isInternal)} />
       <IonItem>
         <IonLabel>
           <h3>Recent Transfers</h3>
         </IonLabel>
       </IonItem>
       <TransfersList
-        transfers={recentTransfers || []}
-        accounts={accounts || []}
+        transfers={recentTransfers}
+        accounts={accounts}
         onSelectTransfer={(id) => setEditing(id)}
       />
       {transferToEdit ? (
         <EditTransfer
           transfer={transferToEdit}
           editTransfer={handleEditTransfer}
-          accounts={accounts || []}
+          accounts={accounts}
           onDelete={() => handleDeleteTransfer(transferToEdit.id)}
           onCancel={() => setEditing(null)}
         />
@@ -129,6 +116,8 @@ Home.propTypes = {
     getAccounts: PropTypes.func.isRequired,
     getRecentTransfers: PropTypes.func.isRequired,
     getTotalWithdrawals: PropTypes.func.isRequired,
+    off: PropTypes.func.isRequired,
+    on: PropTypes.func.isRequired,
     updateTransfer: PropTypes.func.isRequired,
   }).isRequired,
 };
