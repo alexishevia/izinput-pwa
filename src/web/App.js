@@ -2,11 +2,12 @@ import React from "react";
 import PropTypes from "prop-types";
 import { IonApp, IonRouterOutlet } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
-import { Route, Redirect } from "react-router-dom";
+import { Route } from "react-router-dom";
 import Page from "./Page";
 import Transfers from "./screens/Transfers";
 import Accounts from "./screens/Accounts";
 import Sync from "./screens/Sync";
+import Home from "./screens/Home";
 
 export default class App extends React.Component {
   constructor(props) {
@@ -190,6 +191,8 @@ export default class App extends React.Component {
       transfers,
     } = this.state;
 
+    const { coreApp } = this.props;
+
     return (
       <IonApp>
         <IonReactRouter>
@@ -241,7 +244,15 @@ export default class App extends React.Component {
                 />
               </Page>
             </Route>
-            <Route exact path="/" render={() => <Redirect to="/transfers" />} />
+            <Route page="/">
+              <Page
+                isSyncRunning={isSyncRunning}
+                errors={errors}
+                removeError={this.removeError}
+              >
+                <Home coreApp={coreApp} onError={this.newError} />
+              </Page>
+            </Route>
           </IonRouterOutlet>
         </IonReactRouter>
       </IonApp>

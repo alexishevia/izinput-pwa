@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { IonList, IonListHeader, IonItem, IonLabel } from "@ionic/react";
+import { IonList, IonItem, IonLabel } from "@ionic/react";
 
 function sortByModifiedAt(a, b) {
   if (a.modifiedAt > b.modifiedAt) {
@@ -17,6 +17,11 @@ function getAccountName(accounts, id) {
   return account && account.name ? account.name : "";
 }
 
+function FormattedAmount({ amount }) {
+  const prefix = amount < 0 ? "-" : "";
+  return `${prefix} $${amount.toFixed(2)}`;
+}
+
 function TransfersList({ transfers, accounts, onSelectTransfer }) {
   if (!transfers.length) {
     return null;
@@ -24,28 +29,17 @@ function TransfersList({ transfers, accounts, onSelectTransfer }) {
 
   return (
     <IonList>
-      <IonListHeader>
-        <IonLabel>
-          <h1>Transfers</h1>
-        </IonLabel>
-      </IonListHeader>
       {transfers
         .sort(sortByModifiedAt)
         .map(({ id, amount, description, transferDate, from, to }) => {
           const fromLabel = getAccountName(accounts, from);
           const toLabel = getAccountName(accounts, to);
-          const prefix = amount < 0 ? "-" : "";
-          const formattedAmount = `${prefix} $${Math.abs(amount).toFixed(2)}`;
 
           return (
-            <IonItem
-              key={id}
-              onClick={() => onSelectTransfer(id)}
-              style={{ cursor: "pointer" }}
-            >
+            <IonItem key={id} button onClick={() => onSelectTransfer(id)}>
               <IonLabel>
                 <p>
-                  {formattedAmount}
+                  <FormattedAmount amount={amount} />
                   <br />
                   {fromLabel} =&gt; {toLabel}
                   <br />

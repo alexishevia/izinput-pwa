@@ -7,7 +7,7 @@ import TransfersList from "./TransfersList";
 export default function Transfers({
   newTransfer,
   updateTransfer,
-  newError,
+  onError,
   accounts,
   transfers,
   deleteTransfer,
@@ -32,12 +32,12 @@ export default function Transfers({
           accounts={accounts}
           onDelete={() => deleteTransfer(transferToEdit.id)}
           onCancel={() => setEditing(null)}
-          newError={newError}
+          onError={onError}
         />
       ) : (
         <NewTransfer
           newTransfer={newTransfer}
-          newError={newError}
+          onError={onError}
           accounts={accounts}
         />
       )}
@@ -52,7 +52,7 @@ export default function Transfers({
 
 Transfers.propTypes = {
   newTransfer: PropTypes.func.isRequired,
-  newError: PropTypes.func.isRequired,
+  onError: PropTypes.func.isRequired,
   updateTransfer: PropTypes.func.isRequired,
   deleteTransfer: PropTypes.func.isRequired,
   accounts: PropTypes.arrayOf(

@@ -320,9 +320,13 @@ function ByName(name) {
       });
   }
 
-  // both `from` and `to` are inclusive
-  function getAccounts({ from, to }) {
-    return db.accounts
+  // `from` and `to` are inclusive
+  function getAccounts({ from, to, type }) {
+    let query = db.accounts;
+    if (type) {
+      query = query.filter((acc) => acc.type === type);
+    }
+    return query
       .offset(from)
       .limit(to - from + 1)
       .toArray();
@@ -332,10 +336,22 @@ function ByName(name) {
     return getExistingAccount(id).then((account) => account.initialBalance);
   }
 
-  function getTotalWithdrawals(id) {
+  // `fromDate` and `toDate` are inclusive
+  function getTotalWithdrawals({ id, fromDate, toDate }) {
     let total = 0;
-    return db.transfers
-      .filter((transfer) => !transfer.deleted && transfer.from === id)
+    const query = db.transfers.filter(
+      (transfer) => !transfer.deleted && transfer.from === id
+    );
+
+    if (fromDate) {
+      query.filter(({ transferDate }) => transferDate >= fromDate);
+    }
+
+    if (toDate) {
+      query.filter(({ transferDate }) => transferDate <= fromDate);
+    }
+
+    return query
       .each((transfer) => {
         const amount = parseFloat(transfer.amount, 10);
         if (Number.isNaN(amount)) {
@@ -366,13 +382,13 @@ function ByName(name) {
     return Promise.all([
       getInitialBalance(id),
       getTotalDeposits(id),
-      getTotalWithdrawals(id),
+      getTotalWithdrawals({ id }),
     ]).then(([initialBalance, deposits, withdrawals]) => {
       return initialBalance + deposits - withdrawals;
     });
   }
 
-  // both `from` and `to` are inclusive
+  // `from` and `to` are inclusive
   function getLocalActions({ from, to }) {
     return db.localActions
       .offset(from)
@@ -380,9 +396,19 @@ function ByName(name) {
       .toArray();
   }
 
-  // both `from` and `to` are inclusive
+  // `from` and `to` are inclusive
   function getTransfers({ from, to }) {
     return db.transfers
+      .filter((transfer) => !transfer.deleted)
+      .offset(from)
+      .limit(to - from + 1)
+      .toArray();
+  }
+
+  // `from` and `to` are inclusive
+  function getRecentTransfers({ from, to }) {
+    return db.transfers
+      .reverse()
       .filter((transfer) => !transfer.deleted)
       .offset(from)
       .limit(to - from + 1)
@@ -467,6 +493,8 @@ function ByName(name) {
     getActionsCount,
     getLastAction,
     getLocalActions,
+    getRecentTransfers,
+    getTotalWithdrawals,
     getTransfers,
     name,
     processActions,

@@ -1,5 +1,6 @@
 # To-Do
 
+- [ ] finish converting web/App to web/AppFunc
 - [ ] only display latest transfers in the transfers screen
 - [ ] add indicator to show when sync is running/failed/done
 - [ ] run sync.js when app is loaded, or after a transfer is added

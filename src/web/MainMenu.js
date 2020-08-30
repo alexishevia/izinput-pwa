@@ -11,6 +11,13 @@ import {
   IonLabel,
 } from "@ionic/react";
 
+const routes = [
+  { name: "Home", route: "/" },
+  { name: "Transfers", route: "/transfers" },
+  { name: "Accounts", route: "/accounts" },
+  { name: "Sync", route: "/sync" },
+];
+
 export default function MainMenu() {
   return (
     <IonMenu side="start" content-id="main-content">
@@ -22,15 +29,11 @@ export default function MainMenu() {
       <IonContent>
         <IonList>
           <IonMenuToggle>
-            <IonItem routerLink="/transfers">
-              <IonLabel>Transfers</IonLabel>
-            </IonItem>
-            <IonItem routerLink="/accounts">
-              <IonLabel>Accounts</IonLabel>
-            </IonItem>
-            <IonItem routerLink="/sync">
-              <IonLabel>Sync</IonLabel>
-            </IonItem>
+            {routes.map(({ name, route }) => (
+              <IonItem key={route} routerLink={route}>
+                <IonLabel>{name}</IonLabel>
+              </IonItem>
+            ))}
           </IonMenuToggle>
         </IonList>
       </IonContent>
