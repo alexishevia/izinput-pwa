@@ -92,8 +92,8 @@ export default function Home({ coreApp, accounts, onError }) {
 
   async function handleEditTransfer(transferData) {
     try {
-      setEditing(null);
       await coreApp.updateTransfer(transferData);
+      setEditing(null);
     } catch (err) {
       onError(err);
     }
@@ -102,7 +102,7 @@ export default function Home({ coreApp, accounts, onError }) {
   async function handleDeleteTransfer(id) {
     try {
       setEditing(null);
-      coreApp.deleteTransfer(id);
+      await coreApp.deleteTransfer(id);
     } catch (err) {
       onError(err);
     }

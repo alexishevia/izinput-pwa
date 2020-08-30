@@ -72,6 +72,7 @@ export default function EditTransfer({
       setTo(null);
       setDescription(null);
       setTransferDate(null);
+      setDeleteAlertOpen(false);
     },
     [transfer.id]
   );
@@ -92,6 +93,15 @@ export default function EditTransfer({
   function handleDelete(evt) {
     evt.preventDefault();
     setDeleteAlertOpen(true);
+  }
+
+  async function handleDeleteConfirm() {
+    try {
+      setDeleteAlertOpen(false);
+      await onDelete();
+    } catch (err) {
+      onError(err);
+    }
   }
 
   async function handleSubmit(evt) {
@@ -135,7 +145,7 @@ export default function EditTransfer({
             message="Are you sure you want to delete this transfer?"
             buttons={[
               { text: "Cancel", role: "cancel" },
-              { text: "Delete", handler: onDelete },
+              { text: "Delete", handler: handleDeleteConfirm },
             ]}
           />
           <IonItem>
