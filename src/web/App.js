@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { IonApp, IonRouterOutlet } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
 import { Route } from "react-router-dom";
-import Page from "./Page";
+import Screen from "./Screen";
 import Transfers from "./screens/Transfers";
 import Accounts from "./screens/Accounts";
 import Sync from "./screens/Sync";
@@ -198,7 +198,7 @@ export default class App extends React.Component {
         <IonReactRouter>
           <IonRouterOutlet>
             <Route path="/transfers">
-              <Page
+              <Screen
                 isSyncRunning={isSyncRunning}
                 errors={errors}
                 removeError={this.removeError}
@@ -211,10 +211,10 @@ export default class App extends React.Component {
                   deleteTransfer={this.deleteTransfer}
                   transfers={transfers}
                 />
-              </Page>
+              </Screen>
             </Route>
             <Route path="/accounts">
-              <Page
+              <Screen
                 isSyncRunning={isSyncRunning}
                 errors={errors}
                 removeError={this.removeError}
@@ -225,10 +225,10 @@ export default class App extends React.Component {
                   newError={this.newError}
                   newAccount={this.createAccount}
                 />
-              </Page>
+              </Screen>
             </Route>
             <Route path="/sync">
-              <Page
+              <Screen
                 isSyncRunning={isSyncRunning}
                 errors={errors}
                 removeError={this.removeError}
@@ -242,16 +242,16 @@ export default class App extends React.Component {
                   onFilePick={this.selectGDriveFile}
                   onRunSync={this.runSync}
                 />
-              </Page>
+              </Screen>
             </Route>
             <Route page="/">
-              <Page
+              <Screen
                 isSyncRunning={isSyncRunning}
                 errors={errors}
                 removeError={this.removeError}
               >
                 <Home coreApp={coreApp} onError={this.newError} />
-              </Page>
+              </Screen>
             </Route>
           </IonRouterOutlet>
         </IonReactRouter>

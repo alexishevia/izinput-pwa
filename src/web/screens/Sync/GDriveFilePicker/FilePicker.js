@@ -20,6 +20,8 @@ import {
   alertCircleOutline,
 } from "ionicons/icons";
 import loadDir from "./api/loadDir";
+import useErrors from "../../../hooks/useErrors";
+import Errors from "../../../Errors";
 
 function isFile(node) {
   return node.fileType === "file";
@@ -66,27 +68,26 @@ FilePickerHeader.propTypes = {
   onGoBack: PropTypes.func.isRequired,
 };
 
-export default function FilePicker({ onCancel, onFilePick, onError }) {
+export default function FilePicker({ onCancel, onFilePick }) {
   const [path, setPath] = useState("");
   const [pathIDs, setPathIDs] = useState("root");
   const [contents, setContents] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasError, setHasError] = useState(false);
   const [isFileSelected, setIsFileSelected] = useState(false);
+  const [errors, addError, dismissErrors] = useErrors([]);
 
   useEffect(() => {
     async function loadDirContents() {
-      if (isLoading || hasError || contents !== null) return;
+      if (isLoading || errors.length || contents !== null) return;
       setIsLoading(true);
-      setHasError(false);
+      dismissErrors();
       try {
         const result = await loadDir({ id: getCurrentDir(pathIDs) });
         setIsLoading(false);
         setContents(result.contents);
       } catch (err) {
-        onError(err);
+        addError(err);
         setIsLoading(false);
-        setHasError(true);
       }
     }
     loadDirContents();
@@ -99,7 +100,7 @@ export default function FilePicker({ onCancel, onFilePick, onError }) {
       return;
     }
     setIsLoading(false);
-    setHasError(false);
+    dismissErrors();
     setContents(null);
     setIsFileSelected(false);
     setPath(getParentDir(path));
@@ -110,7 +111,7 @@ export default function FilePicker({ onCancel, onFilePick, onError }) {
     evt.preventDefault();
     if (isDir(node)) {
       setIsLoading(false);
-      setHasError(false);
+      dismissErrors();
       setPath(`${path}/${node.name}`);
       setPathIDs(`${pathIDs}/${node.id}`);
       setContents(null);
@@ -122,7 +123,7 @@ export default function FilePicker({ onCancel, onFilePick, onError }) {
       onFilePick(node);
       return;
     }
-    onError(new Error(`Filepicker: Unkown node type: ${node.type}`));
+    addError(new Error(`Filepicker: Unkown node type: ${node.type}`));
   }
 
   return (
@@ -135,6 +136,7 @@ export default function FilePicker({ onCancel, onFilePick, onError }) {
       ) : null}
       {contents && contents.length ? (
         <IonContent>
+          <Errors errors={errors} onDismiss={dismissErrors} />
           <IonList>
             {contents.map((item) => {
               return (
@@ -160,6 +162,5 @@ export default function FilePicker({ onCancel, onFilePick, onError }) {
 
 FilePicker.propTypes = {
   onCancel: PropTypes.func.isRequired,
-  onError: PropTypes.func.isRequired,
   onFilePick: PropTypes.func.isRequired,
 };

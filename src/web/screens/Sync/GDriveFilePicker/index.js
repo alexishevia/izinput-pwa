@@ -14,14 +14,7 @@ export default class Root extends React.Component {
   }
 
   render() {
-    const {
-      isLoggedIn,
-      file,
-      onFilePick,
-      onError,
-      onLogin,
-      onLogout,
-    } = this.props;
+    const { isLoggedIn, file, onFilePick, onLogin, onLogout } = this.props;
     const { renderFilePicker } = this.state;
 
     const isFileSelected = !!file;
@@ -41,7 +34,6 @@ export default class Root extends React.Component {
             closeFilePicker();
             onFilePick(path);
           }}
-          onError={onError}
           onCancel={closeFilePicker}
         />
       );
@@ -73,7 +65,6 @@ Root.propTypes = {
     mimeType: PropTypes.string.isRequired,
   }),
   onFilePick: PropTypes.func.isRequired,
-  onError: PropTypes.func.isRequired,
   onLogin: PropTypes.func.isRequired,
   onLogout: PropTypes.func.isRequired,
 };

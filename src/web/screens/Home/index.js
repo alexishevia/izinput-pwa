@@ -5,6 +5,8 @@ import AccountsChart from "./AccountsChart";
 import TransfersList from "../../Transfers/TransfersList";
 import EditTransfer from "../../Transfers/EditTransfer";
 import { dateToDayStr } from "../../../helpers/date";
+import useErrors from "../../hooks/useErrors";
+import Errors from "../../Errors";
 
 const now = new Date();
 const monthStart = dateToDayStr(new Date(now.getFullYear(), now.getMonth(), 1));
@@ -34,10 +36,11 @@ function getWithdrawals(coreApp, accounts) {
   );
 }
 
-export default function Home({ coreApp, accounts, onError }) {
+export default function Home({ coreApp, accounts }) {
   const [internalAccounts, setInternalAccounts] = useState([]);
   const [recentTransfers, setRecentTransfers] = useState([]);
   const [editing, setEditing] = useState(null);
+  const [errors, addError, dismissErrors] = useErrors([]);
 
   useEffect(() => {
     async function loadInternalAccounts() {
@@ -57,7 +60,7 @@ export default function Home({ coreApp, accounts, onError }) {
           }))
         );
       } catch (err) {
-        onError(err);
+        addError(err);
       }
     }
     coreApp.on(coreApp.CHANGE_EVENT, loadInternalAccounts);
@@ -73,7 +76,7 @@ export default function Home({ coreApp, accounts, onError }) {
         const transfers = await coreApp.getRecentTransfers();
         setRecentTransfers(transfers);
       } catch (err) {
-        onError(err);
+        addError(err);
       }
     }
     coreApp.on(coreApp.CHANGE_EVENT, loadRecentTransfers);
@@ -95,7 +98,7 @@ export default function Home({ coreApp, accounts, onError }) {
       await coreApp.updateTransfer(transferData);
       setEditing(null);
     } catch (err) {
-      onError(err);
+      addError(err);
     }
   }
 
@@ -104,12 +107,13 @@ export default function Home({ coreApp, accounts, onError }) {
       setEditing(null);
       await coreApp.deleteTransfer(id);
     } catch (err) {
-      onError(err);
+      addError(err);
     }
   }
 
   return (
     <>
+      <Errors errors={errors} onDismiss={dismissErrors} />
       <IonItem>
         <IonLabel>
           <h3>Accounts</h3>
@@ -133,7 +137,6 @@ export default function Home({ coreApp, accounts, onError }) {
           accounts={accounts}
           onDelete={() => handleDeleteTransfer(transferToEdit.id)}
           onCancel={() => setEditing(null)}
-          onError={onError}
         />
       ) : null}
     </>
@@ -151,5 +154,4 @@ Home.propTypes = {
     updateTransfer: PropTypes.func.isRequired,
   }).isRequired,
   accounts: PropTypes.arrayOf(PropTypes.shape()).isRequired,
-  onError: PropTypes.func.isRequired,
 };

@@ -19,6 +19,8 @@ import {
 import { chevronBackOutline, trashOutline } from "ionicons/icons";
 import { dateToDayStr, isValidDayStr } from "../../helpers/date";
 import Validation from "../../helpers/Validation";
+import useErrors from "../hooks/useErrors";
+import Errors from "../Errors";
 
 function today() {
   return dateToDayStr(new Date());
@@ -56,7 +58,6 @@ export default function EditTransfer({
   accounts,
   onDelete,
   onCancel,
-  onError,
 }) {
   const [amount, setAmount] = useState(null);
   const [from, setFrom] = useState(null);
@@ -64,6 +65,7 @@ export default function EditTransfer({
   const [description, setDescription] = useState(null);
   const [transferDate, setTransferDate] = useState(null);
   const [isDeleteAlertOpen, setDeleteAlertOpen] = useState(false);
+  const [errors, addError, dismissErrors] = useErrors([]);
 
   useMemo(
     function resetState() {
@@ -100,7 +102,7 @@ export default function EditTransfer({
       setDeleteAlertOpen(false);
       await onDelete();
     } catch (err) {
-      onError(err);
+      addError(err);
     }
   }
 
@@ -117,108 +119,111 @@ export default function EditTransfer({
       });
       await editTransfer(transferData);
     } catch (err) {
-      onError(err);
+      addError(err);
     }
   }
 
   return (
-    <IonModal isOpen swipeToClose onDidDismiss={handleCancel}>
-      <IonToolbar color="secondary">
-        <IonButtons slot="start">
-          <IonButton onClick={handleCancel}>
-            <IonIcon icon={chevronBackOutline} />
-          </IonButton>
-        </IonButtons>
-        <IonTitle>Edit Transfer</IonTitle>
-        <IonButtons slot="end">
-          <IonButton onClick={handleDelete}>
-            <IonIcon icon={trashOutline} />
-          </IonButton>
-        </IonButtons>
-      </IonToolbar>
-      <IonContent>
-        <form onSubmit={handleSubmit}>
-          <IonAlert
-            isOpen={isDeleteAlertOpen}
-            onDidDismiss={() => setDeleteAlertOpen(false)}
-            header="Delete Transfer"
-            message="Are you sure you want to delete this transfer?"
-            buttons={[
-              { text: "Cancel", role: "cancel" },
-              { text: "Delete", handler: handleDeleteConfirm },
-            ]}
-          />
-          <IonItem>
-            <IonLabel position="stacked">From:</IonLabel>
-            <IonSelect
-              value={fromVal}
-              onIonChange={(evt) => {
-                setFrom(evt.detail.value);
-              }}
-              placeholder="Account"
-            >
-              {accounts.map(({ id, name }) => (
-                <IonSelectOption key={id} value={id}>
-                  {name}
-                </IonSelectOption>
-              ))}
-            </IonSelect>
-          </IonItem>
-          <IonItem>
-            <IonLabel position="stacked">To:</IonLabel>
-            <IonSelect
-              value={toVal}
-              onIonChange={(evt) => {
-                setTo(evt.detail.value);
-              }}
-              placeholder="Account"
-            >
-              {accounts.map(({ id, name }) => (
-                <IonSelectOption key={id} value={id}>
-                  {name}
-                </IonSelectOption>
-              ))}
-            </IonSelect>
-          </IonItem>
-          <IonItem>
-            <IonLabel position="stacked">Amount:</IonLabel>
-            <IonInput
-              type="number"
-              step="0.01"
-              value={amountVal}
-              placeholder="$"
-              onIonChange={(evt) => {
-                setAmount(evt.detail.value);
-              }}
-              required
+    <>
+      <Errors errors={errors} onDismiss={dismissErrors} />
+      <IonModal isOpen swipeToClose onDidDismiss={handleCancel}>
+        <IonToolbar color="secondary">
+          <IonButtons slot="start">
+            <IonButton onClick={handleCancel}>
+              <IonIcon icon={chevronBackOutline} />
+            </IonButton>
+          </IonButtons>
+          <IonTitle>Edit Transfer</IonTitle>
+          <IonButtons slot="end">
+            <IonButton onClick={handleDelete}>
+              <IonIcon icon={trashOutline} />
+            </IonButton>
+          </IonButtons>
+        </IonToolbar>
+        <IonContent>
+          <form onSubmit={handleSubmit}>
+            <IonAlert
+              isOpen={isDeleteAlertOpen}
+              onDidDismiss={() => setDeleteAlertOpen(false)}
+              header="Delete Transfer"
+              message="Are you sure you want to delete this transfer?"
+              buttons={[
+                { text: "Cancel", role: "cancel" },
+                { text: "Delete", handler: handleDeleteConfirm },
+              ]}
             />
-          </IonItem>
-          <IonItem>
-            <IonLabel position="stacked">Date:</IonLabel>
-            <IonDatetime
-              value={transferDateVal}
-              onIonChange={(evt) => {
-                setTransferDate(evt.detail.value);
-              }}
-            />
-          </IonItem>
-          <IonItem>
-            <IonLabel position="stacked">Description:</IonLabel>
-            <IonInput
-              type="text"
-              value={descriptionVal}
-              onIonChange={(evt) => {
-                setDescription(evt.detail.value);
-              }}
-            />
-          </IonItem>
-          <IonButton color="medium" onClick={handleCancel}>
-            Cancel
-          </IonButton>
-          <IonButton type="submit">Update Transfer</IonButton>
-        </form>
-      </IonContent>
-    </IonModal>
+            <IonItem>
+              <IonLabel position="stacked">From:</IonLabel>
+              <IonSelect
+                value={fromVal}
+                onIonChange={(evt) => {
+                  setFrom(evt.detail.value);
+                }}
+                placeholder="Account"
+              >
+                {accounts.map(({ id, name }) => (
+                  <IonSelectOption key={id} value={id}>
+                    {name}
+                  </IonSelectOption>
+                ))}
+              </IonSelect>
+            </IonItem>
+            <IonItem>
+              <IonLabel position="stacked">To:</IonLabel>
+              <IonSelect
+                value={toVal}
+                onIonChange={(evt) => {
+                  setTo(evt.detail.value);
+                }}
+                placeholder="Account"
+              >
+                {accounts.map(({ id, name }) => (
+                  <IonSelectOption key={id} value={id}>
+                    {name}
+                  </IonSelectOption>
+                ))}
+              </IonSelect>
+            </IonItem>
+            <IonItem>
+              <IonLabel position="stacked">Amount:</IonLabel>
+              <IonInput
+                type="number"
+                step="0.01"
+                value={amountVal}
+                placeholder="$"
+                onIonChange={(evt) => {
+                  setAmount(evt.detail.value);
+                }}
+                required
+              />
+            </IonItem>
+            <IonItem>
+              <IonLabel position="stacked">Date:</IonLabel>
+              <IonDatetime
+                value={transferDateVal}
+                onIonChange={(evt) => {
+                  setTransferDate(evt.detail.value);
+                }}
+              />
+            </IonItem>
+            <IonItem>
+              <IonLabel position="stacked">Description:</IonLabel>
+              <IonInput
+                type="text"
+                value={descriptionVal}
+                onIonChange={(evt) => {
+                  setDescription(evt.detail.value);
+                }}
+              />
+            </IonItem>
+            <IonButton color="medium" onClick={handleCancel}>
+              Cancel
+            </IonButton>
+            <IonButton type="submit">Update Transfer</IonButton>
+          </form>
+        </IonContent>
+      </IonModal>
+    </>
   );
 }
 
@@ -234,7 +239,6 @@ EditTransfer.propTypes = {
   editTransfer: PropTypes.func.isRequired,
   onCancel: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,
-  onError: PropTypes.func.isRequired,
   accounts: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.string.isRequired,

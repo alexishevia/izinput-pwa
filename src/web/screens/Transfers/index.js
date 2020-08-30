@@ -1,13 +1,10 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import NewTransfer from "../../Transfers/NewTransfer";
 import EditTransfer from "../../Transfers/EditTransfer";
 import TransfersList from "../../Transfers/TransfersList";
 
 export default function Transfers({
-  newTransfer,
   updateTransfer,
-  onError,
   accounts,
   transfers,
   deleteTransfer,
@@ -32,15 +29,8 @@ export default function Transfers({
           accounts={accounts}
           onDelete={() => deleteTransfer(transferToEdit.id)}
           onCancel={() => setEditing(null)}
-          onError={onError}
         />
-      ) : (
-        <NewTransfer
-          newTransfer={newTransfer}
-          onError={onError}
-          accounts={accounts}
-        />
-      )}
+      ) : null}
       <TransfersList
         accounts={accounts}
         transfers={transfers}
@@ -51,8 +41,6 @@ export default function Transfers({
 }
 
 Transfers.propTypes = {
-  newTransfer: PropTypes.func.isRequired,
-  onError: PropTypes.func.isRequired,
   updateTransfer: PropTypes.func.isRequired,
   deleteTransfer: PropTypes.func.isRequired,
   accounts: PropTypes.arrayOf(

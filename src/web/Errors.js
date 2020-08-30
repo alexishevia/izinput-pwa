@@ -2,28 +2,44 @@ import React from "react";
 import PropTypes from "prop-types";
 import { IonToast } from "@ionic/react";
 
-function Errors({ errors = [], removeError }) {
-  if (!errors.length) {
-    return null;
+function getErrorMsg(err) {
+  if (typeof err === typeof "string") {
+    return err;
   }
+  if (err && err.message) {
+    return err.message;
+  }
+  return "Unknown error";
+}
 
-  const msg = errors[errors.length - 1];
+function Errors({ errors = [], onDismiss }) {
+  const msg = errors.length ? getErrorMsg(errors[errors.length - 1]) : "";
+
+  function handleDismiss(evt) {
+    if (evt) {
+      evt.preventDefault();
+    }
+    onDismiss();
+  }
 
   return (
     <IonToast
       key={msg}
-      isOpen
+      isOpen={!!msg}
       message={msg}
       position="bottom"
-      buttons={[{ text: "X", role: "cancel" }]}
-      onDidDismiss={() => removeError(msg)}
+      buttons={[{ text: "X", role: "cancel", handler: handleDismiss }]}
     />
   );
 }
 
 Errors.propTypes = {
-  removeError: PropTypes.func.isRequired,
-  errors: PropTypes.arrayOf(PropTypes.string).isRequired,
+  errors: PropTypes.arrayOf(
+    PropTypes.shape({
+      message: PropTypes.string.isRequired,
+    })
+  ).isRequired,
+  onDismiss: PropTypes.func.isRequired,
 };
 
 export default Errors;

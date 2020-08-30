@@ -3,15 +3,7 @@ import PropTypes from "prop-types";
 import GDriveFilePicker from "./GDriveFilePicker";
 import RunSync from "./RunSync";
 
-function Sync({
-  isLoggedIn,
-  file,
-  onLogin,
-  onLogout,
-  onFilePick,
-  onRunSync,
-  onError,
-}) {
+function Sync({ isLoggedIn, file, onLogin, onLogout, onFilePick, onRunSync }) {
   return (
     <>
       <GDriveFilePicker
@@ -20,7 +12,6 @@ function Sync({
         onLogin={onLogin}
         onLogout={onLogout}
         onFilePick={onFilePick}
-        onError={onError}
       />
       <hr />
       <RunSync isFileSelected={!!file} onRunSync={onRunSync} />
@@ -43,7 +34,6 @@ Sync.propTypes = {
   onLogout: PropTypes.func.isRequired,
   onFilePick: PropTypes.func.isRequired,
   onRunSync: PropTypes.func.isRequired,
-  onError: PropTypes.func.isRequired,
 };
 
 export default Sync;
