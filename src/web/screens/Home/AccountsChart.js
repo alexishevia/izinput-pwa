@@ -41,8 +41,8 @@ AccountsChart.propTypes = {
   accounts: PropTypes.arrayOf(
     PropTypes.shape({
       name: PropTypes.string.isRequired,
-      balance: PropTypes.number.isRequired,
-      monthlyWithdrawals: PropTypes.number.isRequired,
+      balance: PropTypes.number,
+      monthlyWithdrawals: PropTypes.number,
     })
   ).isRequired,
 };

@@ -4,6 +4,7 @@ export default function useErrors() {
   const [errors, setErrors] = useState([]);
 
   function addError(err) {
+    console.error(err);
     setErrors([...errors, err]);
   }
 

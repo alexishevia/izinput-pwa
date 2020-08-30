@@ -1,6 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
 import { promisify } from "util";
-import { EventEmitter } from "events";
 import syncRecursive from "./sync/sync";
 import getLocalDB from "./LocalDB/get";
 import setLocalDB from "./LocalDB/set";
@@ -13,6 +12,7 @@ import {
   TransfersUpdateAction,
   TransfersDeleteAction,
 } from "./actionCreators";
+import { dateToDayStr } from "../helpers/date";
 
 import {
   GOOGLE_API_KEY,
@@ -21,6 +21,11 @@ import {
 } from "../constants";
 
 const CHANGE_EVENT = "CHANGE_EVENT";
+
+// asMoneyFloat truncates a float to 2 decimal points
+function asMoneyFloat(num) {
+  return Number.parseFloat(num.toFixed(2), 10);
+}
 
 function gDriveGetSelectedFile() {
   const selectedFile = localStorage.getItem(STORAGE_KEY_SELECTED_FILE);
@@ -69,18 +74,75 @@ async function isGDriveLoggedIn() {
 
 async function getAccountBalance(id) {
   const localDB = await getLocalDB();
-  return localDB.getAccountBalance(id);
+  const balance = await localDB.getAccountBalance(id);
+  return asMoneyFloat(balance);
+}
+
+async function getBalances(accounts) {
+  return Promise.all(accounts.map((account) => getAccountBalance(account.id)));
+}
+
+async function getTotalWithdrawals({ id, fromDate, toDate }) {
+  const localDB = await getLocalDB();
+  const withdrawals = await localDB.getTotalWithdrawals({
+    id,
+    fromDate,
+    toDate,
+  });
+  return asMoneyFloat(withdrawals);
+}
+
+function getMonthlyWithdrawals(accounts) {
+  const now = new Date();
+  const monthStart = dateToDayStr(
+    new Date(now.getFullYear(), now.getMonth(), 1)
+  );
+  const monthEnd = dateToDayStr(
+    new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  );
+  return Promise.all(
+    accounts.map((account) =>
+      getTotalWithdrawals({
+        id: account.id,
+        fromDate: monthStart,
+        toDate: monthEnd,
+      })
+    )
+  );
+}
+
+// extendAccounts will load new data for the provided accounts
+// NOTE: returns a new array. Does NOT mutate the existing array.
+async function extendAccounts(accounts, fields) {
+  const data = await Promise.all(
+    fields.map((field) => {
+      switch (field) {
+        case "balance":
+          return getBalances(accounts);
+        case "monthlyWithdrawals":
+          return getMonthlyWithdrawals(accounts);
+        default:
+          throw new Error(`Unknown account field: ${field}`);
+      }
+    })
+  );
+  return accounts.map((originalAccount, i) => {
+    const newFields = fields.reduce(
+      (memo, field, j) => ({
+        ...memo,
+        [field]: data[j][i],
+      }),
+      {}
+    );
+    return { ...originalAccount, ...newFields };
+  });
 }
 
 async function getAccounts() {
   // TODO: instead of hardcoding the `from` and `to` values, should iterate until all accounts are pulled from DB
   const localDB = await getLocalDB();
-  return localDB.getAccounts({ from: 0, to: 100 });
-}
-
-async function getTotalWithdrawals({ id, fromDate, toDate }) {
-  const localDB = await getLocalDB();
-  return localDB.getTotalWithdrawals({ id, fromDate, toDate });
+  const allAccounts = await localDB.getAccounts({ from: 0, to: 100 });
+  return allAccounts;
 }
 
 // both `from` and `to` are inclusive
@@ -95,24 +157,9 @@ async function getRecentTransfers() {
 }
 
 export default function InvoiceZero() {
-  const eventEmitter = new EventEmitter();
-
-  function on(event, listener) {
-    return eventEmitter.on(event, listener);
-  }
-
-  function off(event, listener) {
-    return eventEmitter.off(event, listener);
-  }
-
-  function emitChange() {
-    return eventEmitter.emit(CHANGE_EVENT);
-  }
-
   async function processActions(actions) {
     const localDB = await getLocalDB();
     await localDB.processActions(actions);
-    emitChange();
   }
 
   async function createAccount(accountProps) {
@@ -188,7 +235,6 @@ export default function InvoiceZero() {
     await window.gapi.auth2.getAuthInstance().signIn();
     isLoggedIn = await isGDriveLoggedIn();
     if (isLoggedIn) {
-      emitChange();
       return;
     }
     throw new Error("Login to GDrive failed.");
@@ -202,7 +248,6 @@ export default function InvoiceZero() {
     await window.gapi.auth2.getAuthInstance().signOut();
     isLoggedIn = await isGDriveLoggedIn();
     if (!isLoggedIn) {
-      emitChange();
       return;
     }
     throw new Error("Logout from GDrive failed.");
@@ -210,7 +255,6 @@ export default function InvoiceZero() {
 
   function gDriveSelectFile(file) {
     localStorage.setItem(STORAGE_KEY_SELECTED_FILE, JSON.stringify(file));
-    emitChange();
   }
 
   let syncLock = null;
@@ -232,7 +276,6 @@ export default function InvoiceZero() {
         newLocalDB: () => getLocalDB({ forceNew: true }),
       });
       setLocalDB(newLocalDB);
-      emitChange();
       syncLock = false;
     } catch (err) {
       syncLock = false;
@@ -249,6 +292,8 @@ export default function InvoiceZero() {
     gDriveLogin,
     gDriveLogout,
     gDriveSelectFile,
+    getAccountBalance,
+    getTotalWithdrawals,
     getTransfers,
     isGDriveLoggedIn,
     runSync,
@@ -260,10 +305,7 @@ export default function InvoiceZero() {
     ...oldExportedFuncs,
     CHANGE_EVENT,
     getAccounts,
-    getAccountBalance,
+    extendAccounts,
     getRecentTransfers,
-    getTotalWithdrawals,
-    off,
-    on,
   };
 }

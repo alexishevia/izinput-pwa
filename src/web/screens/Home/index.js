@@ -4,73 +4,53 @@ import { IonLabel, IonItem } from "@ionic/react";
 import AccountsChart from "./AccountsChart";
 import TransfersList from "../../Transfers/TransfersList";
 import EditTransfer from "../../Transfers/EditTransfer";
-import { dateToDayStr } from "../../../helpers/date";
 import useErrors from "../../hooks/useErrors";
 import Errors from "../../Errors";
 
-const now = new Date();
-const monthStart = dateToDayStr(new Date(now.getFullYear(), now.getMonth(), 1));
-const monthEnd = dateToDayStr(
-  new Date(now.getFullYear(), now.getMonth() + 1, 0)
-);
-
-function asMoneyFloat(num) {
-  return Number.parseFloat(num.toFixed(2), 10);
+function isInternal(account) {
+  return account.type === "INTERNAL";
 }
 
-function getBalances(coreApp, accounts) {
-  return Promise.all(
-    accounts.map((account) => coreApp.getAccountBalance(account.id))
-  );
+function isExternal(account) {
+  return !isInternal(account);
 }
 
-function getWithdrawals(coreApp, accounts) {
-  return Promise.all(
-    accounts.map((account) =>
-      coreApp.getTotalWithdrawals({
-        id: account.id,
-        fromDate: monthStart,
-        toDate: monthEnd,
-      })
-    )
-  );
-}
-
-export default function Home({ coreApp, accounts }) {
-  const [internalAccounts, setInternalAccounts] = useState([]);
-  const [recentTransfers, setRecentTransfers] = useState([]);
+export default function Home({ coreApp }) {
+  const [accounts, setAccounts] = useState(null);
+  const [recentTransfers, setRecentTransfers] = useState(null);
   const [editing, setEditing] = useState(null);
   const [errors, addError, dismissErrors] = useErrors([]);
 
   useEffect(() => {
-    async function loadInternalAccounts() {
+    if (accounts !== null) {
+      return;
+    }
+    async function loadAccounts() {
       try {
-        const intAccounts = accounts.filter(
-          (account) => account.type === "INTERNAL"
-        );
-        const [balances, withdrawals] = await Promise.all([
-          getBalances(coreApp, intAccounts),
-          getWithdrawals(coreApp, intAccounts),
+        const allAccounts = await coreApp.getAccounts();
+        setAccounts(allAccounts);
+
+        const externalAccounts = allAccounts.filter(isExternal);
+        let internalAccounts = allAccounts.filter(isInternal);
+
+        // extend internalAccounts with commonly used fields
+        internalAccounts = await coreApp.extendAccounts(internalAccounts, [
+          "balance",
+          "monthlyWithdrawals",
         ]);
-        setInternalAccounts(
-          intAccounts.map((account, i) => ({
-            ...account,
-            balance: asMoneyFloat(balances[i]),
-            monthlyWithdrawals: asMoneyFloat(withdrawals[i]),
-          }))
-        );
+
+        setAccounts([...internalAccounts, ...externalAccounts]);
       } catch (err) {
         addError(err);
       }
     }
-    coreApp.on(coreApp.CHANGE_EVENT, loadInternalAccounts);
-    loadInternalAccounts();
-    return () => {
-      coreApp.off(coreApp.CHANGE_EVENT, loadInternalAccounts);
-    };
-  }, []);
+    loadAccounts();
+  });
 
   useEffect(() => {
+    if (recentTransfers !== null) {
+      return;
+    }
     async function loadRecentTransfers() {
       try {
         const transfers = await coreApp.getRecentTransfers();
@@ -79,12 +59,8 @@ export default function Home({ coreApp, accounts }) {
         addError(err);
       }
     }
-    coreApp.on(coreApp.CHANGE_EVENT, loadRecentTransfers);
     loadRecentTransfers();
-    return () => {
-      coreApp.off(coreApp.CHANGE_EVENT, loadRecentTransfers);
-    };
-  }, []);
+  });
 
   let transferToEdit;
   if (editing) {
@@ -119,22 +95,24 @@ export default function Home({ coreApp, accounts }) {
           <h3>Accounts</h3>
         </IonLabel>
       </IonItem>
-      <AccountsChart accounts={internalAccounts} />
+      {accounts ? (
+        <AccountsChart accounts={accounts.filter(isInternal)} />
+      ) : null}
       <IonItem>
         <IonLabel>
           <h3>Recent Transfers</h3>
         </IonLabel>
       </IonItem>
       <TransfersList
-        transfers={recentTransfers}
-        accounts={accounts}
+        transfers={recentTransfers || []}
+        accounts={accounts || []}
         onSelectTransfer={(id) => setEditing(id)}
       />
       {transferToEdit ? (
         <EditTransfer
           transfer={transferToEdit}
           editTransfer={handleEditTransfer}
-          accounts={accounts}
+          accounts={accounts || []}
           onDelete={() => handleDeleteTransfer(transferToEdit.id)}
           onCancel={() => setEditing(null)}
         />
@@ -147,11 +125,10 @@ Home.propTypes = {
   coreApp: PropTypes.shape({
     CHANGE_EVENT: PropTypes.string.isRequired,
     deleteTransfer: PropTypes.func.isRequired,
+    extendAccounts: PropTypes.func.isRequired,
+    getAccounts: PropTypes.func.isRequired,
     getRecentTransfers: PropTypes.func.isRequired,
     getTotalWithdrawals: PropTypes.func.isRequired,
-    off: PropTypes.func.isRequired,
-    on: PropTypes.func.isRequired,
     updateTransfer: PropTypes.func.isRequired,
   }).isRequired,
-  accounts: PropTypes.arrayOf(PropTypes.shape()).isRequired,
 };
