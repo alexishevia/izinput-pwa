@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 
 // useCoreAppData is similar to useState, but:
-// - returns an initialValue of `null`, until the dataLoadFunc runs
+// - allows specifying a dataLoadFunc to load the field's value
 // - re-runs the dataLoadFunc on coreApp.CHANGE_EVENT
-export default function useCoreAppData(coreApp, dataLoadFunc) {
+export default function useCoreAppData(coreApp, initialValue, dataLoadFunc) {
   const [value, setValue] = useState(null);
 
   // reset value to null on coreApp.CHANGE_EVENT
@@ -20,8 +20,9 @@ export default function useCoreAppData(coreApp, dataLoadFunc) {
     if (value !== null) {
       return;
     }
+    setValue(initialValue); // prevents running dataLoadFunc multiple times
     dataLoadFunc(setValue);
-  }, [value, dataLoadFunc]);
+  }, [value, dataLoadFunc, initialValue]);
 
-  return value;
+  return value === null ? initialValue : value;
 }

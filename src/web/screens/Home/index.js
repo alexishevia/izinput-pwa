@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import PropTypes from "prop-types";
 import { IonLabel, IonItem } from "@ionic/react";
 import AccountsChart from "./AccountsChart";
 import TransfersList from "../../Transfers/TransfersList";
-import EditTransfer from "../../Transfers/EditTransfer";
 import useErrors from "../../hooks/useErrors";
 import useCoreAppData from "../../hooks/useCoreAppData";
 import Errors from "../../Errors";
@@ -17,64 +16,40 @@ function isExternal(account) {
 }
 
 export default function Home({ coreApp }) {
-  const [editing, setEditing] = useState(null);
   const [errors, addError, dismissErrors] = useErrors([]);
 
-  const accounts =
-    useCoreAppData(coreApp, async (setAccounts) => {
-      try {
-        const allAccounts = await coreApp.getAccounts();
-        setAccounts(allAccounts);
+  const accounts = useCoreAppData(coreApp, [], async (setAccounts) => {
+    try {
+      const allAccounts = await coreApp.getAccounts();
+      setAccounts(allAccounts);
 
-        const externalAccounts = allAccounts.filter(isExternal);
-        let internalAccounts = allAccounts.filter(isInternal);
+      const externalAccounts = allAccounts.filter(isExternal);
+      let internalAccounts = allAccounts.filter(isInternal);
 
-        // extend internalAccounts with commonly used fields
-        internalAccounts = await coreApp.extendAccounts(internalAccounts, [
-          "balance",
-          "monthlyWithdrawals",
-        ]);
+      // extend internalAccounts with commonly used fields
+      internalAccounts = await coreApp.extendAccounts(internalAccounts, [
+        "balance",
+        "monthlyWithdrawals",
+      ]);
 
-        setAccounts([...internalAccounts, ...externalAccounts]);
-      } catch (err) {
-        addError(err);
-      }
-    }) || [];
+      setAccounts([...internalAccounts, ...externalAccounts]);
+    } catch (err) {
+      addError(err);
+    }
+  });
 
-  const recentTransfers =
-    useCoreAppData(coreApp, async (setRecentTransfers) => {
+  const recentTransfers = useCoreAppData(
+    coreApp,
+    [],
+    async (setRecentTransfers) => {
       try {
         const transfers = await coreApp.getRecentTransfers();
         setRecentTransfers(transfers);
       } catch (err) {
         addError(err);
       }
-    }) || [];
-
-  let transferToEdit;
-  if (editing) {
-    transferToEdit = recentTransfers.find(
-      (transfer) => transfer.id === editing
-    );
-  }
-
-  async function handleEditTransfer(transferData) {
-    try {
-      await coreApp.updateTransfer(transferData);
-      setEditing(null);
-    } catch (err) {
-      addError(err);
     }
-  }
-
-  async function handleDeleteTransfer(id) {
-    try {
-      setEditing(null);
-      await coreApp.deleteTransfer(id);
-    } catch (err) {
-      addError(err);
-    }
-  }
+  );
 
   return (
     <>
@@ -90,20 +65,7 @@ export default function Home({ coreApp }) {
           <h3>Recent Transfers</h3>
         </IonLabel>
       </IonItem>
-      <TransfersList
-        transfers={recentTransfers}
-        accounts={accounts}
-        onSelectTransfer={(id) => setEditing(id)}
-      />
-      {transferToEdit ? (
-        <EditTransfer
-          transfer={transferToEdit}
-          editTransfer={handleEditTransfer}
-          accounts={accounts}
-          onDelete={() => handleDeleteTransfer(transferToEdit.id)}
-          onCancel={() => setEditing(null)}
-        />
-      ) : null}
+      <TransfersList transfers={recentTransfers} accounts={accounts} />
     </>
   );
 }

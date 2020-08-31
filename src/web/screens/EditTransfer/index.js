@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
+  IonAlert,
   IonButton,
   IonContent,
   IonDatetime,
+  IonIcon,
   IonInput,
   IonItem,
   IonLabel,
@@ -11,10 +13,11 @@ import {
   IonSelect,
   IonSelectOption,
 } from "@ionic/react";
-import { dateToDayStr, isValidDayStr } from "../../../helpers/date";
-import Validation from "../../../helpers/Validation";
+import { trashOutline } from "ionicons/icons";
 import useErrors from "../../hooks/useErrors";
 import useCoreAppData from "../../hooks/useCoreAppData";
+import { dateToDayStr, isValidDayStr } from "../../../helpers/date";
+import Validation from "../../../helpers/Validation";
 import Errors from "../../Errors";
 import ModalToolbar from "../../ModalToolbar";
 
@@ -22,8 +25,16 @@ function today() {
   return dateToDayStr(new Date());
 }
 
-function buildTransferData({ from, to, amount, description, transferDate }) {
+function buildTransferData({
+  id,
+  from,
+  to,
+  amount,
+  description,
+  transferDate,
+}) {
   const transferData = {
+    id,
     from,
     to,
     amount: parseFloat(amount, 10),
@@ -40,12 +51,13 @@ function buildTransferData({ from, to, amount, description, transferDate }) {
   return transferData;
 }
 
-export default function NewExpense({ coreApp, onClose }) {
+export default function EditTransfer({ id, coreApp, onClose }) {
   const [amount, setAmount] = useState(null);
   const [from, setFrom] = useState(null);
   const [to, setTo] = useState(null);
   const [description, setDescription] = useState(null);
-  const [transferDate, setTransferDate] = useState(today());
+  const [transferDate, setTransferDate] = useState(null);
+  const [isDeleteAlertOpen, setDeleteAlertOpen] = useState(false);
   const [errors, addError, dismissErrors] = useErrors([]);
 
   const accounts = useCoreAppData(coreApp, [], async (setAccounts) => {
@@ -57,45 +69,108 @@ export default function NewExpense({ coreApp, onClose }) {
     }
   });
 
-  async function handleSubmit(evt) {
-    evt.preventDefault();
+  const transfer = useCoreAppData(coreApp, {}, async (setTransfer) => {
     try {
-      const transferData = buildTransferData({
-        from,
-        to,
-        amount,
-        description,
-        transferDate,
-      });
-      await coreApp.createTransfer(transferData);
-      onClose();
+      const transferData = await coreApp.getTransfer(id);
+      setTransfer(transferData);
     } catch (err) {
       addError(err);
     }
-  }
+  });
+
+  useEffect(
+    function resetFormData() {
+      setAmount(null);
+      setFrom(null);
+      setTo(null);
+      setDescription(null);
+      setTransferDate(null);
+      setDeleteAlertOpen(false);
+    },
+    [id]
+  );
+
+  const amountVal = amount ?? transfer.amount;
+  const fromVal = from ?? transfer.from;
+  const toVal = to ?? transfer.to;
+  const descriptionVal = description ?? transfer.description;
+  const transferDateVal = transferDate ?? transfer.transferDate;
 
   function handleCancel(evt) {
     evt.preventDefault();
     onClose();
   }
 
+  function handleDelete(evt) {
+    evt.preventDefault();
+    setDeleteAlertOpen(true);
+  }
+
+  async function handleDeleteConfirm() {
+    try {
+      setDeleteAlertOpen(false);
+      await coreApp.deleteTransfer(id);
+      onClose();
+    } catch (err) {
+      addError(err);
+    }
+  }
+
+  async function handleSubmit(evt) {
+    evt.preventDefault();
+    try {
+      const transferData = buildTransferData({
+        id: transfer.id,
+        from: fromVal,
+        to: toVal,
+        amount: amountVal,
+        description: descriptionVal,
+        transferDate: transferDateVal,
+      });
+      await coreApp.updateTransfer(transferData);
+      onClose();
+    } catch (err) {
+      addError(err);
+    }
+  }
+
+  const endButton = (
+    <IonButton onClick={handleDelete}>
+      <IonIcon icon={trashOutline} />
+    </IonButton>
+  );
+
   return (
     <IonPage id="main-content">
-      <ModalToolbar title="New Expense" onClose={onClose} />
+      <ModalToolbar
+        title="Edit Transfer"
+        onClose={onClose}
+        endButton={endButton}
+      />
       <IonContent>
         <Errors errors={errors} onDismiss={dismissErrors} />
         <form onSubmit={handleSubmit}>
+          <IonAlert
+            isOpen={isDeleteAlertOpen}
+            onDidDismiss={() => setDeleteAlertOpen(false)}
+            header="Delete Transfer"
+            message="Are you sure you want to delete this transfer?"
+            buttons={[
+              { text: "Cancel", role: "cancel" },
+              { text: "Delete", handler: handleDeleteConfirm },
+            ]}
+          />
           <IonItem>
             <IonLabel position="stacked">From:</IonLabel>
             <IonSelect
-              value={from}
+              value={fromVal}
               onIonChange={(evt) => {
                 setFrom(evt.detail.value);
               }}
               placeholder="Account"
             >
-              {(accounts || []).map(({ id, name }) => (
-                <IonSelectOption key={id} value={id}>
+              {accounts.map(({ id: accID, name }) => (
+                <IonSelectOption key={accID} value={accID}>
                   {name}
                 </IonSelectOption>
               ))}
@@ -104,14 +179,14 @@ export default function NewExpense({ coreApp, onClose }) {
           <IonItem>
             <IonLabel position="stacked">To:</IonLabel>
             <IonSelect
-              value={to}
+              value={toVal}
               onIonChange={(evt) => {
                 setTo(evt.detail.value);
               }}
               placeholder="Account"
             >
-              {(accounts || []).map(({ id, name }) => (
-                <IonSelectOption key={id} value={id}>
+              {accounts.map(({ id: accID, name }) => (
+                <IonSelectOption key={accID} value={accID}>
                   {name}
                 </IonSelectOption>
               ))}
@@ -122,7 +197,7 @@ export default function NewExpense({ coreApp, onClose }) {
             <IonInput
               type="number"
               step="0.01"
-              value={amount}
+              value={amountVal}
               placeholder="$"
               onIonChange={(evt) => {
                 setAmount(evt.detail.value);
@@ -133,7 +208,7 @@ export default function NewExpense({ coreApp, onClose }) {
           <IonItem>
             <IonLabel position="stacked">Date:</IonLabel>
             <IonDatetime
-              value={transferDate}
+              value={transferDateVal}
               onIonChange={(evt) => {
                 setTransferDate(evt.detail.value);
               }}
@@ -143,7 +218,7 @@ export default function NewExpense({ coreApp, onClose }) {
             <IonLabel position="stacked">Description:</IonLabel>
             <IonInput
               type="text"
-              value={description}
+              value={descriptionVal}
               onIonChange={(evt) => {
                 setDescription(evt.detail.value);
               }}
@@ -152,17 +227,20 @@ export default function NewExpense({ coreApp, onClose }) {
           <IonButton color="medium" onClick={handleCancel}>
             Cancel
           </IonButton>
-          <IonButton type="submit">Add Expense</IonButton>
+          <IonButton type="submit">Update Transfer</IonButton>
         </form>
       </IonContent>
     </IonPage>
   );
 }
 
-NewExpense.propTypes = {
+EditTransfer.propTypes = {
+  id: PropTypes.string.isRequired,
   coreApp: PropTypes.shape({
-    createTransfer: PropTypes.func.isRequired,
     getAccounts: PropTypes.func.isRequired,
+    getTransfer: PropTypes.func.isRequired,
+    updateTransfer: PropTypes.func.isRequired,
+    deleteTransfer: PropTypes.func.isRequired,
   }).isRequired,
   onClose: PropTypes.func.isRequired,
 };

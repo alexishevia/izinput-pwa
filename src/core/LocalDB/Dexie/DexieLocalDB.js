@@ -496,6 +496,7 @@ function ByName(name) {
     getLocalActions,
     getRecentTransfers,
     getTotalWithdrawals,
+    getTransfer,
     getTransfers,
     name,
     processActions,

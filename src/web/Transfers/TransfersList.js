@@ -22,7 +22,7 @@ function FormattedAmount({ amount }) {
   return `${prefix} $${amount.toFixed(2)}`;
 }
 
-function TransfersList({ transfers, accounts, onSelectTransfer }) {
+function TransfersList({ transfers, accounts }) {
   if (!transfers.length) {
     return null;
   }
@@ -36,7 +36,7 @@ function TransfersList({ transfers, accounts, onSelectTransfer }) {
           const toLabel = getAccountName(accounts, to);
 
           return (
-            <IonItem key={id} button onClick={() => onSelectTransfer(id)}>
+            <IonItem key={id} button routerLink={`/editTransfer/${id}`}>
               <IonLabel>
                 <p>
                   <FormattedAmount amount={amount} />
@@ -54,7 +54,6 @@ function TransfersList({ transfers, accounts, onSelectTransfer }) {
 }
 
 TransfersList.propTypes = {
-  onSelectTransfer: PropTypes.func.isRequired,
   accounts: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.string.isRequired,

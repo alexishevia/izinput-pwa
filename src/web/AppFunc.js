@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
+import { Route } from "react-router-dom";
 import { IonApp, IonRouterOutlet } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
-import { Route } from "react-router-dom";
 import Screen from "./Screen";
-import ModalScreen from "./ModalScreen";
 import Home from "./screens/Home";
 import NewExpense from "./screens/NewExpense";
+import EditTransfer from "./screens/EditTransfer";
 import NotFound from "./screens/NotFound";
 
 export default function App({ coreApp }) {
@@ -26,18 +26,26 @@ export default function App({ coreApp }) {
             )}
           />
           <Route
+            exact
             path="/newExpense"
             component={({ history }) => (
-              <ModalScreen title="New Expense" onClose={history.goBack}>
-                <NewExpense coreApp={coreApp} onClose={history.goBack} />
-              </ModalScreen>
+              <NewExpense coreApp={coreApp} onClose={history.goBack} />
+            )}
+          />
+          <Route
+            exact
+            path="/editTransfer/:id"
+            component={({ history, match }) => (
+              <EditTransfer
+                coreApp={coreApp}
+                id={match.params.id}
+                onClose={history.goBack}
+              />
             )}
           />
           <Route
             component={({ history }) => (
-              <ModalScreen title="Not Found" onClose={() => history.push("/")}>
-                <NotFound />
-              </ModalScreen>
+              <NotFound onClose={() => history.push("/")} />
             )}
           />
         </IonRouterOutlet>

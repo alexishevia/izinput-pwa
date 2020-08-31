@@ -152,6 +152,11 @@ async function getTransfers({ from, to }) {
   return localDB.getTransfers({ from, to });
 }
 
+async function getTransfer(id) {
+  const localDB = await getLocalDB();
+  return localDB.getTransfer(id);
+}
+
 async function getRecentTransfers() {
   const localDB = await getLocalDB();
   return localDB.getRecentTransfers({ from: 0, to: 15 });
@@ -318,7 +323,6 @@ export default function InvoiceZero() {
     isGDriveLoggedIn,
     runSync,
     updateAccount,
-    updateTransfer,
   };
 
   return {
@@ -327,7 +331,9 @@ export default function InvoiceZero() {
     extendAccounts,
     getAccounts,
     getRecentTransfers,
+    getTransfer,
     off,
     on,
+    updateTransfer,
   };
 }

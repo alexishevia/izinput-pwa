@@ -1,48 +1,16 @@
-import React, { useState } from "react";
+import React from "react";
 import PropTypes from "prop-types";
-import EditTransfer from "../../Transfers/EditTransfer";
 import TransfersList from "../../Transfers/TransfersList";
 
-export default function Transfers({
-  updateTransfer,
-  accounts,
-  transfers,
-  deleteTransfer,
-}) {
-  const [editing, setEditing] = useState(null);
-
-  async function onUpdateTransfer(data) {
-    await updateTransfer(data);
-    setEditing(null);
-  }
-
-  let transferToEdit;
-  if (editing) {
-    transferToEdit = transfers.find((transfer) => transfer.id === editing);
-  }
+export default function Transfers({ accounts, transfers }) {
   return (
     <>
-      {transferToEdit ? (
-        <EditTransfer
-          transfer={transferToEdit}
-          editTransfer={onUpdateTransfer}
-          accounts={accounts}
-          onDelete={() => deleteTransfer(transferToEdit.id)}
-          onCancel={() => setEditing(null)}
-        />
-      ) : null}
-      <TransfersList
-        accounts={accounts}
-        transfers={transfers}
-        onSelectTransfer={(id) => setEditing(id)}
-      />
+      <TransfersList accounts={accounts} transfers={transfers} />
     </>
   );
 }
 
 Transfers.propTypes = {
-  updateTransfer: PropTypes.func.isRequired,
-  deleteTransfer: PropTypes.func.isRequired,
   accounts: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.string.isRequired,
