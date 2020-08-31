@@ -5,7 +5,7 @@ import { IonApp, IonRouterOutlet } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
 import Screen from "./Screen";
 import Home from "./screens/Home";
-import NewExpense from "./screens/NewExpense";
+import NewTransfer from "./screens/NewTransfer";
 import EditTransfer from "./screens/EditTransfer";
 import NotFound from "./screens/NotFound";
 
@@ -29,7 +29,33 @@ export default function App({ coreApp }) {
             exact
             path="/newExpense"
             component={({ history }) => (
-              <NewExpense coreApp={coreApp} onClose={history.goBack} />
+              <NewTransfer
+                type="EXPENSE"
+                coreApp={coreApp}
+                onClose={history.goBack}
+              />
+            )}
+          />
+          <Route
+            exact
+            path="/newIncome"
+            component={({ history }) => (
+              <NewTransfer
+                type="INCOME"
+                coreApp={coreApp}
+                onClose={history.goBack}
+              />
+            )}
+          />
+          <Route
+            exact
+            path="/newTransfer"
+            component={({ history }) => (
+              <NewTransfer
+                type="TRANSFER"
+                coreApp={coreApp}
+                onClose={history.goBack}
+              />
             )}
           />
           <Route

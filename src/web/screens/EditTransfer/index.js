@@ -60,22 +60,32 @@ export default function EditTransfer({ id, coreApp, onClose }) {
   const [isDeleteAlertOpen, setDeleteAlertOpen] = useState(false);
   const [errors, addError, dismissErrors] = useErrors([]);
 
-  const accounts = useCoreAppData(coreApp, [], async (setAccounts) => {
-    try {
-      const allAccounts = await coreApp.getAccounts();
-      setAccounts(allAccounts);
-    } catch (err) {
-      addError(err);
-    }
+  const accounts = useCoreAppData({
+    coreApp,
+    initialValue: [],
+    runOnce: true,
+    dataLoadFunc: async (setAccounts) => {
+      try {
+        const allAccounts = await coreApp.getAccounts();
+        setAccounts(allAccounts);
+      } catch (err) {
+        addError(err);
+      }
+    },
   });
 
-  const transfer = useCoreAppData(coreApp, {}, async (setTransfer) => {
-    try {
-      const transferData = await coreApp.getTransfer(id);
-      setTransfer(transferData);
-    } catch (err) {
-      addError(err);
-    }
+  const transfer = useCoreAppData({
+    coreApp,
+    initialValue: {},
+    runOnce: true,
+    dataLoadFunc: async (setTransfer) => {
+      try {
+        const transferData = await coreApp.getTransfer(id);
+        setTransfer(transferData);
+      } catch (err) {
+        addError(err);
+      }
+    },
   });
 
   useEffect(

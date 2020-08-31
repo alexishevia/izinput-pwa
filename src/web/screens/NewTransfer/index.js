@@ -22,6 +22,16 @@ function today() {
   return dateToDayStr(new Date());
 }
 
+function sortByName({ name: a }, { name: b }) {
+  if (a > b) {
+    return 1;
+  }
+  if (a < b) {
+    return -1;
+  }
+  return 0;
+}
+
 function buildTransferData({ from, to, amount, description, transferDate }) {
   const transferData = {
     from,
@@ -40,7 +50,7 @@ function buildTransferData({ from, to, amount, description, transferDate }) {
   return transferData;
 }
 
-export default function NewExpense({ coreApp, onClose }) {
+export default function NewTransfer({ type, coreApp, onClose }) {
   const [amount, setAmount] = useState(null);
   const [from, setFrom] = useState(null);
   const [to, setTo] = useState(null);
@@ -48,13 +58,28 @@ export default function NewExpense({ coreApp, onClose }) {
   const [transferDate, setTransferDate] = useState(today());
   const [errors, addError, dismissErrors] = useErrors([]);
 
-  const accounts = useCoreAppData(coreApp, [], async (setAccounts) => {
-    try {
-      const allAccounts = await coreApp.getAccounts();
-      setAccounts(allAccounts);
-    } catch (err) {
-      addError(err);
-    }
+  const accounts = useCoreAppData({
+    coreApp,
+    initialValue: [],
+    runOnce: true,
+    dataLoadFunc: async (setAccounts) => {
+      try {
+        const allAccounts = await coreApp.getAccounts();
+        setAccounts(allAccounts);
+
+        const externalAccounts = allAccounts.filter(coreApp.isExternal);
+        let internalAccounts = allAccounts.filter(coreApp.isInternal);
+
+        // extend internalAccounts with commonly used fields
+        internalAccounts = await coreApp.extendAccounts(internalAccounts, [
+          "balance",
+        ]);
+
+        setAccounts([...internalAccounts, ...externalAccounts]);
+      } catch (err) {
+        addError(err);
+      }
+    },
   });
 
   async function handleSubmit(evt) {
@@ -79,9 +104,27 @@ export default function NewExpense({ coreApp, onClose }) {
     onClose();
   }
 
+  const { label, fromFilter, toFilter } = {
+    EXPENSE: {
+      label: "Expense",
+      fromFilter: coreApp.isInternal,
+      toFilter: coreApp.isExternal,
+    },
+    INCOME: {
+      label: "Income",
+      fromFilter: coreApp.isExternal,
+      toFilter: coreApp.isInternal,
+    },
+    TRANSFER: {
+      label: "Transfer",
+      fromFilter: coreApp.isInternal,
+      toFilter: coreApp.isInternal,
+    },
+  }[type];
+
   return (
     <IonPage id="main-content">
-      <ModalToolbar title="New Expense" onClose={onClose} />
+      <ModalToolbar title={`New ${label}`} onClose={onClose} />
       <IonContent>
         <Errors errors={errors} onDismiss={dismissErrors} />
         <form onSubmit={handleSubmit}>
@@ -94,11 +137,15 @@ export default function NewExpense({ coreApp, onClose }) {
               }}
               placeholder="Account"
             >
-              {(accounts || []).map(({ id, name }) => (
-                <IonSelectOption key={id} value={id}>
-                  {name}
-                </IonSelectOption>
-              ))}
+              {(accounts || [])
+                .filter(fromFilter)
+                .sort(sortByName)
+                .map(({ id, name, balance }) => (
+                  <IonSelectOption key={id} value={id}>
+                    {name}
+                    {balance ? ` ($${balance} available)` : ""}
+                  </IonSelectOption>
+                ))}
             </IonSelect>
           </IonItem>
           <IonItem>
@@ -110,11 +157,15 @@ export default function NewExpense({ coreApp, onClose }) {
               }}
               placeholder="Account"
             >
-              {(accounts || []).map(({ id, name }) => (
-                <IonSelectOption key={id} value={id}>
-                  {name}
-                </IonSelectOption>
-              ))}
+              {(accounts || [])
+                .filter(toFilter)
+                .sort(sortByName)
+                .map(({ id, name, balance }) => (
+                  <IonSelectOption key={id} value={id}>
+                    {name}
+                    {balance ? ` ($${balance} available)` : ""}
+                  </IonSelectOption>
+                ))}
             </IonSelect>
           </IonItem>
           <IonItem>
@@ -152,17 +203,21 @@ export default function NewExpense({ coreApp, onClose }) {
           <IonButton color="medium" onClick={handleCancel}>
             Cancel
           </IonButton>
-          <IonButton type="submit">Add Expense</IonButton>
+          <IonButton type="submit">Add {label}</IonButton>
         </form>
       </IonContent>
     </IonPage>
   );
 }
 
-NewExpense.propTypes = {
+NewTransfer.propTypes = {
+  type: PropTypes.oneOf(["EXPENSE", "INCOME", "TRANSFER"]).isRequired,
   coreApp: PropTypes.shape({
     createTransfer: PropTypes.func.isRequired,
     getAccounts: PropTypes.func.isRequired,
+    isExternal: PropTypes.func.isRequired,
+    isInternal: PropTypes.func.isRequired,
+    extendAccounts: PropTypes.func.isRequired,
   }).isRequired,
   onClose: PropTypes.func.isRequired,
 };

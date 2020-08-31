@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import TransfersList from "../../Transfers/TransfersList";
+import TransfersList from "../../TransfersList";
 
 export default function Transfers({ accounts, transfers }) {
   return (

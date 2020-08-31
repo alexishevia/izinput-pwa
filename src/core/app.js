@@ -28,6 +28,14 @@ function asMoneyFloat(num) {
   return Number.parseFloat(num.toFixed(2), 10);
 }
 
+function isInternal(account) {
+  return account.type === "INTERNAL";
+}
+
+function isExternal(account) {
+  return !isInternal(account);
+}
+
 function gDriveGetSelectedFile() {
   const selectedFile = localStorage.getItem(STORAGE_KEY_SELECTED_FILE);
   if (selectedFile) {
@@ -160,6 +168,18 @@ async function getTransfer(id) {
 async function getRecentTransfers() {
   const localDB = await getLocalDB();
   return localDB.getRecentTransfers({ from: 0, to: 15 });
+}
+
+function isExpense(transaction, accounts) {
+  const from = accounts.find((account) => account.id === transaction.from);
+  const to = accounts.find((account) => account.id === transaction.to);
+  return from && to && isInternal(from) && isExternal(to);
+}
+
+function isIncome(transaction, accounts) {
+  const from = accounts.find((account) => account.id === transaction.from);
+  const to = accounts.find((account) => account.id === transaction.to);
+  return from && to && isExternal(from) && isInternal(to);
 }
 
 export default function InvoiceZero() {
@@ -332,6 +352,10 @@ export default function InvoiceZero() {
     getAccounts,
     getRecentTransfers,
     getTransfer,
+    isExpense,
+    isExternal,
+    isIncome,
+    isInternal,
     off,
     on,
     updateTransfer,
