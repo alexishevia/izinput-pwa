@@ -21,12 +21,11 @@ const ERR_INVALID_TRANSFER = "Invalid data for transfer: <ERR>";
 const ERR_EXISTING_ACCOUNT = 'An account with id: "<ID>" exists';
 const ERR_NO_EXISTING_ACCOUNT = 'No account with id: "<ID>" exists';
 const ERR_INVALID_ACCOUNT = "Invalid data for account: <ERR>";
+const ERR_EXISTING_CATEGORY = 'A category with id: "<ID>" exists';
+const ERR_NO_EXISTING_CATEGORY = 'No category with id: "<ID>" exists';
+const ERR_INVALID_CATEGORY = "Invalid data for category: <ERR>";
 const ERR_UPDATE_CONFLICT = "Update conflict";
 const ERR_NO_DELETE_ALLOWED = "Delete is not allowed in this action";
-const ACCOUNT_TYPES = {
-  INTERNAL: "INTERNAL",
-  EXTERNAL: "EXTERNAL",
-};
 
 function ErrNoDeleteAllowed() {
   return { name: ERR_NO_DELETE_ALLOWED, message: ERR_NO_DELETE_ALLOWED };
@@ -43,6 +42,20 @@ function ErrNoExistingAccount(id) {
   return {
     name: ERR_NO_EXISTING_ACCOUNT,
     message: ERR_NO_EXISTING_ACCOUNT.replace("<ID>", id),
+  };
+}
+
+function ErrExistingCategory(id) {
+  return {
+    name: ERR_EXISTING_CATEGORY,
+    message: ERR_EXISTING_CATEGORY.replace("<ID>", id),
+  };
+}
+
+function ErrNoExistingCategory(id) {
+  return {
+    name: ERR_NO_EXISTING_CATEGORY,
+    message: ERR_NO_EXISTING_CATEGORY.replace("<ID>", id),
   };
 }
 
@@ -67,6 +80,13 @@ function ErrInvalidAccount(msg) {
   };
 }
 
+function ErrInvalidCategory(msg) {
+  return {
+    name: ERR_INVALID_CATEGORY,
+    message: ERR_INVALID_CATEGORY.replace("<ERR>", msg),
+  };
+}
+
 function ErrInvalidTransfer(msg) {
   return {
     name: ERR_INVALID_TRANSFER,
@@ -82,14 +102,21 @@ function checkValidAccount(account) {
   try {
     new Validation(account, "id").required().string().notEmpty();
     new Validation(account, "name").required().string().notEmpty();
-    new Validation(account, "type")
-      .required()
-      .oneOf(Object.values(ACCOUNT_TYPES));
     new Validation(account, "initialBalance").required().number();
     new Validation(account, "modifiedAt").required().UTCDateString();
-    new Validation(account, "active").required().boolean();
   } catch (err) {
     throw new ErrInvalidAccount(err.message);
+  }
+}
+
+function checkValidCategory(category) {
+  try {
+    new Validation(category, "id").required().string().notEmpty();
+    new Validation(category, "name").required().string().notEmpty();
+    new Validation(category, "modifiedAt").required().UTCDateString();
+    new Validation(category, "deleted").required().boolean();
+  } catch (err) {
+    throw new ErrInvalidCategory(err.message);
   }
 }
 
@@ -123,7 +150,8 @@ function ByName(name) {
     localActions: "++", // primary key hidden and auto-incremented
     meta: "", // primary key hidden but not auto-incremented
     accounts: "id", // primary key: id
-    transfers: "id,modifiedAt", // primary key: id, index of modifiedAt
+    categories: "id", // primary key: id
+    transfers: "id,modifiedAt", // primary key: id, index for modifiedAt
   });
 
   function deleteDB() {
@@ -143,6 +171,10 @@ function ByName(name) {
 
   function getAccount(id) {
     return db.accounts.get(id);
+  }
+
+  function getCategory(id) {
+    return db.categories.get(id);
   }
 
   function getTransfer(id) {
@@ -179,6 +211,16 @@ function ByName(name) {
       .then((exists) => {
         if (exists) {
           throw new ErrExistingAccount(id);
+        }
+      });
+  }
+
+  function checkNoExistingCategory(id) {
+    return getCategory(id)
+      .then(Boolean)
+      .then((exists) => {
+        if (exists) {
+          throw new ErrExistingCategory(id);
         }
       });
   }
@@ -231,6 +273,26 @@ function ByName(name) {
           case ERR_UPDATE_CONFLICT:
           case ERR_INVALID_ACCOUNT:
             console.warn(`${err.message}. updateAccount will be ignored`);
+            return false; // expected failure
+          default:
+            throw err; // unexpected failure
+        }
+      });
+  }
+
+  function createCategory({ payload }) {
+    return Promise.resolve()
+      .then(() => checkValidCategory(payload))
+      .then(() => checkNoDelete(payload))
+      .then(() => checkNoExistingCategory(payload.id))
+      .then(() => db.categories.add(payload))
+      .then(() => true /* success */)
+      .catch((err) => {
+        switch (err.name) {
+          case ERR_EXISTING_CATEGORY:
+          case ERR_INVALID_CATEGORY:
+          case ERR_NO_DELETE_ALLOWED:
+            console.warn(`${err.message}. createCategory will be ignored`);
             return false; // expected failure
           default:
             throw err; // unexpected failure
@@ -321,12 +383,8 @@ function ByName(name) {
   }
 
   // `from` and `to` are inclusive
-  function getAccounts({ from, to, type }) {
-    let query = db.accounts;
-    if (type) {
-      query = query.filter((acc) => acc.type === type);
-    }
-    return query
+  function getAccounts({ from, to }) {
+    return db.accounts
       .offset(from)
       .limit(to - from + 1)
       .toArray();
@@ -397,6 +455,14 @@ function ByName(name) {
   }
 
   // `from` and `to` are inclusive
+  function getCategories({ from, to }) {
+    return db.categories
+      .offset(from)
+      .limit(to - from + 1)
+      .toArray();
+  }
+
+  // `from` and `to` are inclusive
   function getTransfers({ from, to }) {
     return db.transfers
       .filter((transfer) => !transfer.deleted)
@@ -428,7 +494,7 @@ function ByName(name) {
   function processActions(actions, { actionsAreRemote } = {}) {
     return db.transaction(
       "rw",
-      [db.localActions, db.meta, db.accounts, db.transfers],
+      [db.localActions, db.meta, db.accounts, db.categories, db.transfers],
       () =>
         getActionsCount().then((initialActionsCount) => {
           let actionsCount = initialActionsCount;
@@ -446,6 +512,8 @@ function ByName(name) {
                       return createAccount({ payload: action.payload });
                     case "accounts/update":
                       return updateAccount({ payload: action.payload });
+                    case "categories/create":
+                      return createCategory({ payload: action.payload });
                     case "transfers/create":
                       return createTransfer({ payload: action.payload });
                     case "transfers/update":
@@ -492,6 +560,7 @@ function ByName(name) {
     getAccountBalance,
     getAccounts,
     getActionsCount,
+    getCategories,
     getLastAction,
     getLocalActions,
     getRecentTransfers,

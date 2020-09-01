@@ -1,5 +1,6 @@
 # To-Do
 
+- [ ] finish udpate DexieLocalDB for new rules/v1
 - [ ] finish converting web/App to web/AppFunc
 - [ ] only display latest transfers in the transfers screen
 - [ ] add indicator to show when sync is running/failed/done

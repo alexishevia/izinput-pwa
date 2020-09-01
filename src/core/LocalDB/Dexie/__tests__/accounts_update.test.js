@@ -12,10 +12,8 @@ function Account(values) {
   return {
     id: uuidv1(),
     name: "testsAccount",
-    type: "INTERNAL",
     initialBalance: 0,
     modifiedAt: now,
-    active: true,
     ...values,
   };
 }
@@ -126,25 +124,6 @@ describe("accounts/update", () => {
         ],
         actionsCount: 1,
         lastAction: { id: "phone", initialBalance: 400 },
-      },
-    },
-    {
-      name: "deactivating an account works correctly",
-      setup: async (db) => {
-        await createAccount(db, {
-          id: "phone",
-          modifiedAt: "2020-06-14T18:00:00.000Z",
-        });
-      },
-      action: {
-        id: "phone",
-        active: false,
-        modifiedAt: "2020-06-14T20:00:00.000Z",
-      },
-      expect: {
-        accounts: [{ id: "phone", active: false }],
-        actionsCount: 2,
-        lastAction: { id: "phone", active: false },
       },
     },
   ];

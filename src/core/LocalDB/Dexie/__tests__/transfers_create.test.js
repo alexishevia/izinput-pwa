@@ -15,7 +15,6 @@ function Account(values) {
     type: "INTERNAL",
     initialBalance: 0,
     modifiedAt: now,
-    active: true,
     ...values,
   };
 }
