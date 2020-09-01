@@ -2,35 +2,19 @@
 
 Invoice Zero (IZ) is a personal finance system designed to be easy to use.
 
-IZ is based on just two concepts: Accounts and Transfers.
+IZ supports three types of transactions:
 
-Every transaction in IZ is represented as a Transfer between two Accounts.
+- Payment: money is deposited to one of your accounts
+- Expense: money is withdrawn from one of your accounts
+- Transfer: money is exchanged between two accounts
 
-Eg:
+IZ allows you to assign a category to every transaction, so you can keep track of where your money is being spent (or earned).
 
-- You finish a gig and get paid \$500.
-
-  This can be represented as a \$500 transfer from your "Gigs" account to your "Savings" account.
-
-- You order take out and spend \$30.
-
-  This can be represented as a \$30 transfer from your "Savings" account to your "Food" account.
-
-- You want to save \$50 towards buying a new TV.
-
-  This can be represented as a \$50 transfer from your "Savings" account to your "TV Savings" account.
-
-In these examples:  
-"Gigs" and "Food" would be "external" accounts (money that is not yours).  
-"Savings" and "TV Savings" would be "internal" accounts (your money).
-
-That's it. You decide how many accounts you want to create and how you want to name them.
-
-Based on the transfers you record, IZ can help you answer questions like:
+Based on the transactions you record, IZ can help you answer questions like:
 
 - How much money have I earned this month?
 - How much money have I spent this month?
-- How much money do I currently have?
+- How much money do I currently have on each account?
 - How does my spending patterns compare to previous months?
 - How much money will I have in a year if my financial behavior does not change?
 - If I lost my income sources today, how long will it take for my money to run out?
@@ -53,7 +37,7 @@ Based on the transfers you record, IZ can help you answer questions like:
 
 - Can I share my IZ account with another person (eg: my significant other, family member, etc) so we can collaborate on a shared budget?
 
-  If you want to share an IZ "account" with multiple people, just make sure everyone syncs their data to the same Google Spreadsheet.
+  If you want to share IZ data with multiple people, just make sure everyone syncs their apps to the same Google Spreadsheet.
 
   Google offers different methods to [share documents](https://support.google.com/docs/answer/2494822).
 
