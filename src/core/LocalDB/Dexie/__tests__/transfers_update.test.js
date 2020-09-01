@@ -31,8 +31,8 @@ function Transfer(values) {
   const now = new Date().toISOString();
   return {
     id: uuidv1(),
-    from: uuidv1(),
-    to: uuidv1(),
+    fromID: uuidv1(),
+    toID: uuidv1(),
     amount: 0,
     description: "test transfer",
     transferDate: now.split("T")[0],
@@ -63,8 +63,8 @@ describe("transfers/update", () => {
         await createAccount(db, { id: "food" });
         await createTransfer(db, {
           id: "buyingFood",
-          from: "savings",
-          to: "food",
+          fromID: "savings",
+          toID: "food",
           amount: 50,
           modifiedAt: "2020-06-14T10:00:00.000Z",
         });
@@ -91,8 +91,8 @@ describe("transfers/update", () => {
         await createAccount(db, { id: "food" });
         await createTransfer(db, {
           id: "buyingFood",
-          from: "savings",
-          to: "food",
+          fromID: "savings",
+          toID: "food",
           amount: 50,
           modifiedAt: "2020-06-14T10:00:00.000Z",
         });
@@ -123,8 +123,8 @@ describe("transfers/update", () => {
         await createAccount(db, { id: "food" });
         await createTransfer(db, {
           id: "buyingFood",
-          from: "savings",
-          to: "food",
+          fromID: "savings",
+          toID: "food",
           amount: 50,
           modifiedAt: "2020-06-14T10:00:00.000Z",
         });
@@ -144,8 +144,8 @@ describe("transfers/update", () => {
         await createAccount(db, { id: "food" });
         await createTransfer(db, {
           id: "buyingFood",
-          from: "savings",
-          to: "food",
+          fromID: "savings",
+          toID: "food",
           amount: 50,
           modifiedAt: "2020-06-14T10:00:00.000Z",
         });
@@ -169,8 +169,8 @@ describe("transfers/update", () => {
         await createAccount(db, { id: "food" });
         await createTransfer(db, {
           id: "buyingFood",
-          from: "savings",
-          to: "food",
+          fromID: "savings",
+          toID: "food",
           amount: 50,
           modifiedAt: "2020-06-14T10:00:00.000Z",
         });
@@ -193,8 +193,8 @@ describe("transfers/update", () => {
         await createAccount(db, { id: "food" });
         await createTransfer(db, {
           id: "buyingFood",
-          from: "savings",
-          to: "food",
+          fromID: "savings",
+          toID: "food",
           amount: 50,
           modifiedAt: "2020-06-14T10:00:00.000Z",
         });

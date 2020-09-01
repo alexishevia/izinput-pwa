@@ -124,8 +124,8 @@ function checkValidTransfer(transfer) {
   try {
     new Validation(transfer, "id").required().string().notEmpty();
     new Validation(transfer, "amount").required().number().biggerThan(0);
-    new Validation(transfer, "from").required().string().notEmpty();
-    new Validation(transfer, "to").required().string().notEmpty();
+    new Validation(transfer, "fromID").required().string().notEmpty();
+    new Validation(transfer, "toID").required().string().notEmpty();
     new Validation(transfer, "description").required().string();
     new Validation(transfer, "transferDate").required().dayString();
     new Validation(transfer, "modifiedAt").required().UTCDateString();
@@ -369,8 +369,8 @@ function ByName(name) {
     return Promise.resolve()
       .then(() => checkValidTransfer(payload))
       .then(() => checkNoDelete(payload))
-      .then(() => getExistingAccount(payload.from))
-      .then(() => getExistingAccount(payload.to))
+      .then(() => getExistingAccount(payload.fromID))
+      .then(() => getExistingAccount(payload.toID))
       .then(() => checkNoExistingTransfer(payload.id))
       .then(() => db.transfers.add(payload))
       .then(() => true /* success */)
@@ -401,8 +401,8 @@ function ByName(name) {
         checkValidTransfer(updated);
         return updated;
       })
-      .then((updated) => getExistingAccount(updated.from).then(() => updated))
-      .then((updated) => getExistingAccount(updated.to).then(() => updated))
+      .then((updated) => getExistingAccount(updated.fromID).then(() => updated))
+      .then((updated) => getExistingAccount(updated.toID).then(() => updated))
       .then((updated) => db.transfers.put(updated))
       .then(() => true /* success */)
       .catch((err) => {
@@ -463,7 +463,7 @@ function ByName(name) {
   function getTotalWithdrawals({ id, fromDate, toDate }) {
     let total = 0;
     const query = db.transfers.filter(
-      (transfer) => !transfer.deleted && transfer.from === id
+      (transfer) => !transfer.deleted && transfer.fromID === id
     );
 
     if (fromDate) {
@@ -489,7 +489,7 @@ function ByName(name) {
   function getTotalDeposits(id) {
     let total = 0;
     return db.transfers
-      .filter((transfer) => !transfer.deleted && transfer.to === id)
+      .filter((transfer) => !transfer.deleted && transfer.toID === id)
       .each((transfer) => {
         const amount = parseFloat(transfer.amount, 10);
         if (Number.isNaN(amount)) {

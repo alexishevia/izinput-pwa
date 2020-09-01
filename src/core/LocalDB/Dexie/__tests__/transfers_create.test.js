@@ -28,8 +28,8 @@ function Transfer(values) {
   const now = new Date().toISOString();
   return {
     id: uuidv1(),
-    from: uuidv1(),
-    to: uuidv1(),
+    fromID: uuidv1(),
+    toID: uuidv1(),
     amount: 0,
     description: "test transfer",
     transferDate: now.split("T")[0],
@@ -58,11 +58,11 @@ describe("transfers/create", () => {
         });
         await createAccount(db, { id: "food", type: "EXTERNAL" });
       },
-      action: { from: "savings", to: "food", amount: 30 },
+      action: { fromID: "savings", toID: "food", amount: 30 },
       expect: {
         balances: { savings: 70, food: 30 },
         actionsCount: 3,
-        lastAction: { from: "savings", to: "food" },
+        lastAction: { fromID: "savings", toID: "food" },
       },
     },
     {
@@ -76,8 +76,8 @@ describe("transfers/create", () => {
         await createAccount(db, { id: "food", type: "EXTERNAL" });
       },
       action: {
-        from: "savings",
-        to: "food",
+        fromID: "savings",
+        toID: "food",
         amount: 30,
         modifiedAt: "2020-06-20T17:00:00.000-05:00",
       }, // using -05:00
@@ -94,19 +94,19 @@ describe("transfers/create", () => {
         await createAccount(db, { id: "food" });
         await createTransfer(db, {
           id: "buyingFood",
-          from: "savings",
-          to: "food",
+          fromID: "savings",
+          toID: "food",
           amount: 50,
         });
       },
-      action: { id: "buyingFood", from: "savings", to: "food", amount: 30 },
+      action: { id: "buyingFood", fromID: "savings", toID: "food", amount: 30 },
       expect: {
         balances: { savings: 50, food: 50 },
         actionsCount: 3,
         lastAction: {
           id: "buyingFood",
-          from: "savings",
-          to: "food",
+          fromID: "savings",
+          toID: "food",
           amount: 50,
         },
       },
@@ -117,7 +117,12 @@ describe("transfers/create", () => {
         await createAccount(db, { id: "savings", initialBalance: 100 });
         await createAccount(db, { id: "food" });
       },
-      action: { id: "invalidAmount", from: "savings", to: "food", amount: -50 },
+      action: {
+        id: "invalidAmount",
+        fromID: "savings",
+        toID: "food",
+        amount: -50,
+      },
       expect: {
         balances: { savings: 100, food: 0 },
         actionsCount: 2,
@@ -126,7 +131,7 @@ describe("transfers/create", () => {
     },
     {
       name: "transfer using non-existent account is ignored",
-      action: { from: "foo", to: "bar", amount: 50 },
+      action: { fromID: "foo", toID: "bar", amount: 50 },
       expect: {
         balances: {},
         actionsCount: 0,
@@ -142,7 +147,7 @@ describe("transfers/create", () => {
         });
         await createAccount(db, { id: "food", type: "EXTERNAL" });
       },
-      action: { from: "savings", to: "food", amount: 30, deleted: true },
+      action: { fromID: "savings", toID: "food", amount: 30, deleted: true },
       expect: {
         balances: {
           savings: 100,

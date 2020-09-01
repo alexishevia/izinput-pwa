@@ -32,8 +32,8 @@ function Transfer(values) {
   const now = new Date().toISOString();
   return {
     id: uuidv1(),
-    from: uuidv1(),
-    to: uuidv1(),
+    fromID: uuidv1(),
+    toID: uuidv1(),
     amount: 0,
     description: "test transfer",
     transferDate: now.split("T")[0],
@@ -76,8 +76,8 @@ describe("sync", () => {
         await createAccount(oldLocalDB, { id: "savings", initialBalance: 100 });
         await createAccount(oldLocalDB, { id: "food" });
         await createTransfer(oldLocalDB, {
-          from: "savings",
-          to: "food",
+          fromID: "savings",
+          toID: "food",
           amount: 50,
         });
 
