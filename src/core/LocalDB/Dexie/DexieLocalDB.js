@@ -190,6 +190,15 @@ function ByName(name) {
     });
   }
 
+  function getExistingCategory(id) {
+    return getCategory(id).then((category) => {
+      if (!category) {
+        throw new ErrNoExistingCategory(id);
+      }
+      return category;
+    });
+  }
+
   function getExistingTransfer(id) {
     return getTransfer(id).then((transfer) => {
       if (!transfer) {
@@ -293,6 +302,62 @@ function ByName(name) {
           case ERR_INVALID_CATEGORY:
           case ERR_NO_DELETE_ALLOWED:
             console.warn(`${err.message}. createCategory will be ignored`);
+            return false; // expected failure
+          default:
+            throw err; // unexpected failure
+        }
+      });
+  }
+
+  function updateCategory({ payload }) {
+    return Promise.resolve()
+      .then(() => checkNoDelete(payload))
+      .then(() => getExistingCategory(payload.id))
+      .then((existing) => {
+        checkNoUpdateConflict(existing, payload);
+        return existing;
+      })
+      .then((existing) => ({ ...existing, ...payload, deleted: false }))
+      .then((updated) => {
+        checkValidCategory(updated);
+        return updated;
+      })
+      .then((updated) => db.categories.put(updated))
+      .then(() => true /* success */)
+      .catch((err) => {
+        switch (err.name) {
+          case ERR_NO_EXISTING_CATEGORY:
+          case ERR_UPDATE_CONFLICT:
+          case ERR_INVALID_CATEGORY:
+          case ERR_NO_DELETE_ALLOWED:
+            console.warn(`${err.message}. updateCategory will be ignored`);
+            return false; // expected failure
+          default:
+            throw err; // unexpected failure
+        }
+      });
+  }
+
+  function deleteCategory({ payload }) {
+    const { id, modifiedAt } = payload;
+    return getExistingCategory(id)
+      .then((existing) => {
+        checkNoUpdateConflict(existing, payload);
+        return existing;
+      })
+      .then((existing) => ({ ...existing, deleted: true, modifiedAt }))
+      .then((updated) => {
+        checkValidCategory(updated);
+        return updated;
+      })
+      .then((updated) => db.categories.put(updated))
+      .then(() => true /* success */)
+      .catch((err) => {
+        switch (err.name) {
+          case ERR_INVALID_CATEGORY:
+          case ERR_UPDATE_CONFLICT:
+          case ERR_NO_EXISTING_CATEGORY:
+            console.warn(`${err.message}. deleteCategory will be ignored`);
             return false; // expected failure
           default:
             throw err; // unexpected failure
@@ -514,6 +579,10 @@ function ByName(name) {
                       return updateAccount({ payload: action.payload });
                     case "categories/create":
                       return createCategory({ payload: action.payload });
+                    case "categories/update":
+                      return updateCategory({ payload: action.payload });
+                    case "categories/delete":
+                      return deleteCategory({ payload: action.payload });
                     case "transfers/create":
                       return createTransfer({ payload: action.payload });
                     case "transfers/update":

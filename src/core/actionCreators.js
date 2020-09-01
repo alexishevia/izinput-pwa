@@ -78,11 +78,11 @@ export function CategoriesDeleteAction(id) {
   };
 }
 
-export function CategoriesUpdateAction({ from, to }) {
+export function CategoriesUpdateAction(values) {
   return {
     version: 1,
     type: "categories/update",
-    payload: { from, to },
+    payload: values,
   };
 }
 
