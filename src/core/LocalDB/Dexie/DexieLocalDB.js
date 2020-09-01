@@ -15,6 +15,12 @@ if (!window.indexedDB) {
   Dexie.dependencies.IDBKeyRange = IDBKeyRange;
 }
 
+const ERR_EXISTING_PAYMENT = 'A payment with id: "<ID>" exists';
+const ERR_NO_EXISTING_PAYMENT = 'No payment with id: "<ID>" exists';
+const ERR_INVALID_PAYMENT = "Invalid data for payment: <ERR>";
+const ERR_EXISTING_EXPENSE = 'A expense with id: "<ID>" exists';
+const ERR_NO_EXISTING_EXPENSE = 'No expense with id: "<ID>" exists';
+const ERR_INVALID_EXPENSE = "Invalid data for expense: <ERR>";
 const ERR_EXISTING_TRANSFER = 'A transfer with id: "<ID>" exists';
 const ERR_NO_EXISTING_TRANSFER = 'No transfer with id: "<ID>" exists';
 const ERR_INVALID_TRANSFER = "Invalid data for transfer: <ERR>";
@@ -59,6 +65,34 @@ function ErrNoExistingCategory(id) {
   };
 }
 
+function ErrExistingPayment(id) {
+  return {
+    name: ERR_EXISTING_PAYMENT,
+    message: ERR_EXISTING_PAYMENT.replace("<ID>", id),
+  };
+}
+
+function ErrNoExistingPayment(id) {
+  return {
+    name: ERR_NO_EXISTING_PAYMENT,
+    message: ERR_NO_EXISTING_PAYMENT.replace("<ID>", id),
+  };
+}
+
+function ErrExistingExpense(id) {
+  return {
+    name: ERR_EXISTING_EXPENSE,
+    message: ERR_EXISTING_EXPENSE.replace("<ID>", id),
+  };
+}
+
+function ErrNoExistingExpense(id) {
+  return {
+    name: ERR_NO_EXISTING_EXPENSE,
+    message: ERR_NO_EXISTING_EXPENSE.replace("<ID>", id),
+  };
+}
+
 function ErrExistingTransfer(id) {
   return {
     name: ERR_EXISTING_TRANSFER,
@@ -84,6 +118,20 @@ function ErrInvalidCategory(msg) {
   return {
     name: ERR_INVALID_CATEGORY,
     message: ERR_INVALID_CATEGORY.replace("<ERR>", msg),
+  };
+}
+
+function ErrInvalidPayment(msg) {
+  return {
+    name: ERR_INVALID_PAYMENT,
+    message: ERR_INVALID_PAYMENT.replace("<ERR>", msg),
+  };
+}
+
+function ErrInvalidExpense(msg) {
+  return {
+    name: ERR_INVALID_EXPENSE,
+    message: ERR_INVALID_EXPENSE.replace("<ERR>", msg),
   };
 }
 
@@ -120,6 +168,36 @@ function checkValidCategory(category) {
   }
 }
 
+function checkValidPayment(payment) {
+  try {
+    new Validation(payment, "id").required().string().notEmpty();
+    new Validation(payment, "amount").required().number().biggerThan(0);
+    new Validation(payment, "accountID").required().string().notEmpty();
+    new Validation(payment, "categoryID").required().string().notEmpty();
+    new Validation(payment, "description").required().string();
+    new Validation(payment, "transactionDate").required().dayString();
+    new Validation(payment, "modifiedAt").required().UTCDateString();
+    new Validation(payment, "deleted").required().boolean();
+  } catch (err) {
+    throw new ErrInvalidPayment(err.message);
+  }
+}
+
+function checkValidExpense(expense) {
+  try {
+    new Validation(expense, "id").required().string().notEmpty();
+    new Validation(expense, "amount").required().number().biggerThan(0);
+    new Validation(expense, "accountID").required().string().notEmpty();
+    new Validation(expense, "categoryID").required().string().notEmpty();
+    new Validation(expense, "description").required().string();
+    new Validation(expense, "transactionDate").required().dayString();
+    new Validation(expense, "modifiedAt").required().UTCDateString();
+    new Validation(expense, "deleted").required().boolean();
+  } catch (err) {
+    throw new ErrInvalidExpense(err.message);
+  }
+}
+
 function checkValidTransfer(transfer) {
   try {
     new Validation(transfer, "id").required().string().notEmpty();
@@ -127,7 +205,7 @@ function checkValidTransfer(transfer) {
     new Validation(transfer, "fromID").required().string().notEmpty();
     new Validation(transfer, "toID").required().string().notEmpty();
     new Validation(transfer, "description").required().string();
-    new Validation(transfer, "transferDate").required().dayString();
+    new Validation(transfer, "transactionDate").required().dayString();
     new Validation(transfer, "modifiedAt").required().UTCDateString();
     new Validation(transfer, "deleted").required().boolean();
   } catch (err) {
@@ -146,11 +224,13 @@ function ByName(name) {
   const db = new Dexie(name);
 
   // run migrations
-  db.version(2).stores({
+  db.version(3).stores({
     localActions: "++", // primary key hidden and auto-incremented
     meta: "", // primary key hidden but not auto-incremented
     accounts: "id", // primary key: id
     categories: "id", // primary key: id
+    payments: "id,modifiedAt", // primary key: id, index for modifiedAt
+    expenses: "id,modifiedAt", // primary key: id, index for modifiedAt
     transfers: "id,modifiedAt", // primary key: id, index for modifiedAt
   });
 
@@ -177,6 +257,14 @@ function ByName(name) {
     return db.categories.get(id);
   }
 
+  function getPayment(id) {
+    return db.payments.get(id);
+  }
+
+  function getExpense(id) {
+    return db.expenses.get(id);
+  }
+
   function getTransfer(id) {
     return db.transfers.get(id);
   }
@@ -196,6 +284,24 @@ function ByName(name) {
         throw new ErrNoExistingCategory(id);
       }
       return category;
+    });
+  }
+
+  function getExistingPayment(id) {
+    return getPayment(id).then((payment) => {
+      if (!payment) {
+        throw new ErrNoExistingPayment(id);
+      }
+      return payment;
+    });
+  }
+
+  function getExistingExpense(id) {
+    return getExpense(id).then((expense) => {
+      if (!expense) {
+        throw new ErrNoExistingExpense(id);
+      }
+      return expense;
     });
   }
 
@@ -230,6 +336,26 @@ function ByName(name) {
       .then((exists) => {
         if (exists) {
           throw new ErrExistingCategory(id);
+        }
+      });
+  }
+
+  function checkNoExistingPayment(id) {
+    return getPayment(id)
+      .then(Boolean)
+      .then((exists) => {
+        if (exists) {
+          throw new ErrExistingPayment(id);
+        }
+      });
+  }
+
+  function checkNoExistingExpense(id) {
+    return getExpense(id)
+      .then(Boolean)
+      .then((exists) => {
+        if (exists) {
+          throw new ErrExistingExpense(id);
         }
       });
   }
@@ -365,6 +491,182 @@ function ByName(name) {
       });
   }
 
+  function createPayment({ payload }) {
+    return Promise.resolve()
+      .then(() => checkValidPayment(payload))
+      .then(() => checkNoDelete(payload))
+      .then(() => getExistingAccount(payload.accountID))
+      .then(() => getExistingCategory(payload.categoryID))
+      .then(() => checkNoExistingPayment(payload.id))
+      .then(() => db.payments.add(payload))
+      .then(() => true /* success */)
+      .catch((err) => {
+        switch (err.name) {
+          case ERR_EXISTING_PAYMENT:
+          case ERR_INVALID_PAYMENT:
+          case ERR_NO_EXISTING_ACCOUNT:
+          case ERR_NO_EXISTING_CATEGORY:
+          case ERR_NO_DELETE_ALLOWED:
+            console.warn(`${err.message}. createPayment will be ignored`);
+            return false; // expected failure
+          default:
+            throw err; // unexpected failure
+        }
+      });
+  }
+
+  function updatePayment({ payload }) {
+    return Promise.resolve()
+      .then(() => checkNoDelete(payload))
+      .then(() => getExistingPayment(payload.id))
+      .then((existing) => {
+        checkNoUpdateConflict(existing, payload);
+        return existing;
+      })
+      .then((existing) => ({ ...existing, ...payload, deleted: false }))
+      .then((updated) => {
+        checkValidPayment(updated);
+        return updated;
+      })
+      .then((updated) =>
+        getExistingAccount(updated.accountID).then(() => updated)
+      )
+      .then((updated) =>
+        getExistingCategory(updated.categoryID).then(() => updated)
+      )
+      .then((updated) => db.payments.put(updated))
+      .then(() => true /* success */)
+      .catch((err) => {
+        switch (err.name) {
+          case ERR_NO_EXISTING_PAYMENT:
+          case ERR_NO_EXISTING_ACCOUNT:
+          case ERR_NO_EXISTING_CATEGORY:
+          case ERR_UPDATE_CONFLICT:
+          case ERR_INVALID_PAYMENT:
+          case ERR_NO_DELETE_ALLOWED:
+            console.warn(`${err.message}. updatePayment will be ignored`);
+            return false; // expected failure
+          default:
+            throw err; // unexpected failure
+        }
+      });
+  }
+
+  function deletePayment({ payload }) {
+    const { id, modifiedAt } = payload;
+    return getExistingPayment(id)
+      .then((existing) => {
+        checkNoUpdateConflict(existing, payload);
+        return existing;
+      })
+      .then((existing) => ({ ...existing, deleted: true, modifiedAt }))
+      .then((updated) => {
+        checkValidPayment(updated);
+        return updated;
+      })
+      .then((updated) => db.payments.put(updated))
+      .then(() => true /* success */)
+      .catch((err) => {
+        switch (err.name) {
+          case ERR_INVALID_PAYMENT:
+          case ERR_UPDATE_CONFLICT:
+          case ERR_NO_EXISTING_PAYMENT:
+            console.warn(`${err.message}. deletePayment will be ignored`);
+            return false; // expected failure
+          default:
+            throw err; // unexpected failure
+        }
+      });
+  }
+
+  function createExpense({ payload }) {
+    return Promise.resolve()
+      .then(() => checkValidExpense(payload))
+      .then(() => checkNoDelete(payload))
+      .then(() => getExistingAccount(payload.accountID))
+      .then(() => getExistingCategory(payload.categoryID))
+      .then(() => checkNoExistingExpense(payload.id))
+      .then(() => db.expenses.add(payload))
+      .then(() => true /* success */)
+      .catch((err) => {
+        switch (err.name) {
+          case ERR_EXISTING_EXPENSE:
+          case ERR_INVALID_EXPENSE:
+          case ERR_NO_EXISTING_ACCOUNT:
+          case ERR_NO_EXISTING_CATEGORY:
+          case ERR_NO_DELETE_ALLOWED:
+            console.warn(`${err.message}. createExpense will be ignored`);
+            return false; // expected failure
+          default:
+            throw err; // unexpected failure
+        }
+      });
+  }
+
+  function updateExpense({ payload }) {
+    return Promise.resolve()
+      .then(() => checkNoDelete(payload))
+      .then(() => getExistingExpense(payload.id))
+      .then((existing) => {
+        checkNoUpdateConflict(existing, payload);
+        return existing;
+      })
+      .then((existing) => ({ ...existing, ...payload, deleted: false }))
+      .then((updated) => {
+        checkValidExpense(updated);
+        return updated;
+      })
+      .then((updated) =>
+        getExistingAccount(updated.accountID).then(() => updated)
+      )
+      .then((updated) =>
+        getExistingCategory(updated.categoryID).then(() => updated)
+      )
+      .then((updated) => db.expenses.put(updated))
+      .then(() => true /* success */)
+      .catch((err) => {
+        switch (err.name) {
+          case ERR_NO_EXISTING_EXPENSE:
+          case ERR_NO_EXISTING_ACCOUNT:
+          case ERR_NO_EXISTING_CATEGORY:
+          case ERR_UPDATE_CONFLICT:
+          case ERR_INVALID_EXPENSE:
+          case ERR_NO_DELETE_ALLOWED:
+            console.warn(`${err.message}. updateExpense will be ignored`);
+            return false; // expected failure
+          default:
+            throw err; // unexpected failure
+        }
+      });
+  }
+
+  function deleteExpense({ payload }) {
+    const { id, modifiedAt } = payload;
+    return getExistingExpense(id)
+      .then((existing) => {
+        checkNoUpdateConflict(existing, payload);
+        return existing;
+      })
+      .then((existing) => ({ ...existing, deleted: true, modifiedAt }))
+      .then((updated) => {
+        checkValidExpense(updated);
+        return updated;
+      })
+      .then((updated) => db.expenses.put(updated))
+      .then(() => true /* success */)
+      .catch((err) => {
+        switch (err.name) {
+          case ERR_INVALID_EXPENSE:
+          case ERR_UPDATE_CONFLICT:
+          case ERR_NO_EXISTING_EXPENSE:
+            console.warn(`${err.message}. deleteExpense will be ignored`);
+            return false; // expected failure
+          default:
+            throw err; // unexpected failure
+        }
+      });
+  }
+
   function createTransfer({ payload }) {
     return Promise.resolve()
       .then(() => checkValidTransfer(payload))
@@ -455,56 +757,117 @@ function ByName(name) {
       .toArray();
   }
 
-  function getInitialBalance(id) {
+  function getInitialBalance({ id }) {
     return getExistingAccount(id).then((account) => account.initialBalance);
   }
 
   // `fromDate` and `toDate` are inclusive
   function getTotalWithdrawals({ id, fromDate, toDate }) {
-    let total = 0;
-    const query = db.transfers.filter(
-      (transfer) => !transfer.deleted && transfer.fromID === id
+    function getOutTransfersTotal() {
+      let total = 0;
+      const query = db.transfers.filter(
+        (transfer) => !transfer.deleted && transfer.fromID === id
+      );
+      if (fromDate) {
+        query.filter(({ transactionDate }) => transactionDate >= fromDate);
+      }
+      if (toDate) {
+        query.filter(({ transactionDate }) => transactionDate <= fromDate);
+      }
+      return query
+        .each((transfer) => {
+          const amount = parseFloat(transfer.amount, 10);
+          if (Number.isNaN(amount)) {
+            const msg = `Transfer with id: ${id} has non-numeric amount: ${transfer.amount}`;
+            throw new ErrInvalidTransfer(msg);
+          }
+          total += transfer.amount;
+        })
+        .then(() => total);
+    }
+
+    function getExpensesTotal() {
+      let total = 0;
+      const query = db.expenses.filter(
+        (expense) => !expense.deleted && expense.accountID === id
+      );
+      if (fromDate) {
+        query.filter(({ transactionDate }) => transactionDate >= fromDate);
+      }
+      if (toDate) {
+        query.filter(({ transactionDate }) => transactionDate <= fromDate);
+      }
+      return query
+        .each((expense) => {
+          const amount = parseFloat(expense.amount, 10);
+          if (Number.isNaN(amount)) {
+            const msg = `Expense with id: ${id} has non-numeric amount: ${expense.amount}`;
+            throw new ErrInvalidTransfer(msg);
+          }
+          total += expense.amount;
+        })
+        .then(() => total);
+    }
+
+    return Promise.all([getOutTransfersTotal(), getExpensesTotal()]).then(
+      ([outTransfers, expenses]) => outTransfers + expenses
     );
-
-    if (fromDate) {
-      query.filter(({ transferDate }) => transferDate >= fromDate);
-    }
-
-    if (toDate) {
-      query.filter(({ transferDate }) => transferDate <= fromDate);
-    }
-
-    return query
-      .each((transfer) => {
-        const amount = parseFloat(transfer.amount, 10);
-        if (Number.isNaN(amount)) {
-          const msg = `Transfer with id: ${id} has non-numeric amount: ${transfer.amount}`;
-          throw new ErrInvalidTransfer(msg);
-        }
-        total += transfer.amount;
-      })
-      .then(() => total);
   }
 
-  function getTotalDeposits(id) {
-    let total = 0;
-    return db.transfers
-      .filter((transfer) => !transfer.deleted && transfer.toID === id)
-      .each((transfer) => {
-        const amount = parseFloat(transfer.amount, 10);
-        if (Number.isNaN(amount)) {
-          const msg = `Transfer with id: ${id} has non-numeric amount: ${transfer.amount}`;
-          throw new ErrInvalidTransfer(msg);
-        }
-        total += transfer.amount;
-      })
-      .then(() => total);
+  function getTotalDeposits({ id, fromDate, toDate }) {
+    function getInTransfersTotal() {
+      let total = 0;
+      const query = db.transfers.filter(
+        (transfer) => !transfer.deleted && transfer.toID === id
+      );
+      if (fromDate) {
+        query.filter(({ transactionDate }) => transactionDate >= fromDate);
+      }
+      if (toDate) {
+        query.filter(({ transactionDate }) => transactionDate <= fromDate);
+      }
+      return query
+        .each((transfer) => {
+          const amount = parseFloat(transfer.amount, 10);
+          if (Number.isNaN(amount)) {
+            const msg = `Transfer with id: ${id} has non-numeric amount: ${transfer.amount}`;
+            throw new ErrInvalidTransfer(msg);
+          }
+          total += transfer.amount;
+        })
+        .then(() => total);
+    }
+    function getPaymentsTotal() {
+      let total = 0;
+      const query = db.payments.filter(
+        (payment) => !payment.deleted && payment.accountID === id
+      );
+      if (fromDate) {
+        query.filter(({ transactionDate }) => transactionDate >= fromDate);
+      }
+      if (toDate) {
+        query.filter(({ transactionDate }) => transactionDate <= fromDate);
+      }
+      return query
+        .each((payment) => {
+          const amount = parseFloat(payment.amount, 10);
+          if (Number.isNaN(amount)) {
+            const msg = `Payment with id: ${id} has non-numeric amount: ${payment.amount}`;
+            throw new ErrInvalidTransfer(msg);
+          }
+          total += payment.amount;
+        })
+        .then(() => total);
+    }
+    return Promise.all([getInTransfersTotal(), getPaymentsTotal()]).then(
+      ([inTransfers, payments]) => inTransfers + payments
+    );
   }
 
   function getAccountBalance(id) {
     return Promise.all([
-      getInitialBalance(id),
-      getTotalDeposits(id),
+      getInitialBalance({ id }),
+      getTotalDeposits({ id }),
       getTotalWithdrawals({ id }),
     ]).then(([initialBalance, deposits, withdrawals]) => {
       return initialBalance + deposits - withdrawals;
@@ -559,7 +922,15 @@ function ByName(name) {
   function processActions(actions, { actionsAreRemote } = {}) {
     return db.transaction(
       "rw",
-      [db.localActions, db.meta, db.accounts, db.categories, db.transfers],
+      [
+        db.localActions,
+        db.meta,
+        db.accounts,
+        db.categories,
+        db.payments,
+        db.expenses,
+        db.transfers,
+      ],
       () =>
         getActionsCount().then((initialActionsCount) => {
           let actionsCount = initialActionsCount;
@@ -583,6 +954,18 @@ function ByName(name) {
                       return updateCategory({ payload: action.payload });
                     case "categories/delete":
                       return deleteCategory({ payload: action.payload });
+                    case "payments/create":
+                      return createPayment({ payload: action.payload });
+                    case "payments/update":
+                      return updatePayment({ payload: action.payload });
+                    case "payments/delete":
+                      return deletePayment({ payload: action.payload });
+                    case "expenses/create":
+                      return createExpense({ payload: action.payload });
+                    case "expenses/update":
+                      return updateExpense({ payload: action.payload });
+                    case "expenses/delete":
+                      return deleteExpense({ payload: action.payload });
                     case "transfers/create":
                       return createTransfer({ payload: action.payload });
                     case "transfers/update":

@@ -14,6 +14,54 @@ export function AccountsUpdateAction(values) {
   };
 }
 
+export function PaymentsCreateAction(values) {
+  return {
+    version: 1,
+    type: "payments/create",
+    payload: values,
+  };
+}
+
+export function PaymentsUpdateAction(values) {
+  return {
+    version: 1,
+    type: "payments/update",
+    payload: values,
+  };
+}
+
+export function PaymentsDeleteAction({ id, modifiedAt }) {
+  return {
+    version: 1,
+    type: "payments/delete",
+    payload: { id, modifiedAt },
+  };
+}
+
+export function ExpensesCreateAction(values) {
+  return {
+    version: 1,
+    type: "expenses/create",
+    payload: values,
+  };
+}
+
+export function ExpensesUpdateAction(values) {
+  return {
+    version: 1,
+    type: "expenses/update",
+    payload: values,
+  };
+}
+
+export function ExpensesDeleteAction({ id, modifiedAt }) {
+  return {
+    version: 1,
+    type: "expenses/delete",
+    payload: { id, modifiedAt },
+  };
+}
+
 export function TransfersCreateAction(values) {
   return {
     version: 1,
@@ -38,30 +86,6 @@ export function TransfersDeleteAction({ id, modifiedAt }) {
   };
 }
 
-export function TransactionsCreateAction(values) {
-  return {
-    version: 1,
-    type: "transactions/create",
-    payload: values,
-  };
-}
-
-export function TransactionsDeleteAction({ id, modifiedAt }) {
-  return {
-    version: 1,
-    type: "transactions/delete",
-    payload: { id, modifiedAt },
-  };
-}
-
-export function TransactionsUpdateAction(values) {
-  return {
-    version: 1,
-    type: "transactions/update",
-    payload: values,
-  };
-}
-
 export function CategoriesCreateAction(name) {
   return {
     version: 1,
@@ -83,13 +107,5 @@ export function CategoriesUpdateAction(values) {
     version: 1,
     type: "categories/update",
     payload: values,
-  };
-}
-
-export function InitialSavingsUpdateAction(value) {
-  return {
-    version: 1,
-    type: "initialSavings/update",
-    payload: value,
   };
 }

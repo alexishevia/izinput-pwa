@@ -36,7 +36,7 @@ function Transfer(values) {
     toID: uuidv1(),
     amount: 0,
     description: "test transfer",
-    transferDate: now.split("T")[0],
+    transactionDate: now.split("T")[0],
     modifiedAt: now,
     deleted: false,
     ...values,

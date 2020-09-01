@@ -13,7 +13,6 @@ function Account(values) {
   return {
     id: uuidv1(),
     name: "testsAccount",
-    type: "INTERNAL",
     initialBalance: 0,
     modifiedAt: now,
     active: true,
@@ -34,7 +33,7 @@ function Transfer(values) {
     toID: uuidv1(),
     amount: 0,
     description: "test transfer",
-    transferDate: now.split("T")[0],
+    transactionDate: now.split("T")[0],
     modifiedAt: now,
     deleted: false,
     ...values,
