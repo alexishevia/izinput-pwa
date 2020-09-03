@@ -23,17 +23,19 @@ import {
 
 const CHANGE_EVENT = "CHANGE_EVENT";
 
+function sortByModifiedAt(a, b) {
+  if (a.modifiedAt > b.modifiedAt) {
+    return -1;
+  }
+  if (b.modifiedAt > a.modifiedAt) {
+    return 1;
+  }
+  return 0;
+}
+
 // asMoneyFloat truncates a float to 2 decimal points
 function asMoneyFloat(num) {
   return Number.parseFloat(num.toFixed(2), 10);
-}
-
-function isInternal(account) {
-  return account.type === "INTERNAL";
-}
-
-function isExternal(account) {
-  return !isInternal(account);
 }
 
 function gDriveGetSelectedFile() {
@@ -154,6 +156,13 @@ async function getAccounts() {
   return allAccounts;
 }
 
+async function getCategories() {
+  // TODO: instead of hardcoding the `from` and `to` values, should iterate until all categories are pulled from DB
+  const localDB = await getLocalDB();
+  const allCategories = await localDB.getCategories({ from: 0, to: 100 });
+  return allCategories;
+}
+
 // both `from` and `to` are inclusive
 async function getTransfers({ from, to }) {
   const localDB = await getLocalDB();
@@ -170,16 +179,29 @@ async function getRecentTransfers() {
   return localDB.getRecentTransfers({ from: 0, to: 15 });
 }
 
-function isExpense(transaction, accounts) {
-  const from = accounts.find((account) => account.id === transaction.from);
-  const to = accounts.find((account) => account.id === transaction.to);
-  return from && to && isInternal(from) && isExternal(to);
-}
-
-function isIncome(transaction, accounts) {
-  const from = accounts.find((account) => account.id === transaction.from);
-  const to = accounts.find((account) => account.id === transaction.to);
-  return from && to && isExternal(from) && isInternal(to);
+const recentCount = 15;
+async function getRecentTransactions() {
+  const localDB = await getLocalDB();
+  const [payments, expenses, transfers] = await Promise.all([
+    localDB
+      .getRecentPayments({ from: 0, to: recentCount })
+      .then((result) =>
+        result.map((payment) => ({ ...payment, type: "PAYMENT" }))
+      ),
+    localDB
+      .getRecentExpenses({ from: 0, to: recentCount })
+      .then((result) =>
+        result.map((expense) => ({ ...expense, type: "EXPENSE" }))
+      ),
+    localDB
+      .getRecentTransfers({ from: 0, to: recentCount })
+      .then((result) =>
+        result.map((transfer) => ({ ...transfer, type: "TRANSFER" }))
+      ),
+  ]);
+  return [...payments, ...expenses, ...transfers]
+    .sort(sortByModifiedAt)
+    .slice(0, recentCount);
 }
 
 export default function InvoiceZero() {
@@ -343,6 +365,7 @@ export default function InvoiceZero() {
     isGDriveLoggedIn,
     runSync,
     updateAccount,
+    getRecentTransfers,
   };
 
   return {
@@ -350,12 +373,9 @@ export default function InvoiceZero() {
     CHANGE_EVENT,
     extendAccounts,
     getAccounts,
-    getRecentTransfers,
+    getCategories,
+    getRecentTransactions,
     getTransfer,
-    isExpense,
-    isExternal,
-    isIncome,
-    isInternal,
     off,
     on,
     updateTransfer,

@@ -1,11 +1,11 @@
 import React from "react";
 import PropTypes from "prop-types";
-import TransfersList from "../../TransfersList";
+import TransactionsList from "../../TransactionsList";
 
 export default function Transfers({ accounts, transfers }) {
   return (
     <>
-      <TransfersList accounts={accounts} transfers={transfers} />
+      <TransactionsList accounts={accounts} transfers={transfers} />
     </>
   );
 }

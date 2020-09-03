@@ -91,7 +91,15 @@ export default function FilePicker({ onCancel, onFilePick }) {
       }
     }
     loadDirContents();
-  }, [isFileSelected, pathIDs]);
+  }, [
+    isFileSelected,
+    pathIDs,
+    addError,
+    contents,
+    dismissErrors,
+    errors.length,
+    isLoading,
+  ]);
 
   function onGoBack(evt) {
     evt.preventDefault();

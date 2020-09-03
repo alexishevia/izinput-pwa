@@ -15,7 +15,6 @@ import {
 } from "@ionic/react";
 import { trashOutline } from "ionicons/icons";
 import useErrors from "../../hooks/useErrors";
-import useCoreAppData from "../../hooks/useCoreAppData";
 import { dateToDayStr, isValidDayStr } from "../../../helpers/date";
 import Validation from "../../../helpers/Validation";
 import Errors from "../../Errors";
@@ -59,34 +58,40 @@ export default function EditTransfer({ id, coreApp, onClose }) {
   const [transferDate, setTransferDate] = useState(null);
   const [isDeleteAlertOpen, setDeleteAlertOpen] = useState(false);
   const [errors, addError, dismissErrors] = useErrors([]);
+  const [accounts, setAccounts] = useState(null);
+  const [transfer, setTransfer] = useState(null);
 
-  const accounts = useCoreAppData({
-    coreApp,
-    initialValue: [],
-    runOnce: true,
-    dataLoadFunc: async (setAccounts) => {
+  useEffect(() => {
+    if (accounts !== null) {
+      return;
+    }
+    setAccounts([]);
+    async function loadAccountsData() {
       try {
         const allAccounts = await coreApp.getAccounts();
         setAccounts(allAccounts);
       } catch (err) {
         addError(err);
       }
-    },
-  });
+    }
+    loadAccountsData();
+  }, [accounts, coreApp, addError]);
 
-  const transfer = useCoreAppData({
-    coreApp,
-    initialValue: {},
-    runOnce: true,
-    dataLoadFunc: async (setTransfer) => {
+  useEffect(() => {
+    if (transfer !== null) {
+      return;
+    }
+    setTransfer({});
+    async function loadTransferData() {
       try {
         const transferData = await coreApp.getTransfer(id);
         setTransfer(transferData);
       } catch (err) {
         addError(err);
       }
-    },
-  });
+    }
+    loadTransferData();
+  }, [transfer, coreApp, id, addError]);
 
   useEffect(
     function resetFormData() {

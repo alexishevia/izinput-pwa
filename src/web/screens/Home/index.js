@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { IonLabel, IonItem } from "@ionic/react";
 import AccountsChart from "./AccountsChart";
-import TransfersList from "../../TransfersList";
+import TransactionsList from "../../TransactionsList";
 import useErrors from "../../hooks/useErrors";
 import useCoreAppData from "../../hooks/useCoreAppData";
 import Errors from "../../Errors";
@@ -17,30 +17,37 @@ export default function Home({ coreApp }) {
       try {
         const allAccounts = await coreApp.getAccounts();
         setAccounts(allAccounts);
-
-        const externalAccounts = allAccounts.filter(coreApp.isExternal);
-        let internalAccounts = allAccounts.filter(coreApp.isInternal);
-
-        // extend internalAccounts with commonly used fields
-        internalAccounts = await coreApp.extendAccounts(internalAccounts, [
+        const extendedAccounts = await coreApp.extendAccounts(allAccounts, [
           "balance",
           "monthlyWithdrawals",
         ]);
-
-        setAccounts([...internalAccounts, ...externalAccounts]);
+        setAccounts(extendedAccounts);
       } catch (err) {
         addError(err);
       }
     },
   });
 
-  const recentTransfers = useCoreAppData({
+  const categories = useCoreAppData({
     coreApp,
     initialValue: [],
-    dataLoadFunc: async (setRecentTransfers) => {
+    dataLoadFunc: async (setCategories) => {
       try {
-        const transfers = await coreApp.getRecentTransfers();
-        setRecentTransfers(transfers);
+        const allCategories = await coreApp.getCategories();
+        setCategories(allCategories);
+      } catch (err) {
+        addError(err);
+      }
+    },
+  });
+
+  const recentTransactions = useCoreAppData({
+    coreApp,
+    initialValue: [],
+    dataLoadFunc: async (setRecentTransactions) => {
+      try {
+        const transactions = await coreApp.getRecentTransactions();
+        setRecentTransactions(transactions);
       } catch (err) {
         addError(err);
       }
@@ -55,16 +62,16 @@ export default function Home({ coreApp }) {
           <h3>Accounts</h3>
         </IonLabel>
       </IonItem>
-      <AccountsChart accounts={accounts.filter(coreApp.isInternal)} />
+      <AccountsChart accounts={accounts} />
       <IonItem>
         <IonLabel>
-          <h3>Recent Transfers</h3>
+          <h3>Recent Transactions</h3>
         </IonLabel>
       </IonItem>
-      <TransfersList
-        coreApp={coreApp}
-        transfers={recentTransfers}
+      <TransactionsList
+        transactions={recentTransactions}
         accounts={accounts}
+        categories={categories}
       />
     </>
   );
@@ -72,16 +79,9 @@ export default function Home({ coreApp }) {
 
 Home.propTypes = {
   coreApp: PropTypes.shape({
-    CHANGE_EVENT: PropTypes.string.isRequired,
-    deleteTransfer: PropTypes.func.isRequired,
     extendAccounts: PropTypes.func.isRequired,
     getAccounts: PropTypes.func.isRequired,
-    getRecentTransfers: PropTypes.func.isRequired,
-    getTotalWithdrawals: PropTypes.func.isRequired,
-    isExternal: PropTypes.func.isRequired,
-    isInternal: PropTypes.func.isRequired,
-    off: PropTypes.func.isRequired,
-    on: PropTypes.func.isRequired,
-    updateTransfer: PropTypes.func.isRequired,
+    getCategories: PropTypes.func.isRequired,
+    getRecentTransactions: PropTypes.func.isRequired,
   }).isRequired,
 };

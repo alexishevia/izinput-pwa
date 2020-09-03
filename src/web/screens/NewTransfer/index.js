@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
   IonButton,
@@ -14,7 +14,6 @@ import {
 import { dateToDayStr, isValidDayStr } from "../../../helpers/date";
 import Validation from "../../../helpers/Validation";
 import useErrors from "../../hooks/useErrors";
-import useCoreAppData from "../../hooks/useCoreAppData";
 import Errors from "../../Errors";
 import ModalToolbar from "../../ModalToolbar";
 
@@ -57,12 +56,14 @@ export default function NewTransfer({ type, coreApp, onClose }) {
   const [description, setDescription] = useState(null);
   const [transferDate, setTransferDate] = useState(today());
   const [errors, addError, dismissErrors] = useErrors([]);
+  const [accounts, setAccounts] = useState(null);
 
-  const accounts = useCoreAppData({
-    coreApp,
-    initialValue: [],
-    runOnce: true,
-    dataLoadFunc: async (setAccounts) => {
+  useEffect(() => {
+    if (accounts !== null) {
+      return;
+    }
+    setAccounts([]);
+    async function loadData() {
       try {
         const allAccounts = await coreApp.getAccounts();
         setAccounts(allAccounts);
@@ -79,8 +80,9 @@ export default function NewTransfer({ type, coreApp, onClose }) {
       } catch (err) {
         addError(err);
       }
-    },
-  });
+    }
+    loadData();
+  }, [accounts, coreApp, addError]);
 
   async function handleSubmit(evt) {
     evt.preventDefault();

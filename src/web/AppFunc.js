@@ -8,9 +8,10 @@ import Home from "./screens/Home";
 import NewTransfer from "./screens/NewTransfer";
 import EditTransfer from "./screens/EditTransfer";
 import NotFound from "./screens/NotFound";
+import Sync from "./screens/Sync";
 
 export default function App({ coreApp }) {
-  const [isSyncRunning] = useState(false);
+  const [isSyncRunning, setIsSyncRunning] = useState(false);
 
   return (
     <IonApp>
@@ -26,7 +27,6 @@ export default function App({ coreApp }) {
             )}
           />
           <Route
-            exact
             path="/newExpense"
             component={({ history }) => (
               <NewTransfer
@@ -37,7 +37,6 @@ export default function App({ coreApp }) {
             )}
           />
           <Route
-            exact
             path="/newIncome"
             component={({ history }) => (
               <NewTransfer
@@ -48,7 +47,6 @@ export default function App({ coreApp }) {
             )}
           />
           <Route
-            exact
             path="/newTransfer"
             component={({ history }) => (
               <NewTransfer
@@ -59,7 +57,6 @@ export default function App({ coreApp }) {
             )}
           />
           <Route
-            exact
             path="/editTransfer/:id"
             component={({ history, match }) => (
               <EditTransfer
@@ -67,6 +64,14 @@ export default function App({ coreApp }) {
                 id={match.params.id}
                 onClose={history.goBack}
               />
+            )}
+          />
+          <Route
+            path="/sync"
+            component={() => (
+              <Screen isSyncRunning={isSyncRunning}>
+                <Sync coreApp={coreApp} setIsSyncRunning={setIsSyncRunning} />
+              </Screen>
             )}
           />
           <Route

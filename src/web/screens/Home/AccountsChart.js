@@ -10,16 +10,20 @@ import {
 } from "recharts";
 import "./AccountsChart.css";
 
+const minHeight = 100;
+
 export default function AccountsChart({ accounts }) {
   if (!accounts || !accounts.length) {
     return null;
   }
 
+  const height = accounts.length * 50;
+
   return (
     <ResponsiveContainer
       className="AccountsChart"
       width="100%"
-      height={accounts.length * 50}
+      height={height < minHeight ? minHeight : height}
     >
       <BarChart data={accounts} layout="vertical">
         <XAxis type="number" domain={[0, "dataMax"]} hide />
@@ -30,7 +34,7 @@ export default function AccountsChart({ accounts }) {
           stackId="a"
           dataKey="monthlyWithdrawals"
           name="monthly withdrawals"
-          fill="rgb(200, 37, 44)"
+          fill="#EF666D"
         />
       </BarChart>
     </ResponsiveContainer>

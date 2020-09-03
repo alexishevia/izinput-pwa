@@ -900,6 +900,28 @@ function ByName(name) {
   }
 
   // `from` and `to` are inclusive
+  function getRecentPayments({ from, to }) {
+    return db.payments
+      .orderBy("modifiedAt")
+      .filter((payment) => !payment.deleted)
+      .reverse()
+      .offset(from)
+      .limit(to - from + 1)
+      .toArray();
+  }
+
+  // `from` and `to` are inclusive
+  function getRecentExpenses({ from, to }) {
+    return db.expenses
+      .orderBy("modifiedAt")
+      .filter((expense) => !expense.deleted)
+      .reverse()
+      .offset(from)
+      .limit(to - from + 1)
+      .toArray();
+  }
+
+  // `from` and `to` are inclusive
   function getRecentTransfers({ from, to }) {
     return db.transfers
       .orderBy("modifiedAt")
@@ -1015,6 +1037,8 @@ function ByName(name) {
     getCategories,
     getLastAction,
     getLocalActions,
+    getRecentExpenses,
+    getRecentPayments,
     getRecentTransfers,
     getTotalWithdrawals,
     getTransfer,
