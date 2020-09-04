@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
-  IonAlert,
   IonButton,
   IonContent,
   IonDatetime,
-  IonIcon,
   IonInput,
   IonItem,
   IonLabel,
@@ -13,10 +11,9 @@ import {
   IonSelect,
   IonSelectOption,
 } from "@ionic/react";
-import { trashOutline } from "ionicons/icons";
-import useErrors from "../../hooks/useErrors";
 import { dateToDayStr, isValidDayStr } from "../../../helpers/date";
 import Validation from "../../../helpers/Validation";
+import useErrors from "../../hooks/useErrors";
 import Errors from "../../Errors";
 import ModalToolbar from "../../ModalToolbar";
 
@@ -35,7 +32,6 @@ function sortByName({ name: a }, { name: b }) {
 }
 
 function buildExpenseData({
-  id,
   accountID,
   categoryID,
   amount,
@@ -43,7 +39,6 @@ function buildExpenseData({
   transactionDate,
 }) {
   const expenseData = {
-    id,
     accountID,
     categoryID,
     amount: parseFloat(amount, 10),
@@ -60,17 +55,15 @@ function buildExpenseData({
   return expenseData;
 }
 
-export default function EditExpense({ id, coreApp, onClose }) {
+export default function NewExpense({ coreApp, onClose }) {
   const [amount, setAmount] = useState(null);
   const [accountID, setAccountID] = useState(null);
   const [categoryID, setCategoryID] = useState(null);
   const [description, setDescription] = useState(null);
-  const [transactionDate, setExpenseDate] = useState(null);
-  const [isDeleteAlertOpen, setDeleteAlertOpen] = useState(false);
+  const [transactionDate, setExpenseDate] = useState(today());
   const [errors, addError, dismissErrors] = useErrors([]);
   const [accounts, setAccounts] = useState(null);
   const [categories, setCategories] = useState(null);
-  const [expense, setExpense] = useState(null);
 
   useEffect(
     function loadAccounts() {
@@ -114,115 +107,38 @@ export default function EditExpense({ id, coreApp, onClose }) {
     [categories, coreApp, addError]
   );
 
-  useEffect(
-    function loadExpense() {
-      if (expense !== null) {
-        return;
-      }
-      setExpense({});
-      async function loadExpenseData() {
-        try {
-          const expenseData = await coreApp.getExpense(id);
-          setExpense(expenseData);
-        } catch (err) {
-          addError(err);
-        }
-      }
-      loadExpenseData();
-    },
-    [expense, coreApp, id, addError]
-  );
-
-  useEffect(
-    function resetFormData() {
-      setAmount(null);
-      setAccountID(null);
-      setCategoryID(null);
-      setDescription(null);
-      setExpenseDate(null);
-      setDeleteAlertOpen(false);
-    },
-    [id]
-  );
-
-  const amountVal = amount ?? expense?.amount;
-  const accountIDVal =
-    accountID ??
-    (accounts || []).find((acct) => acct.id === expense?.accountID)?.id;
-  const categoryIDVal =
-    categoryID ??
-    (categories || []).find((cat) => cat.id === expense?.categoryID)?.id;
-  const descriptionVal = description ?? expense?.description;
-  const transactionDateVal = transactionDate ?? expense?.transactionDate;
+  async function handleSubmit(evt) {
+    evt.preventDefault();
+    try {
+      const expenseData = buildExpenseData({
+        accountID,
+        categoryID,
+        amount,
+        description,
+        transactionDate,
+      });
+      await coreApp.createExpense(expenseData);
+      onClose();
+    } catch (err) {
+      addError(err);
+    }
+  }
 
   function handleCancel(evt) {
     evt.preventDefault();
     onClose();
   }
 
-  function handleDelete(evt) {
-    evt.preventDefault();
-    setDeleteAlertOpen(true);
-  }
-
-  async function handleDeleteConfirm() {
-    try {
-      setDeleteAlertOpen(false);
-      await coreApp.deleteExpense(id);
-      onClose();
-    } catch (err) {
-      addError(err);
-    }
-  }
-
-  async function handleSubmit(evt) {
-    evt.preventDefault();
-    try {
-      const expenseData = buildExpenseData({
-        id: expense.id,
-        accountID: accountIDVal,
-        categoryID: categoryIDVal,
-        amount: amountVal,
-        description: descriptionVal,
-        transactionDate: transactionDateVal,
-      });
-      await coreApp.updateExpense(expenseData);
-      onClose();
-    } catch (err) {
-      addError(err);
-    }
-  }
-
-  const endButton = (
-    <IonButton onClick={handleDelete}>
-      <IonIcon icon={trashOutline} />
-    </IonButton>
-  );
-
   return (
     <IonPage id="main-content">
-      <ModalToolbar
-        title="Edit Expense"
-        onClose={onClose}
-        endButton={endButton}
-      />
+      <ModalToolbar title="New Expense" onClose={onClose} />
       <IonContent>
         <Errors errors={errors} onDismiss={dismissErrors} />
         <form onSubmit={handleSubmit}>
-          <IonAlert
-            isOpen={isDeleteAlertOpen}
-            onDidDismiss={() => setDeleteAlertOpen(false)}
-            header="Delete Expense"
-            message="Are you sure you want to delete this expense?"
-            buttons={[
-              { text: "Cancel", role: "cancel" },
-              { text: "Delete", handler: handleDeleteConfirm },
-            ]}
-          />
           <IonItem>
             <IonLabel position="stacked">Account:</IonLabel>
             <IonSelect
-              value={accountIDVal}
+              value={accountID}
               onIonChange={(evt) => {
                 setAccountID(evt.detail.value);
               }}
@@ -241,7 +157,7 @@ export default function EditExpense({ id, coreApp, onClose }) {
           <IonItem>
             <IonLabel position="stacked">Category:</IonLabel>
             <IonSelect
-              value={categoryIDVal}
+              value={categoryID}
               onIonChange={(evt) => {
                 setCategoryID(evt.detail.value);
               }}
@@ -261,7 +177,7 @@ export default function EditExpense({ id, coreApp, onClose }) {
             <IonInput
               type="number"
               step="0.01"
-              value={amountVal}
+              value={amount}
               placeholder="$"
               onIonChange={(evt) => {
                 setAmount(evt.detail.value);
@@ -272,7 +188,7 @@ export default function EditExpense({ id, coreApp, onClose }) {
           <IonItem>
             <IonLabel position="stacked">Date:</IonLabel>
             <IonDatetime
-              value={transactionDateVal}
+              value={transactionDate}
               onIonChange={(evt) => {
                 setExpenseDate(evt.detail.value);
               }}
@@ -282,7 +198,7 @@ export default function EditExpense({ id, coreApp, onClose }) {
             <IonLabel position="stacked">Description:</IonLabel>
             <IonInput
               type="text"
-              value={descriptionVal}
+              value={description}
               onIonChange={(evt) => {
                 setDescription(evt.detail.value);
               }}
@@ -291,22 +207,19 @@ export default function EditExpense({ id, coreApp, onClose }) {
           <IonButton color="medium" onClick={handleCancel}>
             Cancel
           </IonButton>
-          <IonButton type="submit">Update Expense</IonButton>
+          <IonButton type="submit">Add Expense</IonButton>
         </form>
       </IonContent>
     </IonPage>
   );
 }
 
-EditExpense.propTypes = {
-  id: PropTypes.string.isRequired,
+NewExpense.propTypes = {
   coreApp: PropTypes.shape({
-    deleteExpense: PropTypes.func.isRequired,
+    createExpense: PropTypes.func.isRequired,
     extendAccounts: PropTypes.func.isRequired,
     getAccounts: PropTypes.func.isRequired,
     getCategories: PropTypes.func.isRequired,
-    getExpense: PropTypes.func.isRequired,
-    updateExpense: PropTypes.func.isRequired,
   }).isRequired,
   onClose: PropTypes.func.isRequired,
 };

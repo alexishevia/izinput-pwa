@@ -9,6 +9,7 @@ import GoogleSpreadsheet from "./AppendOnlyLog/GoogleSpreadsheet";
 import {
   AccountsCreateAction,
   AccountsUpdateAction,
+  ExpensesCreateAction,
   ExpensesDeleteAction,
   ExpensesUpdateAction,
   TransfersCreateAction,
@@ -288,6 +289,27 @@ export default function InvoiceZero() {
     await processActions([action]);
   }
 
+  async function createExpense(props) {
+    const {
+      accountID,
+      categoryID,
+      amount,
+      description,
+      transactionDate,
+    } = props;
+    const action = new ExpensesCreateAction({
+      id: uuidv4(),
+      amount,
+      accountID,
+      categoryID,
+      description,
+      transactionDate,
+      modifiedAt: new Date().toISOString(),
+      deleted: false,
+    });
+    await processActions([action]);
+  }
+
   async function updateExpense(props) {
     const data = {};
     [
@@ -405,6 +427,7 @@ export default function InvoiceZero() {
   return {
     ...oldExportedFuncs,
     CHANGE_EVENT,
+    createExpense,
     deleteExpense,
     extendAccounts,
     getAccounts,

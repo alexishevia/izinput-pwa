@@ -6,6 +6,7 @@ import { IonReactRouter } from "@ionic/react-router";
 import Screen from "./Screen";
 import Home from "./screens/Home";
 import NewTransfer from "./screens/NewTransfer";
+import NewExpense from "./screens/NewExpense";
 import EditTransfer from "./screens/EditTransfer";
 import EditExpense from "./screens/EditExpense";
 import NotFound from "./screens/NotFound";
@@ -30,11 +31,7 @@ export default function App({ coreApp }) {
           <Route
             path="/newExpense"
             component={({ history }) => (
-              <NewTransfer
-                type="EXPENSE"
-                coreApp={coreApp}
-                onClose={history.goBack}
-              />
+              <NewExpense coreApp={coreApp} onClose={history.goBack} />
             )}
           />
           <Route
