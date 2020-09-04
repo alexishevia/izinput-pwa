@@ -9,9 +9,11 @@ import GoogleSpreadsheet from "./AppendOnlyLog/GoogleSpreadsheet";
 import {
   AccountsCreateAction,
   AccountsUpdateAction,
+  ExpensesDeleteAction,
+  ExpensesUpdateAction,
   TransfersCreateAction,
-  TransfersUpdateAction,
   TransfersDeleteAction,
+  TransfersUpdateAction,
 } from "./actionCreators";
 import { dateToDayStr } from "../helpers/date";
 
@@ -174,6 +176,11 @@ async function getTransfer(id) {
   return localDB.getTransfer(id);
 }
 
+async function getExpense(id) {
+  const localDB = await getLocalDB();
+  return localDB.getExpense(id);
+}
+
 async function getRecentTransfers() {
   const localDB = await getLocalDB();
   return localDB.getRecentTransfers({ from: 0, to: 15 });
@@ -251,39 +258,66 @@ export default function InvoiceZero() {
     await processActions([action]);
   }
 
-  async function createTransfer(transferProps) {
-    const { from, to, amount, description, transferDate } = transferProps;
+  async function createTransfer(props) {
+    const { from, to, amount, description, transactionDate } = props;
     const action = new TransfersCreateAction({
       id: uuidv4(),
       amount,
       from,
       to,
       description,
-      transferDate,
+      transactionDate,
       modifiedAt: new Date().toISOString(),
       deleted: false,
     });
     await processActions([action]);
   }
 
-  async function updateTransfer(transferProps) {
+  async function updateTransfer(props) {
     const data = {};
-    ["id", "from", "to", "amount", "description", "transferDate"].forEach(
+    ["id", "from", "to", "amount", "description", "transactionDate"].forEach(
       (key) => {
-        if (Object.prototype.hasOwnProperty.call(transferProps, key)) {
-          data[key] = transferProps[key];
+        if (Object.prototype.hasOwnProperty.call(props, key)) {
+          data[key] = props[key];
         }
       }
     );
     data.modifiedAt = new Date().toISOString();
     data.deleted = false;
     const action = new TransfersUpdateAction(data);
+    await processActions([action]);
+  }
 
+  async function updateExpense(props) {
+    const data = {};
+    [
+      "id",
+      "accountID",
+      "categoryID",
+      "amount",
+      "description",
+      "transactionDate",
+    ].forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(props, key)) {
+        data[key] = props[key];
+      }
+    });
+    data.modifiedAt = new Date().toISOString();
+    data.deleted = false;
+    const action = new ExpensesUpdateAction(data);
     await processActions([action]);
   }
 
   async function deleteTransfer(id) {
     const action = new TransfersDeleteAction({
+      id,
+      modifiedAt: new Date().toISOString(),
+    });
+    await processActions([action]);
+  }
+
+  async function deleteExpense(id) {
+    const action = new ExpensesDeleteAction({
       id,
       modifiedAt: new Date().toISOString(),
     });
@@ -360,24 +394,27 @@ export default function InvoiceZero() {
     gDriveLogout,
     gDriveSelectFile,
     getAccountBalance,
+    getRecentTransfers,
     getTotalWithdrawals,
     getTransfers,
     isGDriveLoggedIn,
     runSync,
     updateAccount,
-    getRecentTransfers,
   };
 
   return {
     ...oldExportedFuncs,
     CHANGE_EVENT,
+    deleteExpense,
     extendAccounts,
     getAccounts,
     getCategories,
+    getExpense,
     getRecentTransactions,
     getTransfer,
     off,
     on,
+    updateExpense,
     updateTransfer,
   };
 }

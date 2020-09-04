@@ -1043,6 +1043,7 @@ function ByName(name) {
     getTotalWithdrawals,
     getTransfer,
     getTransfers,
+    getExpense,
     name,
     processActions,
   };

@@ -31,20 +31,20 @@ function sortByName({ name: a }, { name: b }) {
   return 0;
 }
 
-function buildTransferData({ from, to, amount, description, transferDate }) {
+function buildTransferData({ from, to, amount, description, transactionDate }) {
   const transferData = {
     from,
     to,
     amount: parseFloat(amount, 10),
     description,
-    transferDate: isValidDayStr(transferDate) ? transferDate : today(),
+    transactionDate: isValidDayStr(transactionDate) ? transactionDate : today(),
   };
 
   new Validation(transferData, "from").required().string().notEmpty();
   new Validation(transferData, "to").required().string().notEmpty();
   new Validation(transferData, "amount").required().number().biggerThan(0);
   new Validation(transferData, "description").required().string();
-  new Validation(transferData, "transferDate").required().dayString();
+  new Validation(transferData, "transactionDate").required().dayString();
 
   return transferData;
 }
@@ -54,7 +54,7 @@ export default function NewTransfer({ type, coreApp, onClose }) {
   const [from, setFrom] = useState(null);
   const [to, setTo] = useState(null);
   const [description, setDescription] = useState(null);
-  const [transferDate, setTransferDate] = useState(today());
+  const [transactionDate, setTransferDate] = useState(today());
   const [errors, addError, dismissErrors] = useErrors([]);
   const [accounts, setAccounts] = useState(null);
 
@@ -92,7 +92,7 @@ export default function NewTransfer({ type, coreApp, onClose }) {
         to,
         amount,
         description,
-        transferDate,
+        transactionDate,
       });
       await coreApp.createTransfer(transferData);
       onClose();
@@ -186,7 +186,7 @@ export default function NewTransfer({ type, coreApp, onClose }) {
           <IonItem>
             <IonLabel position="stacked">Date:</IonLabel>
             <IonDatetime
-              value={transferDate}
+              value={transactionDate}
               onIonChange={(evt) => {
                 setTransferDate(evt.detail.value);
               }}

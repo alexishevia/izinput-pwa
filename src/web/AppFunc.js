@@ -7,6 +7,7 @@ import Screen from "./Screen";
 import Home from "./screens/Home";
 import NewTransfer from "./screens/NewTransfer";
 import EditTransfer from "./screens/EditTransfer";
+import EditExpense from "./screens/EditExpense";
 import NotFound from "./screens/NotFound";
 import Sync from "./screens/Sync";
 
@@ -32,6 +33,16 @@ export default function App({ coreApp }) {
               <NewTransfer
                 type="EXPENSE"
                 coreApp={coreApp}
+                onClose={history.goBack}
+              />
+            )}
+          />
+          <Route
+            path="/editExpense/:id"
+            component={({ history, match }) => (
+              <EditExpense
+                coreApp={coreApp}
+                id={match.params.id}
                 onClose={history.goBack}
               />
             )}

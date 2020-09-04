@@ -24,7 +24,7 @@ Transfers.propTypes = {
       from: PropTypes.string.isRequired,
       to: PropTypes.string.isRequired,
       description: PropTypes.string.isRequired,
-      transferDate: PropTypes.string.isRequired,
+      transactionDate: PropTypes.string.isRequired,
     })
   ).isRequired,
 };
