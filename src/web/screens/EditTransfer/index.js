@@ -134,6 +134,7 @@ export default function EditTransfer({ id, coreApp, onClose }) {
 
   function handleCancel(evt) {
     evt.preventDefault();
+    resetFormData();
     onClose();
   }
 
@@ -146,6 +147,7 @@ export default function EditTransfer({ id, coreApp, onClose }) {
     try {
       setDeleteAlertOpen(false);
       await coreApp.deleteTransfer(id);
+      resetFormData();
       onClose();
     } catch (err) {
       addError(err);
@@ -164,6 +166,7 @@ export default function EditTransfer({ id, coreApp, onClose }) {
         transactionDate: transactionDateVal,
       });
       await coreApp.updateTransfer(transferData);
+      resetFormData();
       onClose();
     } catch (err) {
       addError(err);

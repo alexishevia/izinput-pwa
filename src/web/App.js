@@ -3,10 +3,12 @@ import PropTypes from "prop-types";
 import { Route } from "react-router-dom";
 import { IonApp, IonRouterOutlet } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
+import EditAccount from "./screens/EditAccount";
 import EditExpense from "./screens/EditExpense";
 import EditIncome from "./screens/EditIncome";
 import EditTransfer from "./screens/EditTransfer";
 import Home from "./screens/Home";
+import Accounts from "./screens/Accounts";
 import NewAccount from "./screens/NewAccount";
 import NewExpense from "./screens/NewExpense";
 import NewIncome from "./screens/NewIncome";
@@ -51,9 +53,28 @@ export default function App({ coreApp }) {
             )}
           />
           <Route
+            exact
+            path="/accounts"
+            component={() => (
+              <Screen isSyncRunning={isSyncRunning}>
+                <Accounts coreApp={coreApp} />
+              </Screen>
+            )}
+          />
+          <Route
             path="/newAccount"
             component={({ history }) => (
               <NewAccount coreApp={coreApp} onClose={history.goBack} />
+            )}
+          />
+          <Route
+            path="/editAccount/:id"
+            component={({ history, match }) => (
+              <EditAccount
+                coreApp={coreApp}
+                id={match.params.id}
+                onClose={history.goBack}
+              />
             )}
           />
           <Route

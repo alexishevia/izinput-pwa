@@ -162,6 +162,11 @@ async function getAccounts() {
   return allAccounts;
 }
 
+async function getAccount(id) {
+  const localDB = await getLocalDB();
+  return localDB.getAccount(id);
+}
+
 async function getCategories() {
   // TODO: instead of hardcoding the `from` and `to` values, should iterate until all categories are pulled from DB
   const localDB = await getLocalDB();
@@ -494,6 +499,7 @@ export default function InvoiceZero() {
     deleteExpense,
     deleteIncome,
     extendAccounts,
+    getAccount,
     getAccounts,
     getCategories,
     getExpense,

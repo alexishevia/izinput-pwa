@@ -1,7 +1,5 @@
 # To-Do
 
-- [ ] accounts list
-- [ ] edit account
 - [ ] expenses list
 - [ ] income list
 - [ ] transfers list

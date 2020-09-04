@@ -156,6 +156,7 @@ export default function EditIncome({ id, coreApp, onClose }) {
 
   function handleCancel(evt) {
     evt.preventDefault();
+    resetFormData();
     onClose();
   }
 
@@ -168,6 +169,7 @@ export default function EditIncome({ id, coreApp, onClose }) {
     try {
       setDeleteAlertOpen(false);
       await coreApp.deleteIncome(id);
+      resetFormData();
       onClose();
     } catch (err) {
       addError(err);
@@ -186,6 +188,7 @@ export default function EditIncome({ id, coreApp, onClose }) {
         transactionDate: transactionDateVal,
       });
       await coreApp.updateIncome(incomeData);
+      resetFormData();
       onClose();
     } catch (err) {
       addError(err);
