@@ -31,6 +31,11 @@ export default function NewAccount({ coreApp, onClose }) {
   const [initialBalance, setInitialBalance] = useState(0);
   const [errors, addError, dismissErrors] = useErrors([]);
 
+  function resetFormData() {
+    setName("");
+    setInitialBalance(0);
+  }
+
   async function handleSubmit(evt) {
     evt.preventDefault();
     try {
@@ -44,6 +49,7 @@ export default function NewAccount({ coreApp, onClose }) {
 
   function handleCancel(evt) {
     evt.preventDefault();
+    resetFormData();
     onClose();
   }
 

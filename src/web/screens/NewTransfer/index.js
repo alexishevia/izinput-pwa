@@ -64,6 +64,15 @@ export default function NewTransfer({ coreApp, onClose }) {
   const [errors, addError, dismissErrors] = useErrors([]);
   const [accounts, setAccounts] = useState(null);
 
+  function resetFormData() {
+    setAmount(null);
+    setFromID(null);
+    setToID(null);
+    setDescription(null);
+    setTransferDate(today());
+    setAccounts(null);
+  }
+
   useEffect(
     function loadAccounts() {
       if (accounts !== null) {
@@ -98,6 +107,7 @@ export default function NewTransfer({ coreApp, onClose }) {
         transactionDate,
       });
       await coreApp.createTransfer(transferData);
+      resetFormData();
       onClose();
     } catch (err) {
       addError(err);
@@ -106,6 +116,7 @@ export default function NewTransfer({ coreApp, onClose }) {
 
   function handleCancel(evt) {
     evt.preventDefault();
+    resetFormData();
     onClose();
   }
 

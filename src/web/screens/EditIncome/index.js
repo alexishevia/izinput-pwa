@@ -72,6 +72,15 @@ export default function EditIncome({ id, coreApp, onClose }) {
   const [categories, setCategories] = useState(null);
   const [income, setIncome] = useState(null);
 
+  function resetFormData() {
+    setAmount(null);
+    setAccountID(null);
+    setCategoryID(null);
+    setDescription(null);
+    setIncomeDate(null);
+    setDeleteAlertOpen(false);
+  }
+
   useEffect(
     function loadAccounts() {
       if (accounts !== null) {
@@ -133,17 +142,7 @@ export default function EditIncome({ id, coreApp, onClose }) {
     [income, coreApp, id, addError]
   );
 
-  useEffect(
-    function resetFormData() {
-      setAmount(null);
-      setAccountID(null);
-      setCategoryID(null);
-      setDescription(null);
-      setIncomeDate(null);
-      setDeleteAlertOpen(false);
-    },
-    [id]
-  );
+  useEffect(resetFormData, [id]);
 
   const amountVal = amount ?? income?.amount;
   const accountIDVal =

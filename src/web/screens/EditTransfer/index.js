@@ -71,6 +71,15 @@ export default function EditTransfer({ id, coreApp, onClose }) {
   const [accounts, setAccounts] = useState(null);
   const [transfer, setTransfer] = useState(null);
 
+  function resetFormData() {
+    setAmount(null);
+    setFromID(null);
+    setToID(null);
+    setDescription(null);
+    setTransferDate(null);
+    setDeleteAlertOpen(false);
+  }
+
   useEffect(
     function loadAccounts() {
       if (accounts !== null) {
@@ -113,17 +122,7 @@ export default function EditTransfer({ id, coreApp, onClose }) {
     [transfer, coreApp, id, addError]
   );
 
-  useEffect(
-    function resetFormData() {
-      setAmount(null);
-      setFromID(null);
-      setToID(null);
-      setDescription(null);
-      setTransferDate(null);
-      setDeleteAlertOpen(false);
-    },
-    [id]
-  );
+  useEffect(resetFormData, [id]);
 
   const amountVal = amount ?? transfer?.amount;
   const fromIDVal =

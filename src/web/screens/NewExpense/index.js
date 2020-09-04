@@ -65,6 +65,16 @@ export default function NewExpense({ coreApp, onClose }) {
   const [accounts, setAccounts] = useState(null);
   const [categories, setCategories] = useState(null);
 
+  function resetFormData() {
+    setAmount(null);
+    setAccountID(null);
+    setCategoryID(null);
+    setDescription(null);
+    setExpenseDate(today());
+    setAccounts(null);
+    setCategories(null);
+  }
+
   useEffect(
     function loadAccounts() {
       if (accounts !== null) {
@@ -118,6 +128,7 @@ export default function NewExpense({ coreApp, onClose }) {
         transactionDate,
       });
       await coreApp.createExpense(expenseData);
+      resetFormData();
       onClose();
     } catch (err) {
       addError(err);
@@ -126,6 +137,7 @@ export default function NewExpense({ coreApp, onClose }) {
 
   function handleCancel(evt) {
     evt.preventDefault();
+    resetFormData();
     onClose();
   }
 

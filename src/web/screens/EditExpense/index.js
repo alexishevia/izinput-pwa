@@ -72,6 +72,15 @@ export default function EditExpense({ id, coreApp, onClose }) {
   const [categories, setCategories] = useState(null);
   const [expense, setExpense] = useState(null);
 
+  function resetFormData() {
+    setAmount(null);
+    setAccountID(null);
+    setCategoryID(null);
+    setDescription(null);
+    setExpenseDate(null);
+    setDeleteAlertOpen(false);
+  }
+
   useEffect(
     function loadAccounts() {
       if (accounts !== null) {
@@ -133,17 +142,7 @@ export default function EditExpense({ id, coreApp, onClose }) {
     [expense, coreApp, id, addError]
   );
 
-  useEffect(
-    function resetFormData() {
-      setAmount(null);
-      setAccountID(null);
-      setCategoryID(null);
-      setDescription(null);
-      setExpenseDate(null);
-      setDeleteAlertOpen(false);
-    },
-    [id]
-  );
+  useEffect(resetFormData, [id]);
 
   const amountVal = amount ?? expense?.amount;
   const accountIDVal =
