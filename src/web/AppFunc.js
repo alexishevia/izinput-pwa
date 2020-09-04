@@ -3,13 +3,15 @@ import PropTypes from "prop-types";
 import { Route } from "react-router-dom";
 import { IonApp, IonRouterOutlet } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
-import Screen from "./Screen";
-import Home from "./screens/Home";
-import NewTransfer from "./screens/NewTransfer";
-import NewExpense from "./screens/NewExpense";
-import EditTransfer from "./screens/EditTransfer";
 import EditExpense from "./screens/EditExpense";
+import EditPayment from "./screens/EditPayment";
+import EditTransfer from "./screens/EditTransfer";
+import Home from "./screens/Home";
+import NewExpense from "./screens/NewExpense";
+import NewPayment from "./screens/NewPayment";
+import NewTransfer from "./screens/NewTransfer";
 import NotFound from "./screens/NotFound";
+import Screen from "./Screen";
 import Sync from "./screens/Sync";
 
 export default function App({ coreApp }) {
@@ -45,11 +47,17 @@ export default function App({ coreApp }) {
             )}
           />
           <Route
-            path="/newIncome"
+            path="/newPayment"
             component={({ history }) => (
-              <NewTransfer
-                type="INCOME"
+              <NewPayment coreApp={coreApp} onClose={history.goBack} />
+            )}
+          />
+          <Route
+            path="/editPayment/:id"
+            component={({ history, match }) => (
+              <EditPayment
                 coreApp={coreApp}
+                id={match.params.id}
                 onClose={history.goBack}
               />
             )}

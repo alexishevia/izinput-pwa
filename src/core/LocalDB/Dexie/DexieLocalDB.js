@@ -265,6 +265,10 @@ function ByName(name) {
     return db.expenses.get(id);
   }
 
+  function getPayment(id) {
+    return db.payments.get(id);
+  }
+
   function getTransfer(id) {
     return db.transfers.get(id);
   }
@@ -1035,15 +1039,16 @@ function ByName(name) {
     getAccounts,
     getActionsCount,
     getCategories,
+    getExpense,
     getLastAction,
     getLocalActions,
+    getPayment,
     getRecentExpenses,
     getRecentPayments,
     getRecentTransfers,
     getTotalWithdrawals,
     getTransfer,
     getTransfers,
-    getExpense,
     name,
     processActions,
   };

@@ -12,6 +12,9 @@ import {
   ExpensesCreateAction,
   ExpensesDeleteAction,
   ExpensesUpdateAction,
+  PaymentsCreateAction,
+  PaymentsDeleteAction,
+  PaymentsUpdateAction,
   TransfersCreateAction,
   TransfersDeleteAction,
   TransfersUpdateAction,
@@ -182,6 +185,11 @@ async function getExpense(id) {
   return localDB.getExpense(id);
 }
 
+async function getPayment(id) {
+  const localDB = await getLocalDB();
+  return localDB.getPayment(id);
+}
+
 async function getRecentTransfers() {
   const localDB = await getLocalDB();
   return localDB.getRecentTransfers({ from: 0, to: 15 });
@@ -289,6 +297,14 @@ export default function InvoiceZero() {
     await processActions([action]);
   }
 
+  async function deleteTransfer(id) {
+    const action = new TransfersDeleteAction({
+      id,
+      modifiedAt: new Date().toISOString(),
+    });
+    await processActions([action]);
+  }
+
   async function createExpense(props) {
     const {
       accountID,
@@ -330,16 +346,57 @@ export default function InvoiceZero() {
     await processActions([action]);
   }
 
-  async function deleteTransfer(id) {
-    const action = new TransfersDeleteAction({
+  async function deleteExpense(id) {
+    const action = new ExpensesDeleteAction({
       id,
       modifiedAt: new Date().toISOString(),
     });
     await processActions([action]);
   }
 
-  async function deleteExpense(id) {
-    const action = new ExpensesDeleteAction({
+  async function createPayment(props) {
+    const {
+      accountID,
+      categoryID,
+      amount,
+      description,
+      transactionDate,
+    } = props;
+    const action = new PaymentsCreateAction({
+      id: uuidv4(),
+      amount,
+      accountID,
+      categoryID,
+      description,
+      transactionDate,
+      modifiedAt: new Date().toISOString(),
+      deleted: false,
+    });
+    await processActions([action]);
+  }
+
+  async function updatePayment(props) {
+    const data = {};
+    [
+      "id",
+      "accountID",
+      "categoryID",
+      "amount",
+      "description",
+      "transactionDate",
+    ].forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(props, key)) {
+        data[key] = props[key];
+      }
+    });
+    data.modifiedAt = new Date().toISOString();
+    data.deleted = false;
+    const action = new PaymentsUpdateAction(data);
+    await processActions([action]);
+  }
+
+  async function deletePayment(id) {
+    const action = new PaymentsDeleteAction({
       id,
       modifiedAt: new Date().toISOString(),
     });
@@ -428,16 +485,20 @@ export default function InvoiceZero() {
     ...oldExportedFuncs,
     CHANGE_EVENT,
     createExpense,
+    createPayment,
     deleteExpense,
+    deletePayment,
     extendAccounts,
     getAccounts,
     getCategories,
     getExpense,
+    getPayment,
     getRecentTransactions,
     getTransfer,
     off,
     on,
     updateExpense,
+    updatePayment,
     updateTransfer,
   };
 }
