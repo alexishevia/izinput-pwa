@@ -7,6 +7,7 @@ import EditExpense from "./screens/EditExpense";
 import EditIncome from "./screens/EditIncome";
 import EditTransfer from "./screens/EditTransfer";
 import Home from "./screens/Home";
+import NewAccount from "./screens/NewAccount";
 import NewExpense from "./screens/NewExpense";
 import NewIncome from "./screens/NewIncome";
 import NewTransfer from "./screens/NewTransfer";
@@ -47,6 +48,12 @@ export default function App({ coreApp }) {
               <Screen isSyncRunning={isSyncRunning}>
                 <Home coreApp={coreApp} />
               </Screen>
+            )}
+          />
+          <Route
+            path="/newAccount"
+            component={({ history }) => (
+              <NewAccount coreApp={coreApp} onClose={history.goBack} />
             )}
           />
           <Route

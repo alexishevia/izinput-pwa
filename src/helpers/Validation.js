@@ -37,6 +37,12 @@ function mustBeBiggerThan({ value, failed }, num) {
   }
 }
 
+function mustBeBiggerOrEqualThan({ value, failed }, num) {
+  if (value < num) {
+    failed(`must be bigger or equal than ${num}`);
+  }
+}
+
 function mustBeOneOf({ exists, value, failed, validOptions }) {
   if (exists && !validOptions.includes(value)) {
     failed("is not valid");
@@ -100,6 +106,11 @@ export default class Validation {
 
   biggerThan(num) {
     mustBeBiggerThan(this.props, num);
+    return this;
+  }
+
+  biggerOrEqualThan(num) {
+    mustBeBiggerOrEqualThan(this.props, num);
     return this;
   }
 

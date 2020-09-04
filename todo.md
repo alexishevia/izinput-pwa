@@ -1,6 +1,5 @@
 # To-Do
 
-- [ ] new account
 - [ ] accounts list
 - [ ] edit account
 - [ ] expenses list

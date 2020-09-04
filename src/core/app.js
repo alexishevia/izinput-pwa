@@ -470,7 +470,6 @@ export default function InvoiceZero() {
   }
 
   const oldExportedFuncs = {
-    createAccount,
     createTransfer,
     deleteTransfer,
     gDriveGetSelectedFile,
@@ -489,6 +488,7 @@ export default function InvoiceZero() {
   return {
     ...oldExportedFuncs,
     CHANGE_EVENT,
+    createAccount,
     createExpense,
     createIncome,
     deleteExpense,
