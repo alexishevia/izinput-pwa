@@ -14,26 +14,26 @@ export function AccountsUpdateAction(values) {
   };
 }
 
-export function PaymentsCreateAction(values) {
+export function IncomesCreateAction(values) {
   return {
     version: 1,
-    type: "payments/create",
+    type: "incomes/create",
     payload: values,
   };
 }
 
-export function PaymentsUpdateAction(values) {
+export function IncomesUpdateAction(values) {
   return {
     version: 1,
-    type: "payments/update",
+    type: "incomes/update",
     payload: values,
   };
 }
 
-export function PaymentsDeleteAction({ id, modifiedAt }) {
+export function IncomesDeleteAction({ id, modifiedAt }) {
   return {
     version: 1,
-    type: "payments/delete",
+    type: "incomes/delete",
     payload: { id, modifiedAt },
   };
 }

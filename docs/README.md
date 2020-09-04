@@ -4,7 +4,7 @@ Invoice Zero (IZ) is a personal finance system designed to be easy to use.
 
 IZ supports three types of transactions:
 
-- Payment: money is deposited to one of your accounts
+- Income: money is deposited to one of your accounts
 - Expense: money is withdrawn from one of your accounts
 - Transfer: money is exchanged between two accounts
 

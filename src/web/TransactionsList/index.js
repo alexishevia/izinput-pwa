@@ -56,7 +56,7 @@ Transfer.propTypes = {
   ).isRequired,
 };
 
-function Payment({ payment, accounts, categories }) {
+function Income({ income, accounts, categories }) {
   const {
     id,
     amount,
@@ -64,7 +64,7 @@ function Payment({ payment, accounts, categories }) {
     transactionDate,
     accountID,
     categoryID,
-  } = payment;
+  } = income;
   const accountLabel = getAccountName(accounts, accountID);
   const categoryLabel = getCategoryName(categories, categoryID);
 
@@ -72,7 +72,7 @@ function Payment({ payment, accounts, categories }) {
     <IonItem
       className="TransactionsListItem"
       button
-      routerLink={`/editPayment/${id}`}
+      routerLink={`/editIncome/${id}`}
     >
       <IonLabel>
         <p>
@@ -88,8 +88,8 @@ function Payment({ payment, accounts, categories }) {
   );
 }
 
-Payment.propTypes = {
-  payment: PropTypes.shape({
+Income.propTypes = {
+  income: PropTypes.shape({
     id: PropTypes.string.isRequired,
     type: PropTypes.string.isRequired,
     amount: PropTypes.number.isRequired,
@@ -177,11 +177,11 @@ function TransactionsList({ transactions, accounts, categories }) {
     <IonList className="TransactionsList">
       {transactions.map((transaction) => {
         switch (transaction.type) {
-          case "PAYMENT":
+          case "INCOME":
             return (
-              <Payment
+              <Income
                 key={transaction.id}
-                payment={transaction}
+                income={transaction}
                 accounts={accounts}
                 categories={categories}
               />

@@ -4,11 +4,11 @@ import { Route } from "react-router-dom";
 import { IonApp, IonRouterOutlet } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
 import EditExpense from "./screens/EditExpense";
-import EditPayment from "./screens/EditPayment";
+import EditIncome from "./screens/EditIncome";
 import EditTransfer from "./screens/EditTransfer";
 import Home from "./screens/Home";
 import NewExpense from "./screens/NewExpense";
-import NewPayment from "./screens/NewPayment";
+import NewIncome from "./screens/NewIncome";
 import NewTransfer from "./screens/NewTransfer";
 import NotFound from "./screens/NotFound";
 import Screen from "./Screen";
@@ -47,15 +47,15 @@ export default function App({ coreApp }) {
             )}
           />
           <Route
-            path="/newPayment"
+            path="/newIncome"
             component={({ history }) => (
-              <NewPayment coreApp={coreApp} onClose={history.goBack} />
+              <NewIncome coreApp={coreApp} onClose={history.goBack} />
             )}
           />
           <Route
-            path="/editPayment/:id"
+            path="/editIncome/:id"
             component={({ history, match }) => (
-              <EditPayment
+              <EditIncome
                 coreApp={coreApp}
                 id={match.params.id}
                 onClose={history.goBack}

@@ -12,7 +12,7 @@ import { add } from "ionicons/icons";
 const buttons = [
   { name: "Account", route: "/newAccount" },
   { name: "Transfer", route: "/newTransfer" },
-  { name: "Income", route: "/newPayment" },
+  { name: "Income", route: "/newIncome" },
   { name: "Expense", route: "/newExpense" },
 ];
 

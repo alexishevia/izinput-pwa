@@ -12,9 +12,9 @@ import {
   ExpensesCreateAction,
   ExpensesDeleteAction,
   ExpensesUpdateAction,
-  PaymentsCreateAction,
-  PaymentsDeleteAction,
-  PaymentsUpdateAction,
+  IncomesCreateAction,
+  IncomesDeleteAction,
+  IncomesUpdateAction,
   TransfersCreateAction,
   TransfersDeleteAction,
   TransfersUpdateAction,
@@ -185,9 +185,9 @@ async function getExpense(id) {
   return localDB.getExpense(id);
 }
 
-async function getPayment(id) {
+async function getIncome(id) {
   const localDB = await getLocalDB();
-  return localDB.getPayment(id);
+  return localDB.getIncome(id);
 }
 
 async function getRecentTransfers() {
@@ -198,11 +198,11 @@ async function getRecentTransfers() {
 const recentCount = 15;
 async function getRecentTransactions() {
   const localDB = await getLocalDB();
-  const [payments, expenses, transfers] = await Promise.all([
+  const [incomes, expenses, transfers] = await Promise.all([
     localDB
-      .getRecentPayments({ from: 0, to: recentCount })
+      .getRecentIncomes({ from: 0, to: recentCount })
       .then((result) =>
-        result.map((payment) => ({ ...payment, type: "PAYMENT" }))
+        result.map((income) => ({ ...income, type: "INCOME" }))
       ),
     localDB
       .getRecentExpenses({ from: 0, to: recentCount })
@@ -215,7 +215,7 @@ async function getRecentTransactions() {
         result.map((transfer) => ({ ...transfer, type: "TRANSFER" }))
       ),
   ]);
-  return [...payments, ...expenses, ...transfers]
+  return [...incomes, ...expenses, ...transfers]
     .sort(sortByModifiedAt)
     .slice(0, recentCount);
 }
@@ -354,7 +354,7 @@ export default function InvoiceZero() {
     await processActions([action]);
   }
 
-  async function createPayment(props) {
+  async function createIncome(props) {
     const {
       accountID,
       categoryID,
@@ -362,7 +362,7 @@ export default function InvoiceZero() {
       description,
       transactionDate,
     } = props;
-    const action = new PaymentsCreateAction({
+    const action = new IncomesCreateAction({
       id: uuidv4(),
       amount,
       accountID,
@@ -375,7 +375,7 @@ export default function InvoiceZero() {
     await processActions([action]);
   }
 
-  async function updatePayment(props) {
+  async function updateIncome(props) {
     const data = {};
     [
       "id",
@@ -391,12 +391,12 @@ export default function InvoiceZero() {
     });
     data.modifiedAt = new Date().toISOString();
     data.deleted = false;
-    const action = new PaymentsUpdateAction(data);
+    const action = new IncomesUpdateAction(data);
     await processActions([action]);
   }
 
-  async function deletePayment(id) {
-    const action = new PaymentsDeleteAction({
+  async function deleteIncome(id) {
+    const action = new IncomesDeleteAction({
       id,
       modifiedAt: new Date().toISOString(),
     });
@@ -485,20 +485,20 @@ export default function InvoiceZero() {
     ...oldExportedFuncs,
     CHANGE_EVENT,
     createExpense,
-    createPayment,
+    createIncome,
     deleteExpense,
-    deletePayment,
+    deleteIncome,
     extendAccounts,
     getAccounts,
     getCategories,
     getExpense,
-    getPayment,
+    getIncome,
     getRecentTransactions,
     getTransfer,
     off,
     on,
     updateExpense,
-    updatePayment,
+    updateIncome,
     updateTransfer,
   };
 }

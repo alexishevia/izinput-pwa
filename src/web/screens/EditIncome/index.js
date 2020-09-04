@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import {
+  IonAlert,
   IonButton,
   IonContent,
   IonDatetime,
+  IonIcon,
   IonInput,
   IonItem,
   IonLabel,
@@ -11,9 +13,10 @@ import {
   IonSelect,
   IonSelectOption,
 } from "@ionic/react";
+import { trashOutline } from "ionicons/icons";
+import useErrors from "../../hooks/useErrors";
 import { dateToDayStr, isValidDayStr } from "../../../helpers/date";
 import Validation from "../../../helpers/Validation";
-import useErrors from "../../hooks/useErrors";
 import Errors from "../../Errors";
 import ModalToolbar from "../../ModalToolbar";
 
@@ -31,14 +34,16 @@ function sortByName({ name: a }, { name: b }) {
   return 0;
 }
 
-function buildPaymentData({
+function buildIncomeData({
+  id,
   accountID,
   categoryID,
   amount,
   description,
   transactionDate,
 }) {
-  const paymentData = {
+  const incomeData = {
+    id,
     accountID,
     categoryID,
     amount: parseFloat(amount, 10),
@@ -46,24 +51,26 @@ function buildPaymentData({
     transactionDate: isValidDayStr(transactionDate) ? transactionDate : today(),
   };
 
-  new Validation(paymentData, "accountID").required().string().notEmpty();
-  new Validation(paymentData, "categoryID").required().string().notEmpty();
-  new Validation(paymentData, "amount").required().number().biggerThan(0);
-  new Validation(paymentData, "description").required().string();
-  new Validation(paymentData, "transactionDate").required().dayString();
+  new Validation(incomeData, "accountID").required().string().notEmpty();
+  new Validation(incomeData, "categoryID").required().string().notEmpty();
+  new Validation(incomeData, "amount").required().number().biggerThan(0);
+  new Validation(incomeData, "description").required().string();
+  new Validation(incomeData, "transactionDate").required().dayString();
 
-  return paymentData;
+  return incomeData;
 }
 
-export default function NewPayment({ coreApp, onClose }) {
+export default function EditIncome({ id, coreApp, onClose }) {
   const [amount, setAmount] = useState(null);
   const [accountID, setAccountID] = useState(null);
   const [categoryID, setCategoryID] = useState(null);
   const [description, setDescription] = useState(null);
-  const [transactionDate, setPaymentDate] = useState(today());
+  const [transactionDate, setIncomeDate] = useState(null);
+  const [isDeleteAlertOpen, setDeleteAlertOpen] = useState(false);
   const [errors, addError, dismissErrors] = useErrors([]);
   const [accounts, setAccounts] = useState(null);
   const [categories, setCategories] = useState(null);
+  const [income, setIncome] = useState(null);
 
   useEffect(
     function loadAccounts() {
@@ -107,38 +114,115 @@ export default function NewPayment({ coreApp, onClose }) {
     [categories, coreApp, addError]
   );
 
-  async function handleSubmit(evt) {
-    evt.preventDefault();
-    try {
-      const paymentData = buildPaymentData({
-        accountID,
-        categoryID,
-        amount,
-        description,
-        transactionDate,
-      });
-      await coreApp.createPayment(paymentData);
-      onClose();
-    } catch (err) {
-      addError(err);
-    }
-  }
+  useEffect(
+    function loadIncome() {
+      if (income !== null) {
+        return;
+      }
+      setIncome({});
+      async function loadIncomeData() {
+        try {
+          const incomeData = await coreApp.getIncome(id);
+          setIncome(incomeData);
+        } catch (err) {
+          addError(err);
+        }
+      }
+      loadIncomeData();
+    },
+    [income, coreApp, id, addError]
+  );
+
+  useEffect(
+    function resetFormData() {
+      setAmount(null);
+      setAccountID(null);
+      setCategoryID(null);
+      setDescription(null);
+      setIncomeDate(null);
+      setDeleteAlertOpen(false);
+    },
+    [id]
+  );
+
+  const amountVal = amount ?? income?.amount;
+  const accountIDVal =
+    accountID ??
+    (accounts || []).find((acct) => acct.id === income?.accountID)?.id;
+  const categoryIDVal =
+    categoryID ??
+    (categories || []).find((cat) => cat.id === income?.categoryID)?.id;
+  const descriptionVal = description ?? income?.description;
+  const transactionDateVal = transactionDate ?? income?.transactionDate;
 
   function handleCancel(evt) {
     evt.preventDefault();
     onClose();
   }
 
+  function handleDelete(evt) {
+    evt.preventDefault();
+    setDeleteAlertOpen(true);
+  }
+
+  async function handleDeleteConfirm() {
+    try {
+      setDeleteAlertOpen(false);
+      await coreApp.deleteIncome(id);
+      onClose();
+    } catch (err) {
+      addError(err);
+    }
+  }
+
+  async function handleSubmit(evt) {
+    evt.preventDefault();
+    try {
+      const incomeData = buildIncomeData({
+        id: income.id,
+        accountID: accountIDVal,
+        categoryID: categoryIDVal,
+        amount: amountVal,
+        description: descriptionVal,
+        transactionDate: transactionDateVal,
+      });
+      await coreApp.updateIncome(incomeData);
+      onClose();
+    } catch (err) {
+      addError(err);
+    }
+  }
+
+  const endButton = (
+    <IonButton onClick={handleDelete}>
+      <IonIcon icon={trashOutline} />
+    </IonButton>
+  );
+
   return (
     <IonPage id="main-content">
-      <ModalToolbar title="New Payment" onClose={onClose} />
+      <ModalToolbar
+        title="Edit Income"
+        onClose={onClose}
+        endButton={endButton}
+      />
       <IonContent>
         <Errors errors={errors} onDismiss={dismissErrors} />
         <form onSubmit={handleSubmit}>
+          <IonAlert
+            isOpen={isDeleteAlertOpen}
+            onDidDismiss={() => setDeleteAlertOpen(false)}
+            header="Delete Income"
+            message="Are you sure you want to delete this income?"
+            buttons={[
+              { text: "Cancel", role: "cancel" },
+              { text: "Delete", handler: handleDeleteConfirm },
+            ]}
+          />
           <IonItem>
             <IonLabel position="stacked">Account:</IonLabel>
             <IonSelect
-              value={accountID}
+              value={accountIDVal}
               onIonChange={(evt) => {
                 setAccountID(evt.detail.value);
               }}
@@ -157,7 +241,7 @@ export default function NewPayment({ coreApp, onClose }) {
           <IonItem>
             <IonLabel position="stacked">Category:</IonLabel>
             <IonSelect
-              value={categoryID}
+              value={categoryIDVal}
               onIonChange={(evt) => {
                 setCategoryID(evt.detail.value);
               }}
@@ -177,7 +261,7 @@ export default function NewPayment({ coreApp, onClose }) {
             <IonInput
               type="number"
               step="0.01"
-              value={amount}
+              value={amountVal}
               placeholder="$"
               onIonChange={(evt) => {
                 setAmount(evt.detail.value);
@@ -188,9 +272,9 @@ export default function NewPayment({ coreApp, onClose }) {
           <IonItem>
             <IonLabel position="stacked">Date:</IonLabel>
             <IonDatetime
-              value={transactionDate}
+              value={transactionDateVal}
               onIonChange={(evt) => {
-                setPaymentDate(evt.detail.value);
+                setIncomeDate(evt.detail.value);
               }}
             />
           </IonItem>
@@ -198,7 +282,7 @@ export default function NewPayment({ coreApp, onClose }) {
             <IonLabel position="stacked">Description:</IonLabel>
             <IonInput
               type="text"
-              value={description}
+              value={descriptionVal}
               onIonChange={(evt) => {
                 setDescription(evt.detail.value);
               }}
@@ -207,19 +291,22 @@ export default function NewPayment({ coreApp, onClose }) {
           <IonButton color="medium" onClick={handleCancel}>
             Cancel
           </IonButton>
-          <IonButton type="submit">Add Payment</IonButton>
+          <IonButton type="submit">Update Income</IonButton>
         </form>
       </IonContent>
     </IonPage>
   );
 }
 
-NewPayment.propTypes = {
+EditIncome.propTypes = {
+  id: PropTypes.string.isRequired,
   coreApp: PropTypes.shape({
-    createPayment: PropTypes.func.isRequired,
+    deleteIncome: PropTypes.func.isRequired,
     extendAccounts: PropTypes.func.isRequired,
     getAccounts: PropTypes.func.isRequired,
     getCategories: PropTypes.func.isRequired,
+    getIncome: PropTypes.func.isRequired,
+    updateIncome: PropTypes.func.isRequired,
   }).isRequired,
   onClose: PropTypes.func.isRequired,
 };

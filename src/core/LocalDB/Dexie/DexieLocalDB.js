@@ -15,9 +15,9 @@ if (!window.indexedDB) {
   Dexie.dependencies.IDBKeyRange = IDBKeyRange;
 }
 
-const ERR_EXISTING_PAYMENT = 'A payment with id: "<ID>" exists';
-const ERR_NO_EXISTING_PAYMENT = 'No payment with id: "<ID>" exists';
-const ERR_INVALID_PAYMENT = "Invalid data for payment: <ERR>";
+const ERR_EXISTING_INCOME = 'A income with id: "<ID>" exists';
+const ERR_NO_EXISTING_INCOME = 'No income with id: "<ID>" exists';
+const ERR_INVALID_INCOME = "Invalid data for income: <ERR>";
 const ERR_EXISTING_EXPENSE = 'A expense with id: "<ID>" exists';
 const ERR_NO_EXISTING_EXPENSE = 'No expense with id: "<ID>" exists';
 const ERR_INVALID_EXPENSE = "Invalid data for expense: <ERR>";
@@ -65,17 +65,17 @@ function ErrNoExistingCategory(id) {
   };
 }
 
-function ErrExistingPayment(id) {
+function ErrExistingIncome(id) {
   return {
-    name: ERR_EXISTING_PAYMENT,
-    message: ERR_EXISTING_PAYMENT.replace("<ID>", id),
+    name: ERR_EXISTING_INCOME,
+    message: ERR_EXISTING_INCOME.replace("<ID>", id),
   };
 }
 
-function ErrNoExistingPayment(id) {
+function ErrNoExistingIncome(id) {
   return {
-    name: ERR_NO_EXISTING_PAYMENT,
-    message: ERR_NO_EXISTING_PAYMENT.replace("<ID>", id),
+    name: ERR_NO_EXISTING_INCOME,
+    message: ERR_NO_EXISTING_INCOME.replace("<ID>", id),
   };
 }
 
@@ -121,10 +121,10 @@ function ErrInvalidCategory(msg) {
   };
 }
 
-function ErrInvalidPayment(msg) {
+function ErrInvalidIncome(msg) {
   return {
-    name: ERR_INVALID_PAYMENT,
-    message: ERR_INVALID_PAYMENT.replace("<ERR>", msg),
+    name: ERR_INVALID_INCOME,
+    message: ERR_INVALID_INCOME.replace("<ERR>", msg),
   };
 }
 
@@ -168,18 +168,18 @@ function checkValidCategory(category) {
   }
 }
 
-function checkValidPayment(payment) {
+function checkValidIncome(income) {
   try {
-    new Validation(payment, "id").required().string().notEmpty();
-    new Validation(payment, "amount").required().number().biggerThan(0);
-    new Validation(payment, "accountID").required().string().notEmpty();
-    new Validation(payment, "categoryID").required().string().notEmpty();
-    new Validation(payment, "description").required().string();
-    new Validation(payment, "transactionDate").required().dayString();
-    new Validation(payment, "modifiedAt").required().UTCDateString();
-    new Validation(payment, "deleted").required().boolean();
+    new Validation(income, "id").required().string().notEmpty();
+    new Validation(income, "amount").required().number().biggerThan(0);
+    new Validation(income, "accountID").required().string().notEmpty();
+    new Validation(income, "categoryID").required().string().notEmpty();
+    new Validation(income, "description").required().string();
+    new Validation(income, "transactionDate").required().dayString();
+    new Validation(income, "modifiedAt").required().UTCDateString();
+    new Validation(income, "deleted").required().boolean();
   } catch (err) {
-    throw new ErrInvalidPayment(err.message);
+    throw new ErrInvalidIncome(err.message);
   }
 }
 
@@ -224,12 +224,12 @@ function ByName(name) {
   const db = new Dexie(name);
 
   // run migrations
-  db.version(3).stores({
+  db.version(1).stores({
     localActions: "++", // primary key hidden and auto-incremented
     meta: "", // primary key hidden but not auto-incremented
     accounts: "id", // primary key: id
     categories: "id", // primary key: id
-    payments: "id,modifiedAt", // primary key: id, index for modifiedAt
+    incomes: "id,modifiedAt", // primary key: id, index for modifiedAt
     expenses: "id,modifiedAt", // primary key: id, index for modifiedAt
     transfers: "id,modifiedAt", // primary key: id, index for modifiedAt
   });
@@ -257,16 +257,12 @@ function ByName(name) {
     return db.categories.get(id);
   }
 
-  function getPayment(id) {
-    return db.payments.get(id);
+  function getIncome(id) {
+    return db.incomes.get(id);
   }
 
   function getExpense(id) {
     return db.expenses.get(id);
-  }
-
-  function getPayment(id) {
-    return db.payments.get(id);
   }
 
   function getTransfer(id) {
@@ -291,12 +287,12 @@ function ByName(name) {
     });
   }
 
-  function getExistingPayment(id) {
-    return getPayment(id).then((payment) => {
-      if (!payment) {
-        throw new ErrNoExistingPayment(id);
+  function getExistingIncome(id) {
+    return getIncome(id).then((income) => {
+      if (!income) {
+        throw new ErrNoExistingIncome(id);
       }
-      return payment;
+      return income;
     });
   }
 
@@ -344,12 +340,12 @@ function ByName(name) {
       });
   }
 
-  function checkNoExistingPayment(id) {
-    return getPayment(id)
+  function checkNoExistingIncome(id) {
+    return getIncome(id)
       .then(Boolean)
       .then((exists) => {
         if (exists) {
-          throw new ErrExistingPayment(id);
+          throw new ErrExistingIncome(id);
         }
       });
   }
@@ -495,23 +491,23 @@ function ByName(name) {
       });
   }
 
-  function createPayment({ payload }) {
+  function createIncome({ payload }) {
     return Promise.resolve()
-      .then(() => checkValidPayment(payload))
+      .then(() => checkValidIncome(payload))
       .then(() => checkNoDelete(payload))
       .then(() => getExistingAccount(payload.accountID))
       .then(() => getExistingCategory(payload.categoryID))
-      .then(() => checkNoExistingPayment(payload.id))
-      .then(() => db.payments.add(payload))
+      .then(() => checkNoExistingIncome(payload.id))
+      .then(() => db.incomes.add(payload))
       .then(() => true /* success */)
       .catch((err) => {
         switch (err.name) {
-          case ERR_EXISTING_PAYMENT:
-          case ERR_INVALID_PAYMENT:
+          case ERR_EXISTING_INCOME:
+          case ERR_INVALID_INCOME:
           case ERR_NO_EXISTING_ACCOUNT:
           case ERR_NO_EXISTING_CATEGORY:
           case ERR_NO_DELETE_ALLOWED:
-            console.warn(`${err.message}. createPayment will be ignored`);
+            console.warn(`${err.message}. createIncome will be ignored`);
             return false; // expected failure
           default:
             throw err; // unexpected failure
@@ -519,17 +515,17 @@ function ByName(name) {
       });
   }
 
-  function updatePayment({ payload }) {
+  function updateIncome({ payload }) {
     return Promise.resolve()
       .then(() => checkNoDelete(payload))
-      .then(() => getExistingPayment(payload.id))
+      .then(() => getExistingIncome(payload.id))
       .then((existing) => {
         checkNoUpdateConflict(existing, payload);
         return existing;
       })
       .then((existing) => ({ ...existing, ...payload, deleted: false }))
       .then((updated) => {
-        checkValidPayment(updated);
+        checkValidIncome(updated);
         return updated;
       })
       .then((updated) =>
@@ -538,17 +534,17 @@ function ByName(name) {
       .then((updated) =>
         getExistingCategory(updated.categoryID).then(() => updated)
       )
-      .then((updated) => db.payments.put(updated))
+      .then((updated) => db.incomes.put(updated))
       .then(() => true /* success */)
       .catch((err) => {
         switch (err.name) {
-          case ERR_NO_EXISTING_PAYMENT:
+          case ERR_NO_EXISTING_INCOME:
           case ERR_NO_EXISTING_ACCOUNT:
           case ERR_NO_EXISTING_CATEGORY:
           case ERR_UPDATE_CONFLICT:
-          case ERR_INVALID_PAYMENT:
+          case ERR_INVALID_INCOME:
           case ERR_NO_DELETE_ALLOWED:
-            console.warn(`${err.message}. updatePayment will be ignored`);
+            console.warn(`${err.message}. updateIncome will be ignored`);
             return false; // expected failure
           default:
             throw err; // unexpected failure
@@ -556,26 +552,26 @@ function ByName(name) {
       });
   }
 
-  function deletePayment({ payload }) {
+  function deleteIncome({ payload }) {
     const { id, modifiedAt } = payload;
-    return getExistingPayment(id)
+    return getExistingIncome(id)
       .then((existing) => {
         checkNoUpdateConflict(existing, payload);
         return existing;
       })
       .then((existing) => ({ ...existing, deleted: true, modifiedAt }))
       .then((updated) => {
-        checkValidPayment(updated);
+        checkValidIncome(updated);
         return updated;
       })
-      .then((updated) => db.payments.put(updated))
+      .then((updated) => db.incomes.put(updated))
       .then(() => true /* success */)
       .catch((err) => {
         switch (err.name) {
-          case ERR_INVALID_PAYMENT:
+          case ERR_INVALID_INCOME:
           case ERR_UPDATE_CONFLICT:
-          case ERR_NO_EXISTING_PAYMENT:
-            console.warn(`${err.message}. deletePayment will be ignored`);
+          case ERR_NO_EXISTING_INCOME:
+            console.warn(`${err.message}. deleteIncome will be ignored`);
             return false; // expected failure
           default:
             throw err; // unexpected failure
@@ -841,10 +837,10 @@ function ByName(name) {
         })
         .then(() => total);
     }
-    function getPaymentsTotal() {
+    function getIncomesTotal() {
       let total = 0;
-      const query = db.payments.filter(
-        (payment) => !payment.deleted && payment.accountID === id
+      const query = db.incomes.filter(
+        (income) => !income.deleted && income.accountID === id
       );
       if (fromDate) {
         query.filter(({ transactionDate }) => transactionDate >= fromDate);
@@ -853,18 +849,18 @@ function ByName(name) {
         query.filter(({ transactionDate }) => transactionDate <= fromDate);
       }
       return query
-        .each((payment) => {
-          const amount = parseFloat(payment.amount, 10);
+        .each((income) => {
+          const amount = parseFloat(income.amount, 10);
           if (Number.isNaN(amount)) {
-            const msg = `Payment with id: ${id} has non-numeric amount: ${payment.amount}`;
+            const msg = `Income with id: ${id} has non-numeric amount: ${income.amount}`;
             throw new ErrInvalidTransfer(msg);
           }
-          total += payment.amount;
+          total += income.amount;
         })
         .then(() => total);
     }
-    return Promise.all([getInTransfersTotal(), getPaymentsTotal()]).then(
-      ([inTransfers, payments]) => inTransfers + payments
+    return Promise.all([getInTransfersTotal(), getIncomesTotal()]).then(
+      ([inTransfers, incomes]) => inTransfers + incomes
     );
   }
 
@@ -904,10 +900,10 @@ function ByName(name) {
   }
 
   // `from` and `to` are inclusive
-  function getRecentPayments({ from, to }) {
-    return db.payments
+  function getRecentIncomes({ from, to }) {
+    return db.incomes
       .orderBy("modifiedAt")
-      .filter((payment) => !payment.deleted)
+      .filter((income) => !income.deleted)
       .reverse()
       .offset(from)
       .limit(to - from + 1)
@@ -953,7 +949,7 @@ function ByName(name) {
         db.meta,
         db.accounts,
         db.categories,
-        db.payments,
+        db.incomes,
         db.expenses,
         db.transfers,
       ],
@@ -980,12 +976,12 @@ function ByName(name) {
                       return updateCategory({ payload: action.payload });
                     case "categories/delete":
                       return deleteCategory({ payload: action.payload });
-                    case "payments/create":
-                      return createPayment({ payload: action.payload });
-                    case "payments/update":
-                      return updatePayment({ payload: action.payload });
-                    case "payments/delete":
-                      return deletePayment({ payload: action.payload });
+                    case "incomes/create":
+                      return createIncome({ payload: action.payload });
+                    case "incomes/update":
+                      return updateIncome({ payload: action.payload });
+                    case "incomes/delete":
+                      return deleteIncome({ payload: action.payload });
                     case "expenses/create":
                       return createExpense({ payload: action.payload });
                     case "expenses/update":
@@ -1042,9 +1038,9 @@ function ByName(name) {
     getExpense,
     getLastAction,
     getLocalActions,
-    getPayment,
+    getIncome,
     getRecentExpenses,
-    getRecentPayments,
+    getRecentIncomes,
     getRecentTransfers,
     getTotalWithdrawals,
     getTransfer,
