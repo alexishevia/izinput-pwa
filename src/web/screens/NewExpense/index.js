@@ -131,7 +131,7 @@ export default function NewExpense({ coreApp, onClose }) {
 
   return (
     <IonPage id="main-content">
-      <ModalToolbar title="New Expense" onClose={onClose} />
+      <ModalToolbar title="New Expense" onClose={onClose} color="danger" />
       <IonContent>
         <Errors errors={errors} onDismiss={dismissErrors} />
         <form onSubmit={handleSubmit}>
@@ -207,7 +207,9 @@ export default function NewExpense({ coreApp, onClose }) {
           <IonButton color="medium" onClick={handleCancel}>
             Cancel
           </IonButton>
-          <IonButton type="submit">Add Expense</IonButton>
+          <IonButton type="submit" color="danger">
+            Add Expense
+          </IonButton>
         </form>
       </IonContent>
     </IonPage>

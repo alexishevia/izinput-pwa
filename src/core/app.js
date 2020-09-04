@@ -268,12 +268,12 @@ export default function InvoiceZero() {
   }
 
   async function createTransfer(props) {
-    const { from, to, amount, description, transactionDate } = props;
+    const { fromID, toID, amount, description, transactionDate } = props;
     const action = new TransfersCreateAction({
       id: uuidv4(),
       amount,
-      from,
-      to,
+      fromID,
+      toID,
       description,
       transactionDate,
       modifiedAt: new Date().toISOString(),
@@ -284,13 +284,18 @@ export default function InvoiceZero() {
 
   async function updateTransfer(props) {
     const data = {};
-    ["id", "from", "to", "amount", "description", "transactionDate"].forEach(
-      (key) => {
-        if (Object.prototype.hasOwnProperty.call(props, key)) {
-          data[key] = props[key];
-        }
+    [
+      "id",
+      "fromID",
+      "toID",
+      "amount",
+      "description",
+      "transactionDate",
+    ].forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(props, key)) {
+        data[key] = props[key];
       }
-    );
+    });
     data.modifiedAt = new Date().toISOString();
     data.deleted = false;
     const action = new TransfersUpdateAction(data);

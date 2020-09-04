@@ -203,6 +203,7 @@ export default function EditExpense({ id, coreApp, onClose }) {
     <IonPage id="main-content">
       <ModalToolbar
         title="Edit Expense"
+        color="danger"
         onClose={onClose}
         endButton={endButton}
       />
@@ -291,7 +292,9 @@ export default function EditExpense({ id, coreApp, onClose }) {
           <IonButton color="medium" onClick={handleCancel}>
             Cancel
           </IonButton>
-          <IonButton type="submit">Update Expense</IonButton>
+          <IonButton color="danger" type="submit">
+            Update Expense
+          </IonButton>
         </form>
       </IonContent>
     </IonPage>

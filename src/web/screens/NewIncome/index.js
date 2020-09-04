@@ -131,7 +131,7 @@ export default function NewIncome({ coreApp, onClose }) {
 
   return (
     <IonPage id="main-content">
-      <ModalToolbar title="New Income" onClose={onClose} />
+      <ModalToolbar title="New Income" color="success" onClose={onClose} />
       <IonContent>
         <Errors errors={errors} onDismiss={dismissErrors} />
         <form onSubmit={handleSubmit}>
@@ -207,7 +207,9 @@ export default function NewIncome({ coreApp, onClose }) {
           <IonButton color="medium" onClick={handleCancel}>
             Cancel
           </IonButton>
-          <IonButton type="submit">Add Income</IonButton>
+          <IonButton type="submit" color="success">
+            Add Income
+          </IonButton>
         </form>
       </IonContent>
     </IonPage>

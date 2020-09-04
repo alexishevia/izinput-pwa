@@ -31,17 +31,23 @@ function sortByName({ name: a }, { name: b }) {
   return 0;
 }
 
-function buildTransferData({ from, to, amount, description, transactionDate }) {
+function buildTransferData({
+  fromID,
+  toID,
+  amount,
+  description,
+  transactionDate,
+}) {
   const transferData = {
-    from,
-    to,
+    fromID,
+    toID,
     amount: parseFloat(amount, 10),
     description,
     transactionDate: isValidDayStr(transactionDate) ? transactionDate : today(),
   };
 
-  new Validation(transferData, "from").required().string().notEmpty();
-  new Validation(transferData, "to").required().string().notEmpty();
+  new Validation(transferData, "fromID").required().string().notEmpty();
+  new Validation(transferData, "toID").required().string().notEmpty();
   new Validation(transferData, "amount").required().number().biggerThan(0);
   new Validation(transferData, "description").required().string();
   new Validation(transferData, "transactionDate").required().dayString();
@@ -49,47 +55,44 @@ function buildTransferData({ from, to, amount, description, transactionDate }) {
   return transferData;
 }
 
-export default function NewTransfer({ type, coreApp, onClose }) {
+export default function NewTransfer({ coreApp, onClose }) {
   const [amount, setAmount] = useState(null);
-  const [from, setFrom] = useState(null);
-  const [to, setTo] = useState(null);
+  const [fromID, setFromID] = useState(null);
+  const [toID, setToID] = useState(null);
   const [description, setDescription] = useState(null);
   const [transactionDate, setTransferDate] = useState(today());
   const [errors, addError, dismissErrors] = useErrors([]);
   const [accounts, setAccounts] = useState(null);
 
-  useEffect(() => {
-    if (accounts !== null) {
-      return;
-    }
-    setAccounts([]);
-    async function loadData() {
-      try {
-        const allAccounts = await coreApp.getAccounts();
-        setAccounts(allAccounts);
-
-        const externalAccounts = allAccounts.filter(coreApp.isExternal);
-        let internalAccounts = allAccounts.filter(coreApp.isInternal);
-
-        // extend internalAccounts with commonly used fields
-        internalAccounts = await coreApp.extendAccounts(internalAccounts, [
-          "balance",
-        ]);
-
-        setAccounts([...internalAccounts, ...externalAccounts]);
-      } catch (err) {
-        addError(err);
+  useEffect(
+    function loadAccounts() {
+      if (accounts !== null) {
+        return;
       }
-    }
-    loadData();
-  }, [accounts, coreApp, addError]);
+      setAccounts([]);
+      async function loadAccountsData() {
+        try {
+          const allAccounts = await coreApp.getAccounts();
+          setAccounts(allAccounts);
+          const extendedAccounts = await coreApp.extendAccounts(allAccounts, [
+            "balance",
+          ]);
+          setAccounts(extendedAccounts);
+        } catch (err) {
+          addError(err);
+        }
+      }
+      loadAccountsData();
+    },
+    [accounts, coreApp, addError]
+  );
 
   async function handleSubmit(evt) {
     evt.preventDefault();
     try {
       const transferData = buildTransferData({
-        from,
-        to,
+        fromID,
+        toID,
         amount,
         description,
         transactionDate,
@@ -106,44 +109,25 @@ export default function NewTransfer({ type, coreApp, onClose }) {
     onClose();
   }
 
-  const { label, fromFilter, toFilter } = {
-    EXPENSE: {
-      label: "Expense",
-      fromFilter: coreApp.isInternal,
-      toFilter: coreApp.isExternal,
-    },
-    INCOME: {
-      label: "Income",
-      fromFilter: coreApp.isExternal,
-      toFilter: coreApp.isInternal,
-    },
-    TRANSFER: {
-      label: "Transfer",
-      fromFilter: coreApp.isInternal,
-      toFilter: coreApp.isInternal,
-    },
-  }[type];
-
   return (
     <IonPage id="main-content">
-      <ModalToolbar title={`New ${label}`} onClose={onClose} />
+      <ModalToolbar title="New Transfer" color="tertiary" onClose={onClose} />
       <IonContent>
         <Errors errors={errors} onDismiss={dismissErrors} />
         <form onSubmit={handleSubmit}>
           <IonItem>
             <IonLabel position="stacked">From:</IonLabel>
             <IonSelect
-              value={from}
+              value={fromID}
               onIonChange={(evt) => {
-                setFrom(evt.detail.value);
+                setFromID(evt.detail.value);
               }}
               placeholder="Account"
             >
               {(accounts || [])
-                .filter(fromFilter)
                 .sort(sortByName)
-                .map(({ id, name, balance }) => (
-                  <IonSelectOption key={id} value={id}>
+                .map(({ id: accID, name, balance }) => (
+                  <IonSelectOption key={accID} value={accID}>
                     {name}
                     {balance ? ` ($${balance} available)` : ""}
                   </IonSelectOption>
@@ -153,17 +137,16 @@ export default function NewTransfer({ type, coreApp, onClose }) {
           <IonItem>
             <IonLabel position="stacked">To:</IonLabel>
             <IonSelect
-              value={to}
+              value={toID}
               onIonChange={(evt) => {
-                setTo(evt.detail.value);
+                setToID(evt.detail.value);
               }}
               placeholder="Account"
             >
               {(accounts || [])
-                .filter(toFilter)
                 .sort(sortByName)
-                .map(({ id, name, balance }) => (
-                  <IonSelectOption key={id} value={id}>
+                .map(({ id: accID, name, balance }) => (
+                  <IonSelectOption key={accID} value={accID}>
                     {name}
                     {balance ? ` ($${balance} available)` : ""}
                   </IonSelectOption>
@@ -205,7 +188,9 @@ export default function NewTransfer({ type, coreApp, onClose }) {
           <IonButton color="medium" onClick={handleCancel}>
             Cancel
           </IonButton>
-          <IonButton type="submit">Add {label}</IonButton>
+          <IonButton type="submit" color="tertiary">
+            Add Transfer
+          </IonButton>
         </form>
       </IonContent>
     </IonPage>
@@ -213,13 +198,11 @@ export default function NewTransfer({ type, coreApp, onClose }) {
 }
 
 NewTransfer.propTypes = {
-  type: PropTypes.oneOf(["EXPENSE", "INCOME", "TRANSFER"]).isRequired,
   coreApp: PropTypes.shape({
     createTransfer: PropTypes.func.isRequired,
-    getAccounts: PropTypes.func.isRequired,
-    isExternal: PropTypes.func.isRequired,
-    isInternal: PropTypes.func.isRequired,
     extendAccounts: PropTypes.func.isRequired,
+    getAccounts: PropTypes.func.isRequired,
+    getCategories: PropTypes.func.isRequired,
   }).isRequired,
   onClose: PropTypes.func.isRequired,
 };

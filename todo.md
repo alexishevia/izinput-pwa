@@ -1,6 +1,12 @@
 # To-Do
 
-- [ ] finish converting web/App to web/AppFunc
+- [ ] new account
+- [ ] accounts list
+- [ ] edit account
+- [ ] expenses list
+- [ ] income list
+- [ ] transfers list
+- [ ] auto sync
 - [ ] clean up unused (aka "oldExportedFuncs") from `core/app`
 - [ ] add ability to reset all data (delete indexeddbs and localStorage)
 - [ ] add indicator to show when sync is running/failed/done

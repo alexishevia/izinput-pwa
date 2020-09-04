@@ -203,6 +203,7 @@ export default function EditIncome({ id, coreApp, onClose }) {
     <IonPage id="main-content">
       <ModalToolbar
         title="Edit Income"
+        color="success"
         onClose={onClose}
         endButton={endButton}
       />
@@ -291,7 +292,9 @@ export default function EditIncome({ id, coreApp, onClose }) {
           <IonButton color="medium" onClick={handleCancel}>
             Cancel
           </IonButton>
-          <IonButton type="submit">Update Income</IonButton>
+          <IonButton type="submit" color="success">
+            Update Income
+          </IonButton>
         </form>
       </IonContent>
     </IonPage>

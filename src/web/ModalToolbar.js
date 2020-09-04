@@ -9,14 +9,14 @@ import {
 } from "@ionic/react";
 import { chevronBackOutline } from "ionicons/icons";
 
-export default function ModalToolbar({ title, onClose, endButton }) {
+export default function ModalToolbar({ title, onClose, endButton, color }) {
   function handleCancel(evt) {
     evt.preventDefault();
     onClose();
   }
 
   return (
-    <IonToolbar color="secondary">
+    <IonToolbar color={color}>
       <IonButtons slot="start">
         <IonButton routerDirection="back" onClick={handleCancel}>
           <IonIcon icon={chevronBackOutline} />
@@ -29,11 +29,13 @@ export default function ModalToolbar({ title, onClose, endButton }) {
 }
 
 ModalToolbar.defaultProps = {
+  color: "primary",
   endButton: null,
 };
 
 ModalToolbar.propTypes = {
   title: PropTypes.string.isRequired,
+  color: PropTypes.string,
   endButton: PropTypes.oneOfType([
     PropTypes.arrayOf(PropTypes.node),
     PropTypes.node,

@@ -24,25 +24,35 @@ function today() {
   return dateToDayStr(new Date());
 }
 
+function sortByName({ name: a }, { name: b }) {
+  if (a > b) {
+    return 1;
+  }
+  if (a < b) {
+    return -1;
+  }
+  return 0;
+}
+
 function buildTransferData({
   id,
-  from,
-  to,
+  fromID,
+  toID,
   amount,
   description,
   transactionDate,
 }) {
   const transferData = {
     id,
-    from,
-    to,
+    fromID,
+    toID,
     amount: parseFloat(amount, 10),
     description,
     transactionDate: isValidDayStr(transactionDate) ? transactionDate : today(),
   };
 
-  new Validation(transferData, "from").required().string().notEmpty();
-  new Validation(transferData, "to").required().string().notEmpty();
+  new Validation(transferData, "fromID").required().string().notEmpty();
+  new Validation(transferData, "toID").required().string().notEmpty();
   new Validation(transferData, "amount").required().number().biggerThan(0);
   new Validation(transferData, "description").required().string();
   new Validation(transferData, "transactionDate").required().dayString();
@@ -52,8 +62,8 @@ function buildTransferData({
 
 export default function EditTransfer({ id, coreApp, onClose }) {
   const [amount, setAmount] = useState(null);
-  const [from, setFrom] = useState(null);
-  const [to, setTo] = useState(null);
+  const [fromID, setFromID] = useState(null);
+  const [toID, setToID] = useState(null);
   const [description, setDescription] = useState(null);
   const [transactionDate, setTransferDate] = useState(null);
   const [isDeleteAlertOpen, setDeleteAlertOpen] = useState(false);
@@ -61,43 +71,53 @@ export default function EditTransfer({ id, coreApp, onClose }) {
   const [accounts, setAccounts] = useState(null);
   const [transfer, setTransfer] = useState(null);
 
-  useEffect(() => {
-    if (accounts !== null) {
-      return;
-    }
-    setAccounts([]);
-    async function loadAccountsData() {
-      try {
-        const allAccounts = await coreApp.getAccounts();
-        setAccounts(allAccounts);
-      } catch (err) {
-        addError(err);
+  useEffect(
+    function loadAccounts() {
+      if (accounts !== null) {
+        return;
       }
-    }
-    loadAccountsData();
-  }, [accounts, coreApp, addError]);
+      setAccounts([]);
+      async function loadAccountsData() {
+        try {
+          const allAccounts = await coreApp.getAccounts();
+          setAccounts(allAccounts);
+          const extendedAccounts = await coreApp.extendAccounts(allAccounts, [
+            "balance",
+          ]);
+          setAccounts(extendedAccounts);
+        } catch (err) {
+          addError(err);
+        }
+      }
+      loadAccountsData();
+    },
+    [accounts, coreApp, addError]
+  );
 
-  useEffect(() => {
-    if (transfer !== null) {
-      return;
-    }
-    setTransfer({});
-    async function loadTransferData() {
-      try {
-        const transferData = await coreApp.getTransfer(id);
-        setTransfer(transferData);
-      } catch (err) {
-        addError(err);
+  useEffect(
+    function loadTransfer() {
+      if (transfer !== null) {
+        return;
       }
-    }
-    loadTransferData();
-  }, [transfer, coreApp, id, addError]);
+      setTransfer({});
+      async function loadTransferData() {
+        try {
+          const transferData = await coreApp.getTransfer(id);
+          setTransfer(transferData);
+        } catch (err) {
+          addError(err);
+        }
+      }
+      loadTransferData();
+    },
+    [transfer, coreApp, id, addError]
+  );
 
   useEffect(
     function resetFormData() {
       setAmount(null);
-      setFrom(null);
-      setTo(null);
+      setFromID(null);
+      setToID(null);
       setDescription(null);
       setTransferDate(null);
       setDeleteAlertOpen(false);
@@ -105,11 +125,13 @@ export default function EditTransfer({ id, coreApp, onClose }) {
     [id]
   );
 
-  const amountVal = amount ?? transfer.amount;
-  const fromVal = from ?? transfer.from;
-  const toVal = to ?? transfer.to;
-  const descriptionVal = description ?? transfer.description;
-  const transactionDateVal = transactionDate ?? transfer.transactionDate;
+  const amountVal = amount ?? transfer?.amount;
+  const fromIDVal =
+    fromID ?? (accounts || []).find((acct) => acct.id === transfer?.fromID)?.id;
+  const toIDVal =
+    toID ?? (accounts || []).find((acct) => acct.id === transfer?.toID)?.id;
+  const descriptionVal = description ?? transfer?.description;
+  const transactionDateVal = transactionDate ?? transfer?.transactionDate;
 
   function handleCancel(evt) {
     evt.preventDefault();
@@ -136,8 +158,8 @@ export default function EditTransfer({ id, coreApp, onClose }) {
     try {
       const transferData = buildTransferData({
         id: transfer.id,
-        from: fromVal,
-        to: toVal,
+        fromID: fromIDVal,
+        toID: toIDVal,
         amount: amountVal,
         description: descriptionVal,
         transactionDate: transactionDateVal,
@@ -159,6 +181,7 @@ export default function EditTransfer({ id, coreApp, onClose }) {
     <IonPage id="main-content">
       <ModalToolbar
         title="Edit Transfer"
+        color="tertiary"
         onClose={onClose}
         endButton={endButton}
       />
@@ -178,33 +201,39 @@ export default function EditTransfer({ id, coreApp, onClose }) {
           <IonItem>
             <IonLabel position="stacked">From:</IonLabel>
             <IonSelect
-              value={fromVal}
+              value={fromIDVal}
               onIonChange={(evt) => {
-                setFrom(evt.detail.value);
+                setFromID(evt.detail.value);
               }}
               placeholder="Account"
             >
-              {accounts.map(({ id: accID, name }) => (
-                <IonSelectOption key={accID} value={accID}>
-                  {name}
-                </IonSelectOption>
-              ))}
+              {(accounts || [])
+                .sort(sortByName)
+                .map(({ id: accID, name, balance }) => (
+                  <IonSelectOption key={accID} value={accID}>
+                    {name}
+                    {balance ? ` ($${balance} available)` : ""}
+                  </IonSelectOption>
+                ))}
             </IonSelect>
           </IonItem>
           <IonItem>
             <IonLabel position="stacked">To:</IonLabel>
             <IonSelect
-              value={toVal}
+              value={toIDVal}
               onIonChange={(evt) => {
-                setTo(evt.detail.value);
+                setToID(evt.detail.value);
               }}
               placeholder="Account"
             >
-              {accounts.map(({ id: accID, name }) => (
-                <IonSelectOption key={accID} value={accID}>
-                  {name}
-                </IonSelectOption>
-              ))}
+              {(accounts || [])
+                .sort(sortByName)
+                .map(({ id: accID, name, balance }) => (
+                  <IonSelectOption key={accID} value={accID}>
+                    {name}
+                    {balance ? ` ($${balance} available)` : ""}
+                  </IonSelectOption>
+                ))}
             </IonSelect>
           </IonItem>
           <IonItem>
@@ -242,7 +271,9 @@ export default function EditTransfer({ id, coreApp, onClose }) {
           <IonButton color="medium" onClick={handleCancel}>
             Cancel
           </IonButton>
-          <IonButton type="submit">Update Transfer</IonButton>
+          <IonButton type="submit" color="tertiary">
+            Update Transfer
+          </IonButton>
         </form>
       </IonContent>
     </IonPage>
@@ -252,10 +283,12 @@ export default function EditTransfer({ id, coreApp, onClose }) {
 EditTransfer.propTypes = {
   id: PropTypes.string.isRequired,
   coreApp: PropTypes.shape({
+    deleteTransfer: PropTypes.func.isRequired,
+    extendAccounts: PropTypes.func.isRequired,
     getAccounts: PropTypes.func.isRequired,
+    getCategories: PropTypes.func.isRequired,
     getTransfer: PropTypes.func.isRequired,
     updateTransfer: PropTypes.func.isRequired,
-    deleteTransfer: PropTypes.func.isRequired,
   }).isRequired,
   onClose: PropTypes.func.isRequired,
 };

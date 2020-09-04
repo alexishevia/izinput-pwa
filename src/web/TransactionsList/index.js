@@ -27,7 +27,7 @@ function Transfer({ transfer, accounts }) {
     >
       <IonLabel>
         <p>
-          <IonNote color="dark">${amount.toFixed(2)}</IonNote>
+          <IonNote color="tertiary">${amount.toFixed(2)}</IonNote>
           <br />
           {fromLabel} =&gt; {toLabel}
           <br />

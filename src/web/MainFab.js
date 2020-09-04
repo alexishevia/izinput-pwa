@@ -11,9 +11,9 @@ import { add } from "ionicons/icons";
 
 const buttons = [
   { name: "Account", route: "/newAccount" },
-  { name: "Transfer", route: "/newTransfer" },
-  { name: "Income", route: "/newIncome" },
-  { name: "Expense", route: "/newExpense" },
+  { name: "Transfer", route: "/newTransfer", color: "tertiary" },
+  { name: "Income", route: "/newIncome", color: "success" },
+  { name: "Expense", route: "/newExpense", color: "danger" },
 ];
 
 export default function MainFab() {
@@ -24,8 +24,13 @@ export default function MainFab() {
       </IonFabButton>
       <IonFabList side="top">
         <div className="ion-text-end" style={{ marginLeft: "-5em" }}>
-          {buttons.map(({ name, route }) => (
-            <IonButton key={name} routerLink={route}>
+          {buttons.map(({ name, route, color }) => (
+            <IonButton
+              style={{ minWidth: "8em" }}
+              key={name}
+              routerLink={route}
+              color={color}
+            >
               <IonLabel>{name}</IonLabel>
             </IonButton>
           ))}
