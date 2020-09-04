@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 
 import CoreApp from "./core/app";
-import WebApp from "./web/AppFunc";
+import WebApp from "./web/App";
 import * as serviceWorker from "./serviceWorker";
 
 /* Core CSS required for Ionic components to work properly */
