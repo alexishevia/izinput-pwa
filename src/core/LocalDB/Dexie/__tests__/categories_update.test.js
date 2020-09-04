@@ -1,4 +1,4 @@
-import { v1 as uuidv1, v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import {
   CategoriesCreateAction,
   CategoriesUpdateAction,
@@ -11,7 +11,7 @@ import LocalDB from "..";
 function Category(values) {
   const now = new Date().toISOString();
   return {
-    id: uuidv1(),
+    id: uuidv4(),
     name: "testsCategory",
     modifiedAt: now,
     deleted: false,

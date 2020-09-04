@@ -1,4 +1,4 @@
-import { v1 as uuidv1, v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import {
   AccountsCreateAction,
   AccountsUpdateAction,
@@ -10,7 +10,7 @@ import LocalDB from "..";
 function Account(values) {
   const now = new Date().toISOString();
   return {
-    id: uuidv1(),
+    id: uuidv4(),
     name: "testsAccount",
     initialBalance: 0,
     modifiedAt: now,

@@ -1,4 +1,4 @@
-import { v1 as uuidv1, v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import {
   AccountsCreateAction,
   TransfersCreateAction,
@@ -13,7 +13,7 @@ import AppendOnlyLog from "../../AppendOnlyLog/InMemoryLog";
 function Account(values) {
   const now = new Date().toISOString();
   return {
-    id: uuidv1(),
+    id: uuidv4(),
     name: "testsAccount",
     type: "INTERNAL",
     initialBalance: 0,
@@ -31,9 +31,9 @@ function createAccount(db, values) {
 function Transfer(values) {
   const now = new Date().toISOString();
   return {
-    id: uuidv1(),
-    fromID: uuidv1(),
-    toID: uuidv1(),
+    id: uuidv4(),
+    fromID: uuidv4(),
+    toID: uuidv4(),
     amount: 0,
     description: "test transfer",
     transactionDate: now.split("T")[0],

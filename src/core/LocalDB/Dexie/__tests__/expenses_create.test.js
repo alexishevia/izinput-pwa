@@ -1,4 +1,4 @@
-import { v1 as uuidv1, v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import {
   AccountsCreateAction,
   ExpensesCreateAction,
@@ -11,7 +11,7 @@ import LocalDB from "..";
 function Account(values) {
   const now = new Date().toISOString();
   return {
-    id: uuidv1(),
+    id: uuidv4(),
     name: "testsAccount",
     initialBalance: 0,
     modifiedAt: now,
@@ -22,7 +22,7 @@ function Account(values) {
 function Category(values) {
   const now = new Date().toISOString();
   return {
-    id: uuidv1(),
+    id: uuidv4(),
     name: "testscategory",
     modifiedAt: now,
     deleted: false,
@@ -43,9 +43,9 @@ function createAccount(db, values) {
 function Expense(values) {
   const now = new Date().toISOString();
   return {
-    id: uuidv1(),
-    accountID: uuidv1(),
-    categoryID: uuidv1(),
+    id: uuidv4(),
+    accountID: uuidv4(),
+    categoryID: uuidv4(),
     amount: 0,
     description: "test expense",
     transactionDate: now.split("T")[0],
