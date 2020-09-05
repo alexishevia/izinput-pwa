@@ -13,7 +13,7 @@ import {
 
 const routes = [
   { name: "Home", route: "/" },
-  { name: "Transfers", route: "/transfers" },
+  { name: "Expenses", route: "/expenses" },
   { name: "Accounts", route: "/accounts" },
   { name: "Sync", route: "/sync" },
 ];

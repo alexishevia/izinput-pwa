@@ -10,11 +10,12 @@ export default function useCoreAppData({
 }) {
   const [value, setValue] = useState(null);
 
-  // reset value to null on coreApp.CHANGE_EVENT
+  function resetData() {
+    setValue(null);
+  }
+
+  // reset data on coreApp.CHANGE_EVENT
   useEffect(() => {
-    function resetData() {
-      setValue(null);
-    }
     coreApp.on(coreApp.CHANGE_EVENT, resetData);
     return () => coreApp.off(coreApp.CHANGE_EVENT, resetData);
   }, [coreApp]);
@@ -28,5 +29,5 @@ export default function useCoreAppData({
     dataLoadFunc(setValue);
   }, [value, dataLoadFunc, initialValue]);
 
-  return value === null ? initialValue : value;
+  return [value === null ? initialValue : value, resetData];
 }

@@ -224,14 +224,14 @@ function ByName(name) {
   const db = new Dexie(name);
 
   // run migrations
-  db.version(1).stores({
+  db.version(2).stores({
     localActions: "++", // primary key hidden and auto-incremented
     meta: "", // primary key hidden but not auto-incremented
     accounts: "id", // primary key: id
     categories: "id", // primary key: id
-    incomes: "id,modifiedAt", // primary key: id, index for modifiedAt
-    expenses: "id,modifiedAt", // primary key: id, index for modifiedAt
-    transfers: "id,modifiedAt", // primary key: id, index for modifiedAt
+    incomes: "id,modifiedAt,transactionDate", // primary key: id, indexes: [modifiedAt,transactionDate]
+    expenses: "id,modifiedAt,transactionDate", // primary key: id, indexes: [modifiedAt,transactionDate]
+    transfers: "id,modifiedAt,transactionDate", // primary key: id, indexes: [modifiedAt,transactionDate]
   });
 
   function deleteDB() {
@@ -891,42 +891,89 @@ function ByName(name) {
   }
 
   // `from` and `to` are inclusive
-  function getTransfers({ from, to }) {
-    return db.transfers
-      .filter((transfer) => !transfer.deleted)
+  function getIncomes({ fromDate, toDate, orderBy, reverse, from, to }) {
+    let query = db.incomes;
+    if (orderBy) {
+      query = query.orderBy("modifiedAt");
+    }
+    query = query.filter((income) => !income.deleted);
+    if (fromDate) {
+      query = query.filter(
+        ({ transactionDate }) => fromDate <= transactionDate
+      );
+    }
+    if (toDate) {
+      query = query.filter(({ transactionDate }) => transactionDate <= toDate);
+    }
+    if (reverse) {
+      query = query.reverse();
+    }
+    return query
+      .offset(from)
+      .limit(to - from + 1)
+      .toArray();
+  }
+
+  // `from`, `fromDate`, `to`, and `toDate` are inclusive
+  function getExpenses({
+    fromDate,
+    toDate,
+    accountIDs,
+    categoryIDs,
+    orderBy,
+    reverse,
+    from,
+    to,
+  }) {
+    let query = db.expenses;
+    if (orderBy) {
+      query = query.orderBy(orderBy);
+    }
+    query = query.filter((expense) => !expense.deleted);
+    if (Array.isArray(accountIDs)) {
+      query = query.filter(({ accountID }) => accountIDs.includes(accountID));
+    }
+    if (Array.isArray(categoryIDs)) {
+      query = query.filter(({ categoryID }) =>
+        categoryIDs.includes(categoryID)
+      );
+    }
+    if (fromDate) {
+      query = query.filter(
+        ({ transactionDate }) => fromDate <= transactionDate
+      );
+    }
+    if (toDate) {
+      query = query.filter(({ transactionDate }) => transactionDate <= toDate);
+    }
+    if (reverse) {
+      query = query.reverse();
+    }
+    return query
       .offset(from)
       .limit(to - from + 1)
       .toArray();
   }
 
   // `from` and `to` are inclusive
-  function getRecentIncomes({ from, to }) {
-    return db.incomes
-      .orderBy("modifiedAt")
-      .filter((income) => !income.deleted)
-      .reverse()
-      .offset(from)
-      .limit(to - from + 1)
-      .toArray();
-  }
-
-  // `from` and `to` are inclusive
-  function getRecentExpenses({ from, to }) {
-    return db.expenses
-      .orderBy("modifiedAt")
-      .filter((expense) => !expense.deleted)
-      .reverse()
-      .offset(from)
-      .limit(to - from + 1)
-      .toArray();
-  }
-
-  // `from` and `to` are inclusive
-  function getRecentTransfers({ from, to }) {
-    return db.transfers
-      .orderBy("modifiedAt")
-      .filter((transfer) => !transfer.deleted)
-      .reverse()
+  function getTransfers({ fromDate, toDate, orderBy, reverse, from, to }) {
+    let query = db.transfers;
+    if (orderBy) {
+      query = query.orderBy(orderBy);
+    }
+    query = query.filter((transfer) => !transfer.deleted);
+    if (fromDate) {
+      query = query.filter(
+        ({ transactionDate }) => fromDate <= transactionDate
+      );
+    }
+    if (toDate) {
+      query = query.filter(({ transactionDate }) => transactionDate <= toDate);
+    }
+    if (reverse) {
+      query = query.reverse();
+    }
+    return query
       .offset(from)
       .limit(to - from + 1)
       .toArray();
@@ -1040,12 +1087,11 @@ function ByName(name) {
     getIncome,
     getLastAction,
     getLocalActions,
-    getRecentExpenses,
-    getRecentIncomes,
-    getRecentTransfers,
+    getExpenses,
+    getIncomes,
+    getTransfers,
     getTotalWithdrawals,
     getTransfer,
-    getTransfers,
     name,
     processActions,
   };

@@ -33,3 +33,13 @@ export function isValidDateStr(str) {
 export function isValidUTCDateStr(str) {
   return isValidDateStr(str) && new Date(str).toISOString() === str;
 }
+
+export function monthStart() {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), 1);
+}
+
+export function monthEnd() {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth() + 1, 0);
+}

@@ -8,7 +8,7 @@ import AccountsList from "./AccountsList";
 
 export default function Accounts({ coreApp }) {
   const [errors, addError, dismissErrors] = useErrors([]);
-  const accounts = useCoreAppData({
+  const [accounts] = useCoreAppData({
     coreApp,
     initialValue: [],
     dataLoadFunc: async (setAccounts) => {

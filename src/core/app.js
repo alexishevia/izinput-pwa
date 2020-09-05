@@ -174,12 +174,6 @@ async function getCategories() {
   return allCategories;
 }
 
-// both `from` and `to` are inclusive
-async function getTransfers({ from, to }) {
-  const localDB = await getLocalDB();
-  return localDB.getTransfers({ from, to });
-}
-
 async function getTransfer(id) {
   const localDB = await getLocalDB();
   return localDB.getTransfer(id);
@@ -190,14 +184,57 @@ async function getExpense(id) {
   return localDB.getExpense(id);
 }
 
+async function getExpenses({
+  fromDate,
+  toDate,
+  accountIDs,
+  categoryIDs,
+  orderBy,
+  reverse,
+}) {
+  // TODO: instead of hardcoding the `from` and `to` values, should iterate until all categories are pulled from DB
+  const localDB = await getLocalDB();
+  return localDB.getExpenses({
+    fromDate,
+    toDate,
+    accountIDs,
+    categoryIDs,
+    orderBy,
+    from: 0,
+    to: 500,
+    reverse,
+  });
+}
+
+async function getIncomes({ fromDate, toDate, orderBy, reverse }) {
+  // TODO: instead of hardcoding the `from` and `to` values, should iterate until all categories are pulled from DB
+  const localDB = await getLocalDB();
+  return localDB.getIncomes({
+    fromDate,
+    toDate,
+    orderBy,
+    from: 0,
+    to: 500,
+    reverse,
+  });
+}
+
+async function getTransfers({ fromDate, toDate, orderBy, reverse }) {
+  // TODO: instead of hardcoding the `from` and `to` values, should iterate until all categories are pulled from DB
+  const localDB = await getLocalDB();
+  return localDB.getTransfers({
+    fromDate,
+    toDate,
+    orderBy,
+    from: 0,
+    to: 500,
+    reverse,
+  });
+}
+
 async function getIncome(id) {
   const localDB = await getLocalDB();
   return localDB.getIncome(id);
-}
-
-async function getRecentTransfers() {
-  const localDB = await getLocalDB();
-  return localDB.getRecentTransfers({ from: 0, to: 15 });
 }
 
 const recentCount = 15;
@@ -205,17 +242,32 @@ async function getRecentTransactions() {
   const localDB = await getLocalDB();
   const [incomes, expenses, transfers] = await Promise.all([
     localDB
-      .getRecentIncomes({ from: 0, to: recentCount })
+      .getIncomes({
+        from: 0,
+        to: recentCount,
+        orderBy: "modifiedAt",
+        reverse: true,
+      })
       .then((result) =>
         result.map((income) => ({ ...income, type: "INCOME" }))
       ),
     localDB
-      .getRecentExpenses({ from: 0, to: recentCount })
+      .getExpenses({
+        from: 0,
+        to: recentCount,
+        orderBy: "modifiedAt",
+        reverse: true,
+      })
       .then((result) =>
         result.map((expense) => ({ ...expense, type: "EXPENSE" }))
       ),
     localDB
-      .getRecentTransfers({ from: 0, to: recentCount })
+      .getTransfers({
+        from: 0,
+        to: recentCount,
+        orderBy: "modifiedAt",
+        reverse: true,
+      })
       .then((result) =>
         result.map((transfer) => ({ ...transfer, type: "TRANSFER" }))
       ),
@@ -474,40 +526,35 @@ export default function InvoiceZero() {
     }
   }
 
-  const oldExportedFuncs = {
-    createTransfer,
-    deleteTransfer,
-    gDriveGetSelectedFile,
-    gDriveLogin,
-    gDriveLogout,
-    gDriveSelectFile,
-    getAccountBalance,
-    getRecentTransfers,
-    getTotalWithdrawals,
-    getTransfers,
-    isGDriveLoggedIn,
-    runSync,
-    updateAccount,
-  };
-
   return {
-    ...oldExportedFuncs,
     CHANGE_EVENT,
     createAccount,
     createExpense,
     createIncome,
+    createTransfer,
     deleteExpense,
     deleteIncome,
+    deleteTransfer,
     extendAccounts,
+    gDriveGetSelectedFile,
+    gDriveLogin,
+    gDriveLogout,
+    gDriveSelectFile,
     getAccount,
     getAccounts,
     getCategories,
     getExpense,
+    getExpenses,
     getIncome,
+    getIncomes,
     getRecentTransactions,
     getTransfer,
+    getTransfers,
+    isGDriveLoggedIn,
     off,
     on,
+    runSync,
+    updateAccount,
     updateExpense,
     updateIncome,
     updateTransfer,

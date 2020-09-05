@@ -10,7 +10,7 @@ import Errors from "../../Errors";
 export default function Home({ coreApp }) {
   const [errors, addError, dismissErrors] = useErrors([]);
 
-  const accounts = useCoreAppData({
+  const [accounts] = useCoreAppData({
     coreApp,
     initialValue: [],
     dataLoadFunc: async (setAccounts) => {
@@ -28,7 +28,7 @@ export default function Home({ coreApp }) {
     },
   });
 
-  const categories = useCoreAppData({
+  const [categories] = useCoreAppData({
     coreApp,
     initialValue: [],
     dataLoadFunc: async (setCategories) => {
@@ -41,7 +41,7 @@ export default function Home({ coreApp }) {
     },
   });
 
-  const recentTransactions = useCoreAppData({
+  const [recentTransactions] = useCoreAppData({
     coreApp,
     initialValue: [],
     dataLoadFunc: async (setRecentTransactions) => {
