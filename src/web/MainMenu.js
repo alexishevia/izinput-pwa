@@ -14,6 +14,7 @@ import {
 const routes = [
   { name: "Home", route: "/" },
   { name: "Expenses", route: "/expenses" },
+  { name: "Income", route: "/income" },
   { name: "Accounts", route: "/accounts" },
   { name: "Sync", route: "/sync" },
 ];

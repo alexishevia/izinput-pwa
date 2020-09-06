@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Route } from "react-router-dom";
-import { IonApp, IonRouterOutlet } from "@ionic/react";
+import { IonApp } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
+import { Switch } from "react-router";
 import EditAccount from "./screens/EditAccount";
 import EditExpense from "./screens/EditExpense";
 import EditIncome from "./screens/EditIncome";
@@ -17,6 +18,7 @@ import NotFound from "./screens/NotFound";
 import Screen from "./Screen";
 import Sync from "./screens/Sync";
 import Expenses from "./screens/Expenses";
+import Income from "./screens/Income";
 
 /* Core CSS required for Ionic components to work properly */
 import "@ionic/react/css/core.css";
@@ -43,18 +45,8 @@ export default function App({ coreApp }) {
   return (
     <IonApp>
       <IonReactRouter>
-        <IonRouterOutlet>
+        <Switch>
           <Route
-            exact
-            path="/"
-            component={() => (
-              <Screen isSyncRunning={isSyncRunning}>
-                <Home coreApp={coreApp} />
-              </Screen>
-            )}
-          />
-          <Route
-            exact
             path="/accounts"
             component={() => (
               <Screen isSyncRunning={isSyncRunning}>
@@ -79,13 +71,14 @@ export default function App({ coreApp }) {
             )}
           />
           <Route
-            exact
             path="/expenses"
-            component={() => (
-              <Screen isSyncRunning={isSyncRunning}>
-                <Expenses coreApp={coreApp} />
-              </Screen>
-            )}
+            component={() => {
+              return (
+                <Screen isSyncRunning={isSyncRunning}>
+                  <Expenses coreApp={coreApp} />
+                </Screen>
+              );
+            }}
           />
           <Route
             path="/newExpense"
@@ -101,6 +94,14 @@ export default function App({ coreApp }) {
                 id={match.params.id}
                 onClose={history.goBack}
               />
+            )}
+          />
+          <Route
+            path="/income"
+            component={() => (
+              <Screen isSyncRunning={isSyncRunning}>
+                <Income coreApp={coreApp} />
+              </Screen>
             )}
           />
           <Route
@@ -148,11 +149,20 @@ export default function App({ coreApp }) {
             )}
           />
           <Route
+            path="/"
+            exact
+            component={() => (
+              <Screen isSyncRunning={isSyncRunning}>
+                <Home coreApp={coreApp} />
+              </Screen>
+            )}
+          />
+          <Route
             component={({ history }) => (
               <NotFound onClose={() => history.push("/")} />
             )}
           />
-        </IonRouterOutlet>
+        </Switch>
       </IonReactRouter>
     </IonApp>
   );

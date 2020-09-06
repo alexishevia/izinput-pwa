@@ -1,7 +1,6 @@
 # To-Do
 
-- [ ] expenses list
-- [ ] income list
+- [ ] convert useCoreAppData to use generators, and cancel on unmount
 - [ ] transfers list
 - [ ] auto sync
 - [ ] clean up unused (aka "oldExportedFuncs") from `core/app`
