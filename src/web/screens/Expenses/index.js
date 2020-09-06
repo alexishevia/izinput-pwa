@@ -11,11 +11,16 @@ import {
   IonLabel,
   IonList,
   IonModal,
+  IonSearchbar,
   IonTitle,
   IonToggle,
   IonToolbar,
 } from "@ionic/react";
-import { chevronBackOutline, filterOutline } from "ionicons/icons";
+import {
+  chevronBackOutline,
+  filterOutline,
+  searchOutline,
+} from "ionicons/icons";
 import Errors from "../../Errors";
 import useErrors from "../../hooks/useErrors";
 import useCoreAppData from "../../hooks/useCoreAppData";
@@ -151,13 +156,30 @@ CategoriesFilter.propTypes = {
   setStatusForCategory: PropTypes.func.isRequired,
 };
 
+function filterBySearchText(searchText) {
+  return function filter({ amount, description }) {
+    if (!searchText) {
+      return true;
+    }
+    if (`${amount}`.includes(searchText)) {
+      return true;
+    }
+    if (description.toLowerCase().includes(searchText.toLowerCase())) {
+      return true;
+    }
+    return false;
+  };
+}
+
 export default function Expenses({ coreApp }) {
   const [fromDate, setFromDate] = useState(dateToDayStr(monthStart()));
   const [toDate, setToDate] = useState(dateToDayStr(monthEnd()));
   const [errors, addError, dismissErrors] = useErrors([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [accountsStatus, setAccountsStatus] = useState({});
   const [categoriesStatus, setCategoriesStatus] = useState({});
+  const [searchText, setSearchText] = useState("");
 
   function setStatusForAccount(id, isActive) {
     setAccountsStatus((prevStatus) => ({ ...prevStatus, [id]: isActive }));
@@ -167,9 +189,19 @@ export default function Expenses({ coreApp }) {
     setCategoriesStatus((prevStatus) => ({ ...prevStatus, [id]: isActive }));
   }
 
-  function handleCloseModal(evt) {
-    evt.preventDefault();
-    setIsModalOpen(false);
+  function handleOpenFiltersModal(evt) {
+    evt && evt.preventDefault();
+    setIsFiltersModalOpen(true);
+  }
+
+  function handleCloseFiltersModal(evt) {
+    evt && evt.preventDefault();
+    setIsFiltersModalOpen(false);
+  }
+
+  function handleOpenSearch(evt) {
+    evt && evt.preventDefault();
+    setIsSearchOpen(true);
   }
 
   const [accounts] = useCoreAppData({
@@ -250,10 +282,10 @@ export default function Expenses({ coreApp }) {
   return (
     <>
       <Errors errors={errors} onDismiss={dismissErrors} />
-      <IonModal isOpen={isModalOpen}>
+      <IonModal isOpen={isFiltersModalOpen}>
         <IonToolbar color="primary">
           <IonButtons slot="start">
-            <IonButton onClick={handleCloseModal}>
+            <IonButton onClick={handleCloseFiltersModal}>
               <IonIcon icon={chevronBackOutline} />
             </IonButton>
           </IonButtons>
@@ -284,12 +316,21 @@ export default function Expenses({ coreApp }) {
         <IonLabel>
           <h3>Expenses</h3>
         </IonLabel>
-        <IonButton fill="clear" slot="end" onClick={() => setIsModalOpen(true)}>
+        <IonButton fill="clear" slot="end" onClick={handleOpenSearch}>
+          <IonIcon icon={searchOutline} />
+        </IonButton>
+        <IonButton fill="clear" slot="end" onClick={handleOpenFiltersModal}>
           <IonIcon icon={filterOutline} />
         </IonButton>
       </IonItem>
+      {isSearchOpen ? (
+        <IonSearchbar
+          value={searchText}
+          onIonChange={(e) => setSearchText(e.detail.value)}
+        />
+      ) : null}
       <ExpensesList
-        expenses={expenses}
+        expenses={expenses.filter(filterBySearchText(searchText))}
         accounts={accounts}
         categories={categories}
       />
