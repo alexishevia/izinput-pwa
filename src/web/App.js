@@ -19,6 +19,7 @@ import Screen from "./Screen";
 import Sync from "./screens/Sync";
 import Expenses from "./screens/Expenses";
 import Income from "./screens/Income";
+import Transfers from "./screens/Transfers";
 
 /* Core CSS required for Ionic components to work properly */
 import "@ionic/react/css/core.css";
@@ -118,6 +119,14 @@ export default function App({ coreApp }) {
                 id={match.params.id}
                 onClose={history.goBack}
               />
+            )}
+          />
+          <Route
+            path="/transfers"
+            component={() => (
+              <Screen isSyncRunning={isSyncRunning}>
+                <Transfers coreApp={coreApp} />
+              </Screen>
             )}
           />
           <Route
