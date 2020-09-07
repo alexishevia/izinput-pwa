@@ -1,58 +1,64 @@
-import React from "react";
+import React, { useEffect } from "react";
 import PropTypes from "prop-types";
 import { IonLabel, IonItem } from "@ionic/react";
 import AccountsChart from "./AccountsChart";
 import TransactionsList from "../../TransactionsList";
 import useErrors from "../../hooks/useErrors";
-import useCoreAppData from "../../hooks/useCoreAppData";
+import useAsyncState from "../../hooks/useAsyncState";
 import Errors from "../../Errors";
 
 export default function Home({ coreApp }) {
   const [errors, addError, dismissErrors] = useErrors([]);
 
-  const [accounts] = useCoreAppData({
-    coreApp,
-    initialValue: [],
-    dataLoadFunc: async (setAccounts) => {
+  const [accounts, reloadAccounts] = useAsyncState(
+    [],
+    async function* loadAccounts() {
       try {
         const allAccounts = await coreApp.getAccounts();
-        setAccounts(allAccounts);
+        yield allAccounts;
         const extendedAccounts = await coreApp.extendAccounts(allAccounts, [
           "balance",
           "monthlyWithdrawals",
         ]);
-        setAccounts(extendedAccounts);
+        yield extendedAccounts;
       } catch (err) {
         addError(err);
       }
-    },
-  });
+    }
+  );
 
-  const [categories] = useCoreAppData({
-    coreApp,
-    initialValue: [],
-    dataLoadFunc: async (setCategories) => {
+  const [categories, reloadCategories] = useAsyncState(
+    [],
+    function* loadCategories() {
       try {
-        const allCategories = await coreApp.getCategories();
-        setCategories(allCategories);
+        yield coreApp.getCategories();
       } catch (err) {
         addError(err);
       }
-    },
-  });
+    }
+  );
 
-  const [recentTransactions] = useCoreAppData({
-    coreApp,
-    initialValue: [],
-    dataLoadFunc: async (setRecentTransactions) => {
+  const [recentTransactions, reloadRecentTransactions] = useAsyncState(
+    [],
+    function* loadRecentTransactions() {
       try {
-        const transactions = await coreApp.getRecentTransactions();
-        setRecentTransactions(transactions);
+        yield coreApp.getRecentTransactions();
       } catch (err) {
         addError(err);
       }
-    },
-  });
+    }
+  );
+
+  // reload data on coreApp.CHANGE_EVENT
+  function reloadData() {
+    reloadAccounts();
+    reloadCategories();
+    reloadRecentTransactions();
+  }
+  useEffect(() => {
+    coreApp.on(coreApp.CHANGE_EVENT, reloadData);
+    return () => coreApp.off(coreApp.CHANGE_EVENT, reloadData);
+  }, [coreApp]);
 
   return (
     <>
@@ -79,9 +85,12 @@ export default function Home({ coreApp }) {
 
 Home.propTypes = {
   coreApp: PropTypes.shape({
+    CHANGE_EVENT: PropTypes.string.isRequired,
     extendAccounts: PropTypes.func.isRequired,
     getAccounts: PropTypes.func.isRequired,
     getCategories: PropTypes.func.isRequired,
     getRecentTransactions: PropTypes.func.isRequired,
+    off: PropTypes.func.isRequired,
+    on: PropTypes.func.isRequired,
   }).isRequired,
 };

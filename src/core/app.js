@@ -206,12 +206,21 @@ async function getExpenses({
   });
 }
 
-async function getIncomes({ fromDate, toDate, orderBy, reverse }) {
+async function getIncomes({
+  fromDate,
+  toDate,
+  accountIDs,
+  categoryIDs,
+  orderBy,
+  reverse,
+}) {
   // TODO: instead of hardcoding the `from` and `to` values, should iterate until all categories are pulled from DB
   const localDB = await getLocalDB();
   return localDB.getIncomes({
     fromDate,
     toDate,
+    accountIDs,
+    categoryIDs,
     orderBy,
     from: 0,
     to: 500,
@@ -219,12 +228,19 @@ async function getIncomes({ fromDate, toDate, orderBy, reverse }) {
   });
 }
 
-async function getTransfers({ fromDate, toDate, orderBy, reverse }) {
+async function getTransfers({
+  fromDate,
+  toDate,
+  accountIDs,
+  orderBy,
+  reverse,
+}) {
   // TODO: instead of hardcoding the `from` and `to` values, should iterate until all categories are pulled from DB
   const localDB = await getLocalDB();
   return localDB.getTransfers({
     fromDate,
     toDate,
+    accountIDs,
     orderBy,
     from: 0,
     to: 500,
@@ -558,5 +574,6 @@ export default function InvoiceZero() {
     updateExpense,
     updateIncome,
     updateTransfer,
+    emitChange,
   };
 }

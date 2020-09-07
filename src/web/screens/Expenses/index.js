@@ -23,7 +23,7 @@ import {
 } from "ionicons/icons";
 import Errors from "../../Errors";
 import useErrors from "../../hooks/useErrors";
-import useCoreAppData from "../../hooks/useCoreAppData";
+import useAsyncState from "../../hooks/useAsyncState";
 import ExpensesList from "./ExpensesList";
 import { dateToDayStr, monthStart, monthEnd } from "../../../helpers/date";
 
@@ -190,32 +190,30 @@ export default function Expenses({ coreApp }) {
   }
 
   function handleOpenFiltersModal(evt) {
-    evt && evt.preventDefault();
+    evt.preventDefault();
     setIsFiltersModalOpen(true);
   }
 
   function handleCloseFiltersModal(evt) {
-    evt && evt.preventDefault();
+    evt.preventDefault();
     setIsFiltersModalOpen(false);
   }
 
-  function handleOpenSearch(evt) {
-    evt && evt.preventDefault();
-    setIsSearchOpen(true);
+  function handleToggleSearch(evt) {
+    evt.preventDefault();
+    setIsSearchOpen((val) => !val);
   }
 
-  const [accounts] = useCoreAppData({
-    coreApp,
-    initialValue: [],
-    dataLoadFunc: async (setAccounts) => {
+  const [accounts, reloadAccounts] = useAsyncState(
+    [],
+    function* loadAccounts() {
       try {
-        const allAccounts = await coreApp.getAccounts();
-        setAccounts(allAccounts);
+        yield coreApp.getAccounts();
       } catch (err) {
         addError(err);
       }
-    },
-  });
+    }
+  );
 
   function getActiveAccounts() {
     return (accounts || []).filter(
@@ -223,18 +221,16 @@ export default function Expenses({ coreApp }) {
     );
   }
 
-  const [categories] = useCoreAppData({
-    coreApp,
-    initialValue: [],
-    dataLoadFunc: async (setCategories) => {
+  const [categories, reloadCategories] = useAsyncState(
+    [],
+    function* loadCategories() {
       try {
-        const allCategories = await coreApp.getCategories();
-        setCategories(allCategories);
+        yield coreApp.getCategories();
       } catch (err) {
         addError(err);
       }
-    },
-  });
+    }
+  );
 
   function getActiveCategories() {
     return (categories || []).filter(
@@ -242,10 +238,9 @@ export default function Expenses({ coreApp }) {
     );
   }
 
-  const [expenses, reloadExpenses] = useCoreAppData({
-    coreApp,
-    initialValue: [],
-    dataLoadFunc: async (setExpenses) => {
+  const [expenses, reloadExpenses] = useAsyncState(
+    [],
+    function* loadExpenses() {
       try {
         const activeAccounts = getActiveAccounts();
         const accountIDs =
@@ -257,7 +252,7 @@ export default function Expenses({ coreApp }) {
           activeCategories.length !== categories.length
             ? activeCategories.map((cat) => cat.id)
             : null;
-        const allExpenses = await coreApp.getExpenses({
+        yield coreApp.getExpenses({
           fromDate,
           toDate,
           orderBy: "transactionDate",
@@ -265,13 +260,24 @@ export default function Expenses({ coreApp }) {
           accountIDs,
           categoryIDs,
         });
-        setExpenses(allExpenses);
       } catch (err) {
         addError(err);
       }
-    },
-  });
+    }
+  );
 
+  // reload data on coreApp.CHANGE_EVENT
+  function reloadData() {
+    reloadAccounts();
+    reloadCategories();
+    reloadExpenses();
+  }
+  useEffect(() => {
+    coreApp.on(coreApp.CHANGE_EVENT, reloadData);
+    return () => coreApp.off(coreApp.CHANGE_EVENT, reloadData);
+  }, [coreApp]);
+
+  // reload expenses when filters change
   useEffect(
     function resetExpenses() {
       reloadExpenses();
@@ -316,7 +322,7 @@ export default function Expenses({ coreApp }) {
         <IonLabel>
           <h3>Expenses</h3>
         </IonLabel>
-        <IonButton fill="clear" slot="end" onClick={handleOpenSearch}>
+        <IonButton fill="clear" slot="end" onClick={handleToggleSearch}>
           <IonIcon icon={searchOutline} />
         </IonButton>
         <IonButton fill="clear" slot="end" onClick={handleOpenFiltersModal}>
@@ -340,8 +346,11 @@ export default function Expenses({ coreApp }) {
 
 Expenses.propTypes = {
   coreApp: PropTypes.shape({
+    CHANGE_EVENT: PropTypes.string.isRequired,
     getAccounts: PropTypes.func.isRequired,
-    getExpenses: PropTypes.func.isRequired,
     getCategories: PropTypes.func.isRequired,
+    getExpenses: PropTypes.func.isRequired,
+    off: PropTypes.func.isRequired,
+    on: PropTypes.func.isRequired,
   }).isRequired,
 };

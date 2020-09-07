@@ -1,6 +1,6 @@
 # To-Do
 
-- [ ] convert useCoreAppData to use generators, and cancel on unmount
+- [ ] convert useCoreAppData to useAsyncState
 - [ ] transfers list
 - [ ] auto sync
 - [ ] clean up unused (aka "oldExportedFuncs") from `core/app`

@@ -23,7 +23,7 @@ import {
 } from "ionicons/icons";
 import Errors from "../../Errors";
 import useErrors from "../../hooks/useErrors";
-import useCoreAppData from "../../hooks/useCoreAppData";
+import useAsyncState from "../../hooks/useAsyncState";
 import IncomeList from "./IncomeList";
 import { dateToDayStr, monthStart, monthEnd } from "../../../helpers/date";
 
@@ -190,32 +190,30 @@ export default function Income({ coreApp }) {
   }
 
   function handleOpenFiltersModal(evt) {
-    evt && evt.preventDefault();
+    evt.preventDefault();
     setIsFiltersModalOpen(true);
   }
 
   function handleCloseFiltersModal(evt) {
-    evt && evt.preventDefault();
+    evt.preventDefault();
     setIsFiltersModalOpen(false);
   }
 
   function handleOpenSearch(evt) {
-    evt && evt.preventDefault();
+    evt.preventDefault();
     setIsSearchOpen(true);
   }
 
-  const [accounts] = useCoreAppData({
-    coreApp,
-    initialValue: [],
-    dataLoadFunc: async (setAccounts) => {
+  const [accounts, reloadAccounts] = useAsyncState(
+    [],
+    function* loadAccounts() {
       try {
-        const allAccounts = await coreApp.getAccounts();
-        setAccounts(allAccounts);
+        yield coreApp.getAccounts();
       } catch (err) {
         addError(err);
       }
-    },
-  });
+    }
+  );
 
   function getActiveAccounts() {
     return (accounts || []).filter(
@@ -223,18 +221,16 @@ export default function Income({ coreApp }) {
     );
   }
 
-  const [categories] = useCoreAppData({
-    coreApp,
-    initialValue: [],
-    dataLoadFunc: async (setCategories) => {
+  const [categories, reloadCategories] = useAsyncState(
+    [],
+    function* loadCategories() {
       try {
-        const allCategories = await coreApp.getCategories();
-        setCategories(allCategories);
+        yield coreApp.getCategories();
       } catch (err) {
         addError(err);
       }
-    },
-  });
+    }
+  );
 
   function getActiveCategories() {
     return (categories || []).filter(
@@ -242,36 +238,43 @@ export default function Income({ coreApp }) {
     );
   }
 
-  const [income, reloadIncome] = useCoreAppData({
-    coreApp,
-    initialValue: [],
-    dataLoadFunc: async (setIncome) => {
-      try {
-        const activeAccounts = getActiveAccounts();
-        const accountIDs =
-          activeAccounts.length !== accounts.length
-            ? activeAccounts.map((acc) => acc.id)
-            : null;
-        const activeCategories = getActiveCategories();
-        const categoryIDs =
-          activeCategories.length !== categories.length
-            ? activeCategories.map((cat) => cat.id)
-            : null;
-        const allIncome = await coreApp.getIncomes({
-          fromDate,
-          toDate,
-          orderBy: "transactionDate",
-          reverse: true,
-          accountIDs,
-          categoryIDs,
-        });
-        setIncome(allIncome);
-      } catch (err) {
-        addError(err);
-      }
-    },
+  const [income, reloadIncome] = useAsyncState([], function* loadIncome() {
+    try {
+      const activeAccounts = getActiveAccounts();
+      const accountIDs =
+        activeAccounts.length !== accounts.length
+          ? activeAccounts.map((acc) => acc.id)
+          : null;
+      const activeCategories = getActiveCategories();
+      const categoryIDs =
+        activeCategories.length !== categories.length
+          ? activeCategories.map((cat) => cat.id)
+          : null;
+      yield coreApp.getIncomes({
+        fromDate,
+        toDate,
+        orderBy: "transactionDate",
+        reverse: true,
+        accountIDs,
+        categoryIDs,
+      });
+    } catch (err) {
+      addError(err);
+    }
   });
 
+  // reload data on coreApp.CHANGE_EVENT
+  function reloadData() {
+    reloadAccounts();
+    reloadCategories();
+    reloadIncome();
+  }
+  useEffect(() => {
+    coreApp.on(coreApp.CHANGE_EVENT, reloadData);
+    return () => coreApp.off(coreApp.CHANGE_EVENT, reloadData);
+  }, [coreApp]);
+
+  // reload income when filters change
   useEffect(
     function resetIncome() {
       reloadIncome();
@@ -340,8 +343,11 @@ export default function Income({ coreApp }) {
 
 Income.propTypes = {
   coreApp: PropTypes.shape({
+    CHANGE_EVENT: PropTypes.string.isRequired,
     getAccounts: PropTypes.func.isRequired,
     getIncomes: PropTypes.func.isRequired,
     getCategories: PropTypes.func.isRequired,
+    off: PropTypes.func.isRequired,
+    on: PropTypes.func.isRequired,
   }).isRequired,
 };

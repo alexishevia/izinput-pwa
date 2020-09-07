@@ -890,13 +890,30 @@ function ByName(name) {
       .toArray();
   }
 
-  // `from` and `to` are inclusive
-  function getIncomes({ fromDate, toDate, orderBy, reverse, from, to }) {
+  // `from`, `fromDate`, `to`, and `toDate` are inclusive
+  function getIncomes({
+    fromDate,
+    toDate,
+    accountIDs,
+    categoryIDs,
+    orderBy,
+    reverse,
+    from,
+    to,
+  }) {
     let query = db.incomes;
     if (orderBy) {
-      query = query.orderBy("modifiedAt");
+      query = query.orderBy(orderBy);
     }
-    query = query.filter((income) => !income.deleted);
+    query = query.filter((expense) => !expense.deleted);
+    if (Array.isArray(accountIDs)) {
+      query = query.filter(({ accountID }) => accountIDs.includes(accountID));
+    }
+    if (Array.isArray(categoryIDs)) {
+      query = query.filter(({ categoryID }) =>
+        categoryIDs.includes(categoryID)
+      );
+    }
     if (fromDate) {
       query = query.filter(
         ({ transactionDate }) => fromDate <= transactionDate
@@ -955,13 +972,27 @@ function ByName(name) {
       .toArray();
   }
 
-  // `from` and `to` are inclusive
-  function getTransfers({ fromDate, toDate, orderBy, reverse, from, to }) {
+  // `from`, `fromDate`, `to`, and `toDate` are inclusive
+  function getTransfers({
+    fromDate,
+    toDate,
+    accountIDs,
+    orderBy,
+    reverse,
+    from,
+    to,
+  }) {
     let query = db.transfers;
     if (orderBy) {
       query = query.orderBy(orderBy);
     }
     query = query.filter((transfer) => !transfer.deleted);
+    if (Array.isArray(accountIDs)) {
+      query = query.filter(
+        ({ fromID, toID }) =>
+          accountIDs.includes(fromID) && accountIDs.includes(toID)
+      );
+    }
     if (fromDate) {
       query = query.filter(
         ({ transactionDate }) => fromDate <= transactionDate
