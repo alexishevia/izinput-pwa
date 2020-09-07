@@ -1,3 +1,4 @@
+/* eslint no-console:[0] */
 import { v4 as uuidv4 } from "uuid";
 import { promisify } from "util";
 import { EventEmitter } from "events";
@@ -574,6 +575,5 @@ export default function InvoiceZero() {
     updateExpense,
     updateIncome,
     updateTransfer,
-    emitChange,
   };
 }

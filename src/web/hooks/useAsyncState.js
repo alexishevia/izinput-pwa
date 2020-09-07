@@ -5,15 +5,27 @@ import { useState, useEffect } from "react";
 export default function useAsyncState(initialValue, generator) {
   const [value, setValue] = useState(initialValue);
 
-  let isCancelled = false;
+  // each generator is assigned a self-incrementing id
+  // by keeping track of this id, we can cancel old generators
+  let currentID = 0;
+
+  function newGenerator() {
+    currentID += 1;
+    return [generator(), currentID];
+  }
+
+  function isCancelled(id) {
+    return id < currentID;
+  }
+
+  function cancelPendingGenerators() {
+    currentID += 1;
+  }
 
   async function loadData() {
-    if (isCancelled) {
-      return;
-    }
-    const it = generator();
-    for await (const val of it) {
-      if (isCancelled) {
+    const [gen, id] = newGenerator();
+    for await (const val of gen) {
+      if (isCancelled(id)) {
         return;
       }
       setValue(val);
@@ -23,7 +35,7 @@ export default function useAsyncState(initialValue, generator) {
   useEffect(() => {
     loadData();
     return function onExit() {
-      isCancelled = true; // cancels loadData once component is unmounted
+      cancelPendingGenerators();
     };
   }, []);
 
