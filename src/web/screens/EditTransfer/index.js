@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import {
   IonAlert,
@@ -15,6 +15,7 @@ import {
 } from "@ionic/react";
 import { trashOutline } from "ionicons/icons";
 import useErrors from "../../hooks/useErrors";
+import useAsyncState from "../../hooks/useAsyncState";
 import { dateToDayStr, isValidDayStr } from "../../../helpers/date";
 import Validation from "../../../helpers/Validation";
 import Errors from "../../Errors";
@@ -68,61 +69,27 @@ export default function EditTransfer({ id, coreApp, onClose }) {
   const [transactionDate, setTransferDate] = useState(null);
   const [isDeleteAlertOpen, setDeleteAlertOpen] = useState(false);
   const [errors, addError, dismissErrors] = useErrors([]);
-  const [accounts, setAccounts] = useState(null);
-  const [transfer, setTransfer] = useState(null);
 
-  function resetFormData() {
-    setAmount(null);
-    setFromID(null);
-    setToID(null);
-    setDescription(null);
-    setTransferDate(null);
-    setDeleteAlertOpen(false);
-  }
+  const [accounts] = useAsyncState([], async function* loadAccounts() {
+    try {
+      const allAccounts = await coreApp.getAccounts();
+      yield allAccounts;
+      const extendedAccounts = await coreApp.extendAccounts(allAccounts, [
+        "balance",
+      ]);
+      yield extendedAccounts;
+    } catch (err) {
+      addError(err);
+    }
+  });
 
-  useEffect(
-    function loadAccounts() {
-      if (accounts !== null) {
-        return;
-      }
-      setAccounts([]);
-      async function loadAccountsData() {
-        try {
-          const allAccounts = await coreApp.getAccounts();
-          setAccounts(allAccounts);
-          const extendedAccounts = await coreApp.extendAccounts(allAccounts, [
-            "balance",
-          ]);
-          setAccounts(extendedAccounts);
-        } catch (err) {
-          addError(err);
-        }
-      }
-      loadAccountsData();
-    },
-    [accounts, coreApp, addError]
-  );
-
-  useEffect(
-    function loadTransfer() {
-      if (transfer !== null) {
-        return;
-      }
-      setTransfer({});
-      async function loadTransferData() {
-        try {
-          const transferData = await coreApp.getTransfer(id);
-          setTransfer(transferData);
-        } catch (err) {
-          addError(err);
-        }
-      }
-      loadTransferData();
-    },
-    [transfer, coreApp, id, addError]
-  );
-
-  useEffect(resetFormData, [id]);
+  const [transfer] = useAsyncState({}, function* loadTransfer() {
+    try {
+      yield coreApp.getTransfer(id);
+    } catch (err) {
+      addError(err);
+    }
+  });
 
   const amountVal = amount ?? transfer?.amount;
   const fromIDVal =
@@ -134,7 +101,6 @@ export default function EditTransfer({ id, coreApp, onClose }) {
 
   function handleCancel(evt) {
     evt.preventDefault();
-    resetFormData();
     onClose();
   }
 
@@ -147,7 +113,6 @@ export default function EditTransfer({ id, coreApp, onClose }) {
     try {
       setDeleteAlertOpen(false);
       await coreApp.deleteTransfer(id);
-      resetFormData();
       onClose();
     } catch (err) {
       addError(err);
@@ -166,7 +131,6 @@ export default function EditTransfer({ id, coreApp, onClose }) {
         transactionDate: transactionDateVal,
       });
       await coreApp.updateTransfer(transferData);
-      resetFormData();
       onClose();
     } catch (err) {
       addError(err);
@@ -288,7 +252,6 @@ EditTransfer.propTypes = {
     deleteTransfer: PropTypes.func.isRequired,
     extendAccounts: PropTypes.func.isRequired,
     getAccounts: PropTypes.func.isRequired,
-    getCategories: PropTypes.func.isRequired,
     getTransfer: PropTypes.func.isRequired,
     updateTransfer: PropTypes.func.isRequired,
   }).isRequired,

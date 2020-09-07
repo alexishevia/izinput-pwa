@@ -267,23 +267,20 @@ export default function Expenses({ coreApp }) {
   );
 
   // reload data on coreApp.CHANGE_EVENT
-  function reloadData() {
-    reloadAccounts();
-    reloadCategories();
-    reloadExpenses();
-  }
   useEffect(() => {
+    function reloadData() {
+      reloadAccounts();
+      reloadCategories();
+      reloadExpenses();
+    }
     coreApp.on(coreApp.CHANGE_EVENT, reloadData);
     return () => coreApp.off(coreApp.CHANGE_EVENT, reloadData);
-  }, [coreApp]);
+  }, []);
 
   // reload expenses when filters change
-  useEffect(
-    function resetExpenses() {
-      reloadExpenses();
-    },
-    [fromDate, toDate, accountsStatus, categoriesStatus]
-  );
+  useEffect(() => {
+    reloadExpenses();
+  }, [fromDate, toDate, accountsStatus, categoriesStatus]);
 
   return (
     <>

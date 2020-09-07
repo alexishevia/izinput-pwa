@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import {
   IonButton,
@@ -9,6 +9,7 @@ import {
   IonPage,
 } from "@ionic/react";
 import useErrors from "../../hooks/useErrors";
+import useAsyncState from "../../hooks/useAsyncState";
 import Validation from "../../../helpers/Validation";
 import Errors from "../../Errors";
 import ModalToolbar from "../../ModalToolbar";
@@ -31,40 +32,19 @@ export default function EditAccount({ id, coreApp, onClose }) {
   const [name, setName] = useState(null);
   const [initialBalance, setInitialBalance] = useState(null);
   const [errors, addError, dismissErrors] = useErrors([]);
-  const [account, setAccount] = useState(null);
-
-  function resetFormData() {
-    setName(null);
-    setInitialBalance(null);
-  }
-
-  useEffect(
-    function loadAccount() {
-      if (account !== null) {
-        return;
-      }
-      setAccount({});
-      async function loadAccountData() {
-        try {
-          const accountData = await coreApp.getAccount(id);
-          setAccount(accountData);
-        } catch (err) {
-          addError(err);
-        }
-      }
-      loadAccountData();
-    },
-    [account, coreApp, id, addError]
-  );
-
-  useEffect(resetFormData, [id]);
+  const [account] = useAsyncState({}, function* loadAccount() {
+    try {
+      yield coreApp.getAccount(id);
+    } catch (err) {
+      addError(err);
+    }
+  });
 
   const nameVal = name ?? account?.name;
   const initialBalanceVal = initialBalance ?? account?.initialBalance;
 
   function handleCancel(evt) {
     evt.preventDefault();
-    resetFormData();
     onClose();
   }
 
@@ -77,7 +57,6 @@ export default function EditAccount({ id, coreApp, onClose }) {
         initialBalance: initialBalanceVal,
       });
       await coreApp.updateAccount(accountData);
-      resetFormData();
       onClose();
     } catch (err) {
       addError(err);

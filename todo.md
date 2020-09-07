@@ -1,5 +1,6 @@
 # To-Do
 
+- [ ] move useErrors to top-level App
 - [ ] auto sync
 - [ ] clean up unused (aka "oldExportedFuncs") from `core/app`
 - [ ] add ability to reset all data (delete indexeddbs and localStorage)

@@ -21,6 +21,7 @@ import {
 } from "ionicons/icons";
 import loadDir from "./api/loadDir";
 import useErrors from "../../../hooks/useErrors";
+import useAsyncState from "../../../hooks/useAsyncState";
 import Errors from "../../../Errors";
 
 function isFile(node) {
@@ -71,35 +72,28 @@ FilePickerHeader.propTypes = {
 export default function FilePicker({ onCancel, onFilePick }) {
   const [path, setPath] = useState("");
   const [pathIDs, setPathIDs] = useState("root");
-  const [contents, setContents] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isFileSelected, setIsFileSelected] = useState(false);
   const [errors, addError, dismissErrors] = useErrors([]);
 
-  useEffect(() => {
-    async function loadDirContents() {
-      if (isLoading || errors.length || contents !== null) return;
-      setIsLoading(true);
-      dismissErrors();
+  const [contents, reloadContents] = useAsyncState(
+    [],
+    async function* loadContents() {
       try {
+        setIsLoading(true);
         const result = await loadDir({ id: getCurrentDir(pathIDs) });
         setIsLoading(false);
-        setContents(result.contents);
+        yield result.contents;
       } catch (err) {
         addError(err);
         setIsLoading(false);
       }
     }
-    loadDirContents();
-  }, [
-    isFileSelected,
-    pathIDs,
-    addError,
-    contents,
-    dismissErrors,
-    errors.length,
-    isLoading,
-  ]);
+  );
+
+  useEffect(() => {
+    reloadContents();
+  }, [isFileSelected, pathIDs]);
 
   function onGoBack(evt) {
     evt.preventDefault();
@@ -107,9 +101,6 @@ export default function FilePicker({ onCancel, onFilePick }) {
       onCancel();
       return;
     }
-    setIsLoading(false);
-    dismissErrors();
-    setContents(null);
     setIsFileSelected(false);
     setPath(getParentDir(path));
     setPathIDs(getParentDir(pathIDs));
@@ -118,11 +109,8 @@ export default function FilePicker({ onCancel, onFilePick }) {
   function openNode(evt, node) {
     evt.preventDefault();
     if (isDir(node)) {
-      setIsLoading(false);
-      dismissErrors();
       setPath(`${path}/${node.name}`);
       setPathIDs(`${pathIDs}/${node.id}`);
-      setContents(null);
       setIsFileSelected(false);
       return;
     }

@@ -26,7 +26,7 @@ export default function Accounts({ coreApp }) {
   useEffect(() => {
     coreApp.on(coreApp.CHANGE_EVENT, reloadAccounts);
     return () => coreApp.off(coreApp.CHANGE_EVENT, reloadAccounts);
-  }, [coreApp, reloadAccounts]);
+  }, []);
 
   return (
     <>

@@ -196,22 +196,19 @@ export default function Transfers({ coreApp }) {
   );
 
   // reload data on coreApp.CHANGE_EVENT
-  function reloadData() {
-    reloadAccounts();
-    reloadTransfers();
-  }
   useEffect(() => {
+    function reloadData() {
+      reloadAccounts();
+      reloadTransfers();
+    }
     coreApp.on(coreApp.CHANGE_EVENT, reloadData);
     return () => coreApp.off(coreApp.CHANGE_EVENT, reloadData);
-  }, [coreApp]);
+  }, []);
 
   // reload transfers when filters change
-  useEffect(
-    function resetTransfers() {
-      reloadTransfers();
-    },
-    [fromDate, toDate, accountsStatus]
-  );
+  useEffect(() => {
+    reloadTransfers();
+  }, []);
 
   return (
     <>

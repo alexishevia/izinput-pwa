@@ -50,15 +50,15 @@ export default function Home({ coreApp }) {
   );
 
   // reload data on coreApp.CHANGE_EVENT
-  function reloadData() {
-    reloadAccounts();
-    reloadCategories();
-    reloadRecentTransactions();
-  }
   useEffect(() => {
+    function reloadData() {
+      reloadAccounts();
+      reloadCategories();
+      reloadRecentTransactions();
+    }
     coreApp.on(coreApp.CHANGE_EVENT, reloadData);
     return () => coreApp.off(coreApp.CHANGE_EVENT, reloadData);
-  }, [coreApp]);
+  }, []);
 
   return (
     <>

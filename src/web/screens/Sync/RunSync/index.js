@@ -2,9 +2,14 @@ import React from "react";
 import PropTypes from "prop-types";
 import { IonButton } from "@ionic/react";
 
-function RunSync({ isFileSelected, onRunSync }) {
+function RunSync({ isFileSelected, coreApp }) {
   if (!isFileSelected) {
     return null;
+  }
+
+  function onRunSync(evt) {
+    evt.preventDefault();
+    coreApp.runSync();
   }
 
   return <IonButton onClick={onRunSync}>Run Sync</IonButton>;
@@ -16,7 +21,9 @@ RunSync.defaultProps = {
 
 RunSync.propTypes = {
   isFileSelected: PropTypes.bool,
-  onRunSync: PropTypes.func.isRequired,
+  coreApp: PropTypes.shape({
+    runSync: PropTypes.func.isRequired,
+  }).isRequired,
 };
 
 export default RunSync;

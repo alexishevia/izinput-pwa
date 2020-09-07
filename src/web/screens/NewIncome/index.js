@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import {
   IonButton,
@@ -14,6 +14,7 @@ import {
 import { dateToDayStr, isValidDayStr } from "../../../helpers/date";
 import Validation from "../../../helpers/Validation";
 import useErrors from "../../hooks/useErrors";
+import useAsyncState from "../../hooks/useAsyncState";
 import Errors from "../../Errors";
 import ModalToolbar from "../../ModalToolbar";
 
@@ -62,60 +63,27 @@ export default function NewIncome({ coreApp, onClose }) {
   const [description, setDescription] = useState(null);
   const [transactionDate, setIncomeDate] = useState(today());
   const [errors, addError, dismissErrors] = useErrors([]);
-  const [accounts, setAccounts] = useState(null);
-  const [categories, setCategories] = useState(null);
 
-  function resetFormData() {
-    setAmount(null);
-    setAccountID(null);
-    setCategoryID(null);
-    setDescription(null);
-    setIncomeDate(today());
-    setAccounts(null);
-    setCategories(null);
-  }
+  const [accounts] = useAsyncState([], async function* loadAccounts() {
+    try {
+      const allAccounts = await coreApp.getAccounts();
+      yield allAccounts;
+      const extendedAccounts = await coreApp.extendAccounts(allAccounts, [
+        "balance",
+      ]);
+      yield extendedAccounts;
+    } catch (err) {
+      addError(err);
+    }
+  });
 
-  useEffect(
-    function loadAccounts() {
-      if (accounts !== null) {
-        return;
-      }
-      setAccounts([]);
-      async function loadAccountsData() {
-        try {
-          const allAccounts = await coreApp.getAccounts();
-          setAccounts(allAccounts);
-          const extendedAccounts = await coreApp.extendAccounts(allAccounts, [
-            "balance",
-          ]);
-          setAccounts(extendedAccounts);
-        } catch (err) {
-          addError(err);
-        }
-      }
-      loadAccountsData();
-    },
-    [accounts, coreApp, addError]
-  );
-
-  useEffect(
-    function loadCategories() {
-      if (categories !== null) {
-        return;
-      }
-      setCategories([]);
-      async function loadCategoriesData() {
-        try {
-          const allCategories = await coreApp.getCategories();
-          setCategories(allCategories);
-        } catch (err) {
-          addError(err);
-        }
-      }
-      loadCategoriesData();
-    },
-    [categories, coreApp, addError]
-  );
+  const [categories] = useAsyncState([], function* loadCategories() {
+    try {
+      yield coreApp.getCategories();
+    } catch (err) {
+      addError(err);
+    }
+  });
 
   async function handleSubmit(evt) {
     evt.preventDefault();
@@ -128,7 +96,6 @@ export default function NewIncome({ coreApp, onClose }) {
         transactionDate,
       });
       await coreApp.createIncome(incomeData);
-      resetFormData();
       onClose();
     } catch (err) {
       addError(err);
@@ -137,7 +104,6 @@ export default function NewIncome({ coreApp, onClose }) {
 
   function handleCancel(evt) {
     evt.preventDefault();
-    resetFormData();
     onClose();
   }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import {
   IonAlert,
@@ -15,6 +15,7 @@ import {
 } from "@ionic/react";
 import { trashOutline } from "ionicons/icons";
 import useErrors from "../../hooks/useErrors";
+import useAsyncState from "../../hooks/useAsyncState";
 import { dateToDayStr, isValidDayStr } from "../../../helpers/date";
 import Validation from "../../../helpers/Validation";
 import Errors from "../../Errors";
@@ -68,81 +69,35 @@ export default function EditExpense({ id, coreApp, onClose }) {
   const [transactionDate, setExpenseDate] = useState(null);
   const [isDeleteAlertOpen, setDeleteAlertOpen] = useState(false);
   const [errors, addError, dismissErrors] = useErrors([]);
-  const [accounts, setAccounts] = useState(null);
-  const [categories, setCategories] = useState(null);
-  const [expense, setExpense] = useState(null);
 
-  function resetFormData() {
-    setAmount(null);
-    setAccountID(null);
-    setCategoryID(null);
-    setDescription(null);
-    setExpenseDate(null);
-    setDeleteAlertOpen(false);
-  }
+  const [accounts] = useAsyncState([], async function* loadAccounts() {
+    try {
+      const allAccounts = await coreApp.getAccounts();
+      yield allAccounts;
+      const extendedAccounts = await coreApp.extendAccounts(allAccounts, [
+        "balance",
+      ]);
+      yield extendedAccounts;
+    } catch (err) {
+      addError(err);
+    }
+  });
 
-  useEffect(
-    function loadAccounts() {
-      if (accounts !== null) {
-        return;
-      }
-      setAccounts([]);
-      async function loadAccountsData() {
-        try {
-          const allAccounts = await coreApp.getAccounts();
-          setAccounts(allAccounts);
-          const extendedAccounts = await coreApp.extendAccounts(allAccounts, [
-            "balance",
-          ]);
-          setAccounts(extendedAccounts);
-        } catch (err) {
-          addError(err);
-        }
-      }
-      loadAccountsData();
-    },
-    [accounts, coreApp, addError]
-  );
+  const [categories] = useAsyncState([], function* loadCategories() {
+    try {
+      yield coreApp.getCategories();
+    } catch (err) {
+      addError(err);
+    }
+  });
 
-  useEffect(
-    function loadCategories() {
-      if (categories !== null) {
-        return;
-      }
-      setCategories([]);
-      async function loadCategoriesData() {
-        try {
-          const allCategories = await coreApp.getCategories();
-          setCategories(allCategories);
-        } catch (err) {
-          addError(err);
-        }
-      }
-      loadCategoriesData();
-    },
-    [categories, coreApp, addError]
-  );
-
-  useEffect(
-    function loadExpense() {
-      if (expense !== null) {
-        return;
-      }
-      setExpense({});
-      async function loadExpenseData() {
-        try {
-          const expenseData = await coreApp.getExpense(id);
-          setExpense(expenseData);
-        } catch (err) {
-          addError(err);
-        }
-      }
-      loadExpenseData();
-    },
-    [expense, coreApp, id, addError]
-  );
-
-  useEffect(resetFormData, [id]);
+  const [expense] = useAsyncState({}, function* loadExpense() {
+    try {
+      yield coreApp.getExpense(id);
+    } catch (err) {
+      addError(err);
+    }
+  });
 
   const amountVal = amount ?? expense?.amount;
   const accountIDVal =
@@ -156,7 +111,6 @@ export default function EditExpense({ id, coreApp, onClose }) {
 
   function handleCancel(evt) {
     evt.preventDefault();
-    resetFormData();
     onClose();
   }
 
@@ -169,7 +123,6 @@ export default function EditExpense({ id, coreApp, onClose }) {
     try {
       setDeleteAlertOpen(false);
       await coreApp.deleteExpense(id);
-      resetFormData();
       onClose();
     } catch (err) {
       addError(err);
@@ -188,7 +141,6 @@ export default function EditExpense({ id, coreApp, onClose }) {
         transactionDate: transactionDateVal,
       });
       await coreApp.updateExpense(expenseData);
-      resetFormData();
       onClose();
     } catch (err) {
       addError(err);

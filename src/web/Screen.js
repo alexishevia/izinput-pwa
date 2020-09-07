@@ -5,18 +5,13 @@ import MainMenu from "./MainMenu";
 import MainHeader from "./MainHeader";
 import MainFab from "./MainFab";
 
-export default function Screen({ isSyncRunning, children }) {
+export default function Screen({ children }) {
   return (
     <>
       <MainMenu />
+      <MainHeader />
       <IonPage id="main-content">
-        <MainHeader />
         <IonContent>
-          {isSyncRunning ? (
-            <div style={{ backgroundColor: "#eee", marginBottom: "1em" }}>
-              syncing...
-            </div>
-          ) : null}
           {children}
           <MainFab />
         </IonContent>
@@ -25,14 +20,9 @@ export default function Screen({ isSyncRunning, children }) {
   );
 }
 
-Screen.defaultProps = {
-  isSyncRunning: false,
-};
-
 Screen.propTypes = {
   children: PropTypes.oneOfType([
     PropTypes.arrayOf(PropTypes.node),
     PropTypes.node,
   ]).isRequired,
-  isSyncRunning: PropTypes.bool,
 };

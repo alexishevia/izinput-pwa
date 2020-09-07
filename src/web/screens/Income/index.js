@@ -264,23 +264,20 @@ export default function Income({ coreApp }) {
   });
 
   // reload data on coreApp.CHANGE_EVENT
-  function reloadData() {
-    reloadAccounts();
-    reloadCategories();
-    reloadIncome();
-  }
   useEffect(() => {
+    function reloadData() {
+      reloadAccounts();
+      reloadCategories();
+      reloadIncome();
+    }
     coreApp.on(coreApp.CHANGE_EVENT, reloadData);
     return () => coreApp.off(coreApp.CHANGE_EVENT, reloadData);
-  }, [coreApp]);
+  }, []);
 
   // reload income when filters change
-  useEffect(
-    function resetIncome() {
-      reloadIncome();
-    },
-    [fromDate, toDate, accountsStatus, categoriesStatus]
-  );
+  useEffect(() => {
+    reloadIncome();
+  }, [fromDate, toDate, accountsStatus, categoriesStatus]);
 
   return (
     <>

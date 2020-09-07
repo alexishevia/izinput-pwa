@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import {
   IonButton,
@@ -11,10 +11,9 @@ import {
   IonSelect,
   IonSelectOption,
 } from "@ionic/react";
+import useAsyncState from "../../hooks/useAsyncState";
 import { dateToDayStr, isValidDayStr } from "../../../helpers/date";
 import Validation from "../../../helpers/Validation";
-import useErrors from "../../hooks/useErrors";
-import Errors from "../../Errors";
 import ModalToolbar from "../../ModalToolbar";
 
 function today() {
@@ -55,46 +54,25 @@ function buildTransferData({
   return transferData;
 }
 
-export default function NewTransfer({ coreApp, onClose }) {
+export default function NewTransfer({ coreApp, onClose, addError }) {
   const [amount, setAmount] = useState(null);
   const [fromID, setFromID] = useState(null);
   const [toID, setToID] = useState(null);
   const [description, setDescription] = useState(null);
   const [transactionDate, setTransferDate] = useState(today());
-  const [errors, addError, dismissErrors] = useErrors([]);
-  const [accounts, setAccounts] = useState(null);
 
-  function resetFormData() {
-    setAmount(null);
-    setFromID(null);
-    setToID(null);
-    setDescription(null);
-    setTransferDate(today());
-    setAccounts(null);
-  }
-
-  useEffect(
-    function loadAccounts() {
-      if (accounts !== null) {
-        return;
-      }
-      setAccounts([]);
-      async function loadAccountsData() {
-        try {
-          const allAccounts = await coreApp.getAccounts();
-          setAccounts(allAccounts);
-          const extendedAccounts = await coreApp.extendAccounts(allAccounts, [
-            "balance",
-          ]);
-          setAccounts(extendedAccounts);
-        } catch (err) {
-          addError(err);
-        }
-      }
-      loadAccountsData();
-    },
-    [accounts, coreApp, addError]
-  );
+  const [accounts] = useAsyncState([], async function* loadAccounts() {
+    try {
+      const allAccounts = await coreApp.getAccounts();
+      yield allAccounts;
+      const extendedAccounts = await coreApp.extendAccounts(allAccounts, [
+        "balance",
+      ]);
+      yield extendedAccounts;
+    } catch (err) {
+      addError(err);
+    }
+  });
 
   async function handleSubmit(evt) {
     evt.preventDefault();
@@ -107,7 +85,6 @@ export default function NewTransfer({ coreApp, onClose }) {
         transactionDate,
       });
       await coreApp.createTransfer(transferData);
-      resetFormData();
       onClose();
     } catch (err) {
       addError(err);
@@ -116,7 +93,6 @@ export default function NewTransfer({ coreApp, onClose }) {
 
   function handleCancel(evt) {
     evt.preventDefault();
-    resetFormData();
     onClose();
   }
 
@@ -124,7 +100,6 @@ export default function NewTransfer({ coreApp, onClose }) {
     <IonPage id="main-content">
       <ModalToolbar title="New Transfer" color="tertiary" onClose={onClose} />
       <IonContent>
-        <Errors errors={errors} onDismiss={dismissErrors} />
         <form onSubmit={handleSubmit}>
           <IonItem>
             <IonLabel position="stacked">From:</IonLabel>
@@ -216,4 +191,5 @@ NewTransfer.propTypes = {
     getCategories: PropTypes.func.isRequired,
   }).isRequired,
   onClose: PropTypes.func.isRequired,
+  addError: PropTypes.func.isRequired,
 };

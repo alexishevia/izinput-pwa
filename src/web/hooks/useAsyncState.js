@@ -34,7 +34,7 @@ export default function useAsyncState(initialValue, generator) {
 
   useEffect(() => {
     loadData();
-    return function onExit() {
+    return () => {
       cancelPendingGenerators();
     };
   }, []);

@@ -29,6 +29,9 @@ import {
 } from "../constants";
 
 const CHANGE_EVENT = "CHANGE_EVENT";
+const SYNC_START_EVENT = "SYNC_CHANGE_EVENT";
+const SYNC_SUCCESS_EVENT = "SYNC_SUCCESS_EVENT";
+const SYNC_ERROR_EVENT = "SYNC_ERROR_EVENT";
 
 function sortByModifiedAt(a, b) {
   if (a.modifiedAt > b.modifiedAt) {
@@ -54,7 +57,7 @@ function gDriveGetSelectedFile() {
 }
 
 let isGDriveReady;
-async function initGDrive() {
+async function gDriveInit() {
   if (isGDriveReady) {
     return;
   }
@@ -85,7 +88,7 @@ async function initGDrive() {
 }
 
 async function isGDriveLoggedIn() {
-  await initGDrive();
+  await gDriveInit();
   const isLoggedIn = await window.gapi.auth2.getAuthInstance().isSignedIn.get();
   return isLoggedIn;
 }
@@ -305,14 +308,59 @@ export default function InvoiceZero() {
     return eventEmitter.off(event, listener);
   }
 
-  function emitChange() {
-    return eventEmitter.emit(CHANGE_EVENT);
+  let syncLock = null;
+  function onSyncStart() {
+    syncLock = true;
+    eventEmitter.emit(SYNC_START_EVENT);
+  }
+
+  function onSyncSuccess() {
+    syncLock = false;
+    eventEmitter.emit(SYNC_SUCCESS_EVENT);
+  }
+
+  function onSyncError(err) {
+    syncLock = false;
+    eventEmitter.emit(SYNC_ERROR_EVENT, err.message);
+  }
+
+  async function runSync() {
+    if (syncLock) {
+      return;
+    }
+    try {
+      onSyncStart();
+      await gDriveInit();
+      const file = gDriveGetSelectedFile();
+      if (!file || !file.id) {
+        throw new Error("Tried running sync without a file selected.");
+      }
+      const localDB = await getLocalDB();
+      const newLocalDB = await syncRecursive({
+        localDB,
+        cloudReplica: await getCloudReplica(),
+        appendOnlyLog: new GoogleSpreadsheet({ spreadsheetId: file.id }),
+        newLocalDB: () => getLocalDB({ forceNew: true }),
+      });
+      if (newLocalDB !== localDB) {
+        setLocalDB(newLocalDB);
+        eventEmitter.emit(CHANGE_EVENT);
+      }
+      onSyncSuccess();
+    } catch (err) {
+      onSyncError(err);
+    }
+  }
+
+  function onChange() {
+    eventEmitter.emit(CHANGE_EVENT);
+    runSync();
   }
 
   async function processActions(actions) {
     const localDB = await getLocalDB();
     await localDB.processActions(actions);
-    emitChange();
+    onChange();
   }
 
   async function createAccount(accountProps) {
@@ -490,13 +538,19 @@ export default function InvoiceZero() {
     await window.gapi.auth2.getAuthInstance().signIn();
     isLoggedIn = await isGDriveLoggedIn();
     if (isLoggedIn) {
-      emitChange();
+      onChange();
       return;
     }
     throw new Error("Login to GDrive failed.");
   }
 
+  function gDriveSelectFile(file) {
+    localStorage.setItem(STORAGE_KEY_SELECTED_FILE, JSON.stringify(file));
+    onChange();
+  }
+
   async function gDriveLogout() {
+    gDriveSelectFile(null);
     let isLoggedIn = await isGDriveLoggedIn();
     if (!isLoggedIn) {
       return;
@@ -504,47 +558,17 @@ export default function InvoiceZero() {
     await window.gapi.auth2.getAuthInstance().signOut();
     isLoggedIn = await isGDriveLoggedIn();
     if (!isLoggedIn) {
-      emitChange();
+      onChange();
       return;
     }
     throw new Error("Logout from GDrive failed.");
   }
 
-  function gDriveSelectFile(file) {
-    localStorage.setItem(STORAGE_KEY_SELECTED_FILE, JSON.stringify(file));
-    emitChange();
-  }
-
-  let syncLock = null;
-  async function runSync() {
-    const file = gDriveGetSelectedFile();
-    if (!file || !file.id) {
-      throw new Error("Tried running sync without a file selected.");
-    }
-    if (syncLock) {
-      console.warn("Sync is already running.");
-      return;
-    }
-    try {
-      syncLock = true;
-      const newLocalDB = await syncRecursive({
-        localDB: await getLocalDB(),
-        cloudReplica: await getCloudReplica(),
-        appendOnlyLog: new GoogleSpreadsheet({ spreadsheetId: file.id }),
-        newLocalDB: () => getLocalDB({ forceNew: true }),
-      });
-      setLocalDB(newLocalDB);
-      syncLock = false;
-      emitChange();
-    } catch (err) {
-      syncLock = false;
-      console.error(err);
-      throw new Error(`Sync failed: ${err.message}`);
-    }
-  }
-
   return {
     CHANGE_EVENT,
+    SYNC_START_EVENT,
+    SYNC_SUCCESS_EVENT,
+    SYNC_ERROR_EVENT,
     createAccount,
     createExpense,
     createIncome,
