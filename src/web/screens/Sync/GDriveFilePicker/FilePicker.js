@@ -120,7 +120,7 @@ export default function FilePicker({ onCancel, onFilePick, onError }) {
   }
 
   return (
-    <IonModal isOpen>
+    <IonModal isOpen onDidDismiss={() => onCancel()}>
       <FilePickerHeader path={path} onGoBack={onGoBack} />
       {contents && !contents.length ? (
         <IonItem>

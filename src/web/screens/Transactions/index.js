@@ -167,7 +167,10 @@ export default function Transactions({ coreApp }) {
 
   return (
     <>
-      <IonModal isOpen={isFiltersModalOpen}>
+      <IonModal
+        isOpen={isFiltersModalOpen}
+        onDidDismiss={() => setIsFiltersModalOpen(false)}
+      >
         <IonToolbar color="primary">
           <IonButtons slot="start">
             <IonButton onClick={handleCloseFiltersModal}>
