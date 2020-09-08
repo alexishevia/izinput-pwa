@@ -3,13 +3,9 @@ import PropTypes from "prop-types";
 import { IonLabel, IonItem } from "@ionic/react";
 import AccountsChart from "./AccountsChart";
 import TransactionsList from "../../TransactionsList";
-import useErrors from "../../hooks/useErrors";
 import useAsyncState from "../../hooks/useAsyncState";
-import Errors from "../../Errors";
 
 export default function Home({ coreApp }) {
-  const [errors, addError, dismissErrors] = useErrors([]);
-
   const [accounts, reloadAccounts] = useAsyncState(
     [],
     async function* loadAccounts() {
@@ -22,7 +18,7 @@ export default function Home({ coreApp }) {
         ]);
         yield extendedAccounts;
       } catch (err) {
-        addError(err);
+        coreApp.newError(err);
       }
     }
   );
@@ -33,7 +29,7 @@ export default function Home({ coreApp }) {
       try {
         yield coreApp.getCategories();
       } catch (err) {
-        addError(err);
+        coreApp.newError(err);
       }
     }
   );
@@ -44,7 +40,7 @@ export default function Home({ coreApp }) {
       try {
         yield coreApp.getRecentTransactions();
       } catch (err) {
-        addError(err);
+        coreApp.newError(err);
       }
     }
   );
@@ -62,7 +58,6 @@ export default function Home({ coreApp }) {
 
   return (
     <>
-      <Errors errors={errors} onDismiss={dismissErrors} />
       <IonItem>
         <IonLabel>
           <h3>Accounts</h3>
@@ -92,5 +87,6 @@ Home.propTypes = {
     getRecentTransactions: PropTypes.func.isRequired,
     off: PropTypes.func.isRequired,
     on: PropTypes.func.isRequired,
+    newError: PropTypes.func.isRequired,
   }).isRequired,
 };

@@ -9,8 +9,6 @@ import {
   IonPage,
 } from "@ionic/react";
 import Validation from "../../../helpers/Validation";
-import useErrors from "../../hooks/useErrors";
-import Errors from "../../Errors";
 import ModalToolbar from "../../ModalToolbar";
 
 function buildAccountData({ name, initialBalance }) {
@@ -29,7 +27,6 @@ function buildAccountData({ name, initialBalance }) {
 export default function NewAccount({ coreApp, onClose }) {
   const [name, setName] = useState("");
   const [initialBalance, setInitialBalance] = useState(0);
-  const [errors, addError, dismissErrors] = useErrors([]);
 
   async function handleSubmit(evt) {
     evt.preventDefault();
@@ -38,7 +35,7 @@ export default function NewAccount({ coreApp, onClose }) {
       await coreApp.createAccount(accountData);
       onClose();
     } catch (err) {
-      addError(err);
+      coreApp.newError(err);
     }
   }
 
@@ -51,7 +48,6 @@ export default function NewAccount({ coreApp, onClose }) {
     <IonPage id="main-content">
       <ModalToolbar title="New Account" onClose={onClose} />
       <IonContent>
-        <Errors errors={errors} onDismiss={dismissErrors} />
         <form onSubmit={handleSubmit}>
           <IonItem>
             <IonLabel position="stacked">Name:</IonLabel>
@@ -92,6 +88,7 @@ NewAccount.propTypes = {
     extendAccounts: PropTypes.func.isRequired,
     getAccounts: PropTypes.func.isRequired,
     getCategories: PropTypes.func.isRequired,
+    newError: PropTypes.func.isRequired,
   }).isRequired,
   onClose: PropTypes.func.isRequired,
 };

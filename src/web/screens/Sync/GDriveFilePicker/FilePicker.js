@@ -20,9 +20,7 @@ import {
   alertCircleOutline,
 } from "ionicons/icons";
 import loadDir from "./api/loadDir";
-import useErrors from "../../../hooks/useErrors";
 import useAsyncState from "../../../hooks/useAsyncState";
-import Errors from "../../../Errors";
 
 function isFile(node) {
   return node.fileType === "file";
@@ -69,12 +67,11 @@ FilePickerHeader.propTypes = {
   onGoBack: PropTypes.func.isRequired,
 };
 
-export default function FilePicker({ onCancel, onFilePick }) {
+export default function FilePicker({ onCancel, onFilePick, onError }) {
   const [path, setPath] = useState("");
   const [pathIDs, setPathIDs] = useState("root");
   const [isLoading, setIsLoading] = useState(false);
   const [isFileSelected, setIsFileSelected] = useState(false);
-  const [errors, addError, dismissErrors] = useErrors([]);
 
   const [contents, reloadContents] = useAsyncState(
     [],
@@ -85,7 +82,7 @@ export default function FilePicker({ onCancel, onFilePick }) {
         setIsLoading(false);
         yield result.contents;
       } catch (err) {
-        addError(err);
+        onError(err);
         setIsLoading(false);
       }
     }
@@ -119,7 +116,7 @@ export default function FilePicker({ onCancel, onFilePick }) {
       onFilePick(node);
       return;
     }
-    addError(new Error(`Filepicker: Unkown node type: ${node.type}`));
+    onError(new Error(`Filepicker: Unkown node type: ${node.type}`));
   }
 
   return (
@@ -132,7 +129,6 @@ export default function FilePicker({ onCancel, onFilePick }) {
       ) : null}
       {contents && contents.length ? (
         <IonContent>
-          <Errors errors={errors} onDismiss={dismissErrors} />
           <IonList>
             {contents.map((item) => {
               return (
@@ -159,4 +155,5 @@ export default function FilePicker({ onCancel, onFilePick }) {
 FilePicker.propTypes = {
   onCancel: PropTypes.func.isRequired,
   onFilePick: PropTypes.func.isRequired,
+  onError: PropTypes.func.isRequired,
 };

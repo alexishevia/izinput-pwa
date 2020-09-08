@@ -21,8 +21,6 @@ import {
   filterOutline,
   searchOutline,
 } from "ionicons/icons";
-import Errors from "../../Errors";
-import useErrors from "../../hooks/useErrors";
 import useAsyncState from "../../hooks/useAsyncState";
 import ExpensesList from "./ExpensesList";
 import { dateToDayStr, monthStart, monthEnd } from "../../../helpers/date";
@@ -174,7 +172,6 @@ function filterBySearchText(searchText) {
 export default function Expenses({ coreApp }) {
   const [fromDate, setFromDate] = useState(dateToDayStr(monthStart()));
   const [toDate, setToDate] = useState(dateToDayStr(monthEnd()));
-  const [errors, addError, dismissErrors] = useErrors([]);
   const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [accountsStatus, setAccountsStatus] = useState({});
@@ -210,7 +207,7 @@ export default function Expenses({ coreApp }) {
       try {
         yield coreApp.getAccounts();
       } catch (err) {
-        addError(err);
+        coreApp.newError(err);
       }
     }
   );
@@ -227,7 +224,7 @@ export default function Expenses({ coreApp }) {
       try {
         yield coreApp.getCategories();
       } catch (err) {
-        addError(err);
+        coreApp.newError(err);
       }
     }
   );
@@ -261,7 +258,7 @@ export default function Expenses({ coreApp }) {
           categoryIDs,
         });
       } catch (err) {
-        addError(err);
+        coreApp.newError(err);
       }
     }
   );
@@ -284,7 +281,6 @@ export default function Expenses({ coreApp }) {
 
   return (
     <>
-      <Errors errors={errors} onDismiss={dismissErrors} />
       <IonModal isOpen={isFiltersModalOpen}>
         <IonToolbar color="primary">
           <IonButtons slot="start">
@@ -349,5 +345,6 @@ Expenses.propTypes = {
     getExpenses: PropTypes.func.isRequired,
     off: PropTypes.func.isRequired,
     on: PropTypes.func.isRequired,
+    newError: PropTypes.func.isRequired,
   }).isRequired,
 };

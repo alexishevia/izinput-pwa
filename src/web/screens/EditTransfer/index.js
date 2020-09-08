@@ -14,11 +14,9 @@ import {
   IonSelectOption,
 } from "@ionic/react";
 import { trashOutline } from "ionicons/icons";
-import useErrors from "../../hooks/useErrors";
 import useAsyncState from "../../hooks/useAsyncState";
 import { dateToDayStr, isValidDayStr } from "../../../helpers/date";
 import Validation from "../../../helpers/Validation";
-import Errors from "../../Errors";
 import ModalToolbar from "../../ModalToolbar";
 
 function today() {
@@ -68,7 +66,6 @@ export default function EditTransfer({ id, coreApp, onClose }) {
   const [description, setDescription] = useState(null);
   const [transactionDate, setTransferDate] = useState(null);
   const [isDeleteAlertOpen, setDeleteAlertOpen] = useState(false);
-  const [errors, addError, dismissErrors] = useErrors([]);
 
   const [accounts] = useAsyncState([], async function* loadAccounts() {
     try {
@@ -79,7 +76,7 @@ export default function EditTransfer({ id, coreApp, onClose }) {
       ]);
       yield extendedAccounts;
     } catch (err) {
-      addError(err);
+      coreApp.newError(err);
     }
   });
 
@@ -87,7 +84,7 @@ export default function EditTransfer({ id, coreApp, onClose }) {
     try {
       yield coreApp.getTransfer(id);
     } catch (err) {
-      addError(err);
+      coreApp.newError(err);
     }
   });
 
@@ -115,7 +112,7 @@ export default function EditTransfer({ id, coreApp, onClose }) {
       await coreApp.deleteTransfer(id);
       onClose();
     } catch (err) {
-      addError(err);
+      coreApp.newError(err);
     }
   }
 
@@ -133,7 +130,7 @@ export default function EditTransfer({ id, coreApp, onClose }) {
       await coreApp.updateTransfer(transferData);
       onClose();
     } catch (err) {
-      addError(err);
+      coreApp.newError(err);
     }
   }
 
@@ -152,7 +149,6 @@ export default function EditTransfer({ id, coreApp, onClose }) {
         endButton={endButton}
       />
       <IonContent>
-        <Errors errors={errors} onDismiss={dismissErrors} />
         <form onSubmit={handleSubmit}>
           <IonAlert
             isOpen={isDeleteAlertOpen}
@@ -254,6 +250,7 @@ EditTransfer.propTypes = {
     getAccounts: PropTypes.func.isRequired,
     getTransfer: PropTypes.func.isRequired,
     updateTransfer: PropTypes.func.isRequired,
+    newError: PropTypes.func.isRequired,
   }).isRequired,
   onClose: PropTypes.func.isRequired,
 };

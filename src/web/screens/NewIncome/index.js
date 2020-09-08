@@ -13,9 +13,7 @@ import {
 } from "@ionic/react";
 import { dateToDayStr, isValidDayStr } from "../../../helpers/date";
 import Validation from "../../../helpers/Validation";
-import useErrors from "../../hooks/useErrors";
 import useAsyncState from "../../hooks/useAsyncState";
-import Errors from "../../Errors";
 import ModalToolbar from "../../ModalToolbar";
 
 function today() {
@@ -62,7 +60,6 @@ export default function NewIncome({ coreApp, onClose }) {
   const [categoryID, setCategoryID] = useState(null);
   const [description, setDescription] = useState(null);
   const [transactionDate, setIncomeDate] = useState(today());
-  const [errors, addError, dismissErrors] = useErrors([]);
 
   const [accounts] = useAsyncState([], async function* loadAccounts() {
     try {
@@ -73,7 +70,7 @@ export default function NewIncome({ coreApp, onClose }) {
       ]);
       yield extendedAccounts;
     } catch (err) {
-      addError(err);
+      coreApp.newError(err);
     }
   });
 
@@ -81,7 +78,7 @@ export default function NewIncome({ coreApp, onClose }) {
     try {
       yield coreApp.getCategories();
     } catch (err) {
-      addError(err);
+      coreApp.newError(err);
     }
   });
 
@@ -98,7 +95,7 @@ export default function NewIncome({ coreApp, onClose }) {
       await coreApp.createIncome(incomeData);
       onClose();
     } catch (err) {
-      addError(err);
+      coreApp.newError(err);
     }
   }
 
@@ -111,7 +108,6 @@ export default function NewIncome({ coreApp, onClose }) {
     <IonPage id="main-content">
       <ModalToolbar title="New Income" color="success" onClose={onClose} />
       <IonContent>
-        <Errors errors={errors} onDismiss={dismissErrors} />
         <form onSubmit={handleSubmit}>
           <IonItem>
             <IonLabel position="stacked">Account:</IonLabel>
@@ -200,6 +196,7 @@ NewIncome.propTypes = {
     extendAccounts: PropTypes.func.isRequired,
     getAccounts: PropTypes.func.isRequired,
     getCategories: PropTypes.func.isRequired,
+    newError: PropTypes.func.isRequired,
   }).isRequired,
   onClose: PropTypes.func.isRequired,
 };

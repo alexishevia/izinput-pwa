@@ -1,14 +1,11 @@
 import React, { useEffect } from "react";
 import PropTypes from "prop-types";
 import { IonLabel, IonItem } from "@ionic/react";
-import Errors from "../../Errors";
-import useErrors from "../../hooks/useErrors";
 import useAsyncState from "../../hooks/useAsyncState";
 import AccountsList from "./AccountsList";
 
 export default function Accounts({ coreApp }) {
   window.coreApp = coreApp;
-  const [errors, addError, dismissErrors] = useErrors([]);
   const [accounts, reloadAccounts] = useAsyncState(
     [],
     async function* loadAccounts() {
@@ -17,7 +14,7 @@ export default function Accounts({ coreApp }) {
         yield allAccounts;
         yield await coreApp.extendAccounts(allAccounts, ["balance"]);
       } catch (err) {
-        addError(err);
+        coreApp.newError(err);
       }
     }
   );
@@ -30,7 +27,6 @@ export default function Accounts({ coreApp }) {
 
   return (
     <>
-      <Errors errors={errors} onDismiss={dismissErrors} />
       <IonItem>
         <IonLabel>
           <h3>Accounts</h3>
@@ -50,5 +46,6 @@ Accounts.propTypes = {
     on: PropTypes.func.isRequired,
     off: PropTypes.func.isRequired,
     CHANGE_EVENT: PropTypes.string.isRequired,
+    newError: PropTypes.func.isRequired,
   }).isRequired,
 };

@@ -8,10 +8,8 @@ import {
   IonLabel,
   IonPage,
 } from "@ionic/react";
-import useErrors from "../../hooks/useErrors";
 import useAsyncState from "../../hooks/useAsyncState";
 import Validation from "../../../helpers/Validation";
-import Errors from "../../Errors";
 import ModalToolbar from "../../ModalToolbar";
 
 function buildAccountData({ id, name, initialBalance }) {
@@ -31,12 +29,11 @@ function buildAccountData({ id, name, initialBalance }) {
 export default function EditAccount({ id, coreApp, onClose }) {
   const [name, setName] = useState(null);
   const [initialBalance, setInitialBalance] = useState(null);
-  const [errors, addError, dismissErrors] = useErrors([]);
   const [account] = useAsyncState({}, function* loadAccount() {
     try {
       yield coreApp.getAccount(id);
     } catch (err) {
-      addError(err);
+      coreApp.newError(err);
     }
   });
 
@@ -59,7 +56,7 @@ export default function EditAccount({ id, coreApp, onClose }) {
       await coreApp.updateAccount(accountData);
       onClose();
     } catch (err) {
-      addError(err);
+      coreApp.newError(err);
     }
   }
 
@@ -67,7 +64,6 @@ export default function EditAccount({ id, coreApp, onClose }) {
     <IonPage id="main-content">
       <ModalToolbar title="Edit Account" onClose={onClose} />
       <IonContent>
-        <Errors errors={errors} onDismiss={dismissErrors} />
         <form onSubmit={handleSubmit}>
           <IonItem>
             <IonLabel position="stacked">Name:</IonLabel>
@@ -107,6 +103,7 @@ EditAccount.propTypes = {
   coreApp: PropTypes.shape({
     getAccount: PropTypes.func.isRequired,
     updateAccount: PropTypes.func.isRequired,
+    newError: PropTypes.func.isRequired,
   }).isRequired,
   onClose: PropTypes.func.isRequired,
 };

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import PropTypes from "prop-types";
 import { Route } from "react-router-dom";
 import { IonApp, IonContent } from "@ionic/react";
@@ -6,6 +6,7 @@ import { IonReactRouter } from "@ionic/react-router";
 import { Switch } from "react-router";
 import Errors from "./Errors";
 import SyncStatus from "./SyncStatus";
+import MainMenu from "./MainMenu";
 import EditAccount from "./screens/EditAccount";
 import EditExpense from "./screens/EditExpense";
 import EditIncome from "./screens/EditIncome";
@@ -43,21 +44,12 @@ import "@ionic/react/css/display.css";
 import "./App.css";
 
 export default function App({ coreApp }) {
-  const [errors, setErrors] = useState([]);
-
-  function addError(err) {
-    setErrors([...errors, err]);
-  }
-
-  function dismissErrors() {
-    setErrors([]);
-  }
-
   return (
     <IonApp>
-      <Errors errors={errors} onDismiss={dismissErrors} />
+      <Errors coreApp={coreApp} />
       <IonContent>
         <IonReactRouter>
+          <MainMenu />
           <Switch>
             <Route
               path="/accounts"
@@ -148,7 +140,6 @@ export default function App({ coreApp }) {
                   type="TRANSFER"
                   coreApp={coreApp}
                   onClose={history.goBack}
-                  addError={addError}
                 />
               )}
             />

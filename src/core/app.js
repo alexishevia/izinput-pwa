@@ -29,6 +29,7 @@ import {
 } from "../constants";
 
 const CHANGE_EVENT = "CHANGE_EVENT";
+const ERROR_EVENT = "ERROR_EVENT";
 const SYNC_START_EVENT = "SYNC_CHANGE_EVENT";
 const SYNC_SUCCESS_EVENT = "SYNC_SUCCESS_EVENT";
 const SYNC_ERROR_EVENT = "SYNC_ERROR_EVENT";
@@ -564,11 +565,16 @@ export default function InvoiceZero() {
     throw new Error("Logout from GDrive failed.");
   }
 
+  function newError(err) {
+    eventEmitter.emit(ERROR_EVENT, err);
+  }
+
   return {
     CHANGE_EVENT,
+    ERROR_EVENT,
+    SYNC_ERROR_EVENT,
     SYNC_START_EVENT,
     SYNC_SUCCESS_EVENT,
-    SYNC_ERROR_EVENT,
     createAccount,
     createExpense,
     createIncome,
@@ -592,6 +598,7 @@ export default function InvoiceZero() {
     getTransfer,
     getTransfers,
     isGDriveLoggedIn,
+    newError,
     off,
     on,
     runSync,

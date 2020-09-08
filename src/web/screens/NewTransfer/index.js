@@ -54,7 +54,7 @@ function buildTransferData({
   return transferData;
 }
 
-export default function NewTransfer({ coreApp, onClose, addError }) {
+export default function NewTransfer({ coreApp, onClose }) {
   const [amount, setAmount] = useState(null);
   const [fromID, setFromID] = useState(null);
   const [toID, setToID] = useState(null);
@@ -70,7 +70,7 @@ export default function NewTransfer({ coreApp, onClose, addError }) {
       ]);
       yield extendedAccounts;
     } catch (err) {
-      addError(err);
+      coreApp.newError(err);
     }
   });
 
@@ -87,7 +87,7 @@ export default function NewTransfer({ coreApp, onClose, addError }) {
       await coreApp.createTransfer(transferData);
       onClose();
     } catch (err) {
-      addError(err);
+      coreApp.newError(err);
     }
   }
 
@@ -189,7 +189,7 @@ NewTransfer.propTypes = {
     extendAccounts: PropTypes.func.isRequired,
     getAccounts: PropTypes.func.isRequired,
     getCategories: PropTypes.func.isRequired,
+    newError: PropTypes.func.isRequired,
   }).isRequired,
   onClose: PropTypes.func.isRequired,
-  addError: PropTypes.func.isRequired,
 };

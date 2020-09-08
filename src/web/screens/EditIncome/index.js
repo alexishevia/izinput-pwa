@@ -14,11 +14,9 @@ import {
   IonSelectOption,
 } from "@ionic/react";
 import { trashOutline } from "ionicons/icons";
-import useErrors from "../../hooks/useErrors";
 import useAsyncState from "../../hooks/useAsyncState";
 import { dateToDayStr, isValidDayStr } from "../../../helpers/date";
 import Validation from "../../../helpers/Validation";
-import Errors from "../../Errors";
 import ModalToolbar from "../../ModalToolbar";
 
 function today() {
@@ -68,7 +66,6 @@ export default function EditIncome({ id, coreApp, onClose }) {
   const [description, setDescription] = useState(null);
   const [transactionDate, setIncomeDate] = useState(null);
   const [isDeleteAlertOpen, setDeleteAlertOpen] = useState(false);
-  const [errors, addError, dismissErrors] = useErrors([]);
 
   const [accounts] = useAsyncState([], async function* loadAccounts() {
     try {
@@ -79,7 +76,7 @@ export default function EditIncome({ id, coreApp, onClose }) {
       ]);
       yield extendedAccounts;
     } catch (err) {
-      addError(err);
+      coreApp.newError(err);
     }
   });
 
@@ -87,7 +84,7 @@ export default function EditIncome({ id, coreApp, onClose }) {
     try {
       yield coreApp.getCategories();
     } catch (err) {
-      addError(err);
+      coreApp.newError(err);
     }
   });
 
@@ -95,7 +92,7 @@ export default function EditIncome({ id, coreApp, onClose }) {
     try {
       yield coreApp.getIncome(id);
     } catch (err) {
-      addError(err);
+      coreApp.newError(err);
     }
   });
 
@@ -125,7 +122,7 @@ export default function EditIncome({ id, coreApp, onClose }) {
       await coreApp.deleteIncome(id);
       onClose();
     } catch (err) {
-      addError(err);
+      coreApp.newError(err);
     }
   }
 
@@ -143,7 +140,7 @@ export default function EditIncome({ id, coreApp, onClose }) {
       await coreApp.updateIncome(incomeData);
       onClose();
     } catch (err) {
-      addError(err);
+      coreApp.newError(err);
     }
   }
 
@@ -162,7 +159,6 @@ export default function EditIncome({ id, coreApp, onClose }) {
         endButton={endButton}
       />
       <IonContent>
-        <Errors errors={errors} onDismiss={dismissErrors} />
         <form onSubmit={handleSubmit}>
           <IonAlert
             isOpen={isDeleteAlertOpen}
@@ -264,6 +260,7 @@ EditIncome.propTypes = {
     getCategories: PropTypes.func.isRequired,
     getIncome: PropTypes.func.isRequired,
     updateIncome: PropTypes.func.isRequired,
+    newError: PropTypes.func.isRequired,
   }).isRequired,
   onClose: PropTypes.func.isRequired,
 };

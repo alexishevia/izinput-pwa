@@ -1,20 +1,57 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { IonLabel } from "@ionic/react";
+import { IonIcon } from "@ionic/react";
+import {
+  checkmarkDoneOutline,
+  syncOutline,
+  alertCircleOutline,
+} from "ionicons/icons";
+
+const RUNNING = "RUNNING";
+const SUCCESS = "SUCCESS";
+const ERROR = "ERROR";
 
 export default function SyncStatus({ coreApp }) {
-  const [isSyncRunning, setIsSyncRunning] = useState(false);
+  const [syncStatus, setSyncStatus] = useState(SUCCESS);
+  const [lastSuccessDate, setLastSuccessDate] = useState(null);
+  const [lastErrorMsg, setLastErrorMsg] = useState(null);
 
   function onSyncStart() {
-    setIsSyncRunning(true);
+    setSyncStatus(RUNNING);
   }
 
-  function onSyncError() {
-    setIsSyncRunning(false);
+  function onSyncError(errMsg) {
+    setLastErrorMsg(errMsg);
+    setSyncStatus(ERROR);
   }
 
   function onSyncSuccess() {
-    setIsSyncRunning(false);
+    setLastSuccessDate(new Date().toLocaleTimeString());
+    setSyncStatus(SUCCESS);
+  }
+
+  function getIcon() {
+    switch (syncStatus) {
+      case RUNNING:
+        return syncOutline;
+      case SUCCESS:
+        return checkmarkDoneOutline;
+      default:
+        return alertCircleOutline;
+    }
+  }
+
+  function getMsg() {
+    switch (syncStatus) {
+      case RUNNING:
+        return "Sync is running";
+      case SUCCESS:
+        return lastSuccessDate ? `Last synced: ${lastSuccessDate}` : "";
+      case ERROR:
+        return `Sync failed: ${lastErrorMsg}`;
+      default:
+        return "";
+    }
   }
 
   useEffect(() => {
@@ -29,15 +66,15 @@ export default function SyncStatus({ coreApp }) {
     };
   }, []);
 
-  return (
-    <IonLabel slot="fixed" style={{ bottom: 0 }}>
-      {isSyncRunning ? (
-        <div style={{ backgroundColor: "#eee" }}>syncing...</div>
-      ) : (
-        <div>&nbsp;</div>
-      )}
-    </IonLabel>
-  );
+  function onClick(evt) {
+    evt.preventDefault();
+    const msg = getMsg();
+    if (msg) {
+      coreApp.newError(msg);
+    }
+  }
+
+  return <IonIcon icon={getIcon()} onClick={onClick} />;
 }
 
 SyncStatus.propTypes = {
@@ -48,5 +85,6 @@ SyncStatus.propTypes = {
     on: PropTypes.func.isRequired,
     off: PropTypes.func.isRequired,
     runSync: PropTypes.func.isRequired,
+    newError: PropTypes.func.isRequired,
   }).isRequired,
 };
