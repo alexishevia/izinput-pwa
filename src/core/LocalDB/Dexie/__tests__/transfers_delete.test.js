@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid";
+import { v1 as uuid } from "uuid";
 import {
   AccountsCreateAction,
   TransfersCreateAction,
@@ -11,7 +11,7 @@ import LocalDB from "..";
 function Account(values) {
   const now = new Date().toISOString();
   return {
-    id: uuidv4(),
+    id: uuid(),
     name: "testsAccount",
     initialBalance: 0,
     modifiedAt: now,
@@ -28,9 +28,9 @@ function createAccount(db, values) {
 function Transfer(values) {
   const now = new Date().toISOString();
   return {
-    id: uuidv4(),
-    fromID: uuidv4(),
-    toID: uuidv4(),
+    id: uuid(),
+    fromID: uuid(),
+    toID: uuid(),
     amount: 0,
     description: "test transfer",
     transactionDate: now.split("T")[0],
@@ -128,7 +128,7 @@ describe("transfers/delete", () => {
 
   tests.forEach((test) => {
     it(test.name, async () => {
-      const localDB = await new LocalDB.ByName(uuidv4());
+      const localDB = await new LocalDB.ByName(uuid());
       try {
         // setup
         if (test.setup) {

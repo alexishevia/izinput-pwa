@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid";
+import { v1 as uuid } from "uuid";
 import {
   CategoriesCreateAction,
   CategoriesUpdateAction,
@@ -11,7 +11,7 @@ import LocalDB from "..";
 function Category(values) {
   const now = new Date().toISOString();
   return {
-    id: uuidv4(),
+    id: uuid(),
     name: "testsCategory",
     modifiedAt: now,
     deleted: false,
@@ -176,7 +176,7 @@ describe("categories/update", () => {
 
   tests.forEach((test) => {
     it(test.name, async () => {
-      const localDB = await new LocalDB.ByName(uuidv4());
+      const localDB = await new LocalDB.ByName(uuid());
       try {
         // setup
         if (test.setup) {

@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid";
+import { v1 as uuid } from "uuid";
 import { AccountsCreateAction } from "../../../actionCreators";
 import LocalDB from "..";
 
@@ -7,7 +7,7 @@ import LocalDB from "..";
 function Account(values) {
   const now = new Date().toISOString();
   return {
-    id: uuidv4(),
+    id: uuid(),
     name: "testsAccount",
     initialBalance: 0,
     modifiedAt: now,
@@ -57,7 +57,7 @@ describe("accounts/create", () => {
 
   tests.forEach((test) => {
     it(test.name, async () => {
-      const localDB = await new LocalDB.ByName(uuidv4());
+      const localDB = await new LocalDB.ByName(uuid());
       try {
         // setup
         if (test.setup) {
