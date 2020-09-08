@@ -41,8 +41,6 @@ Accounts.propTypes = {
   coreApp: PropTypes.shape({
     extendAccounts: PropTypes.func.isRequired,
     getAccounts: PropTypes.func.isRequired,
-    getCategories: PropTypes.func.isRequired,
-    getRecentTransactions: PropTypes.func.isRequired,
     on: PropTypes.func.isRequired,
     off: PropTypes.func.isRequired,
     CHANGE_EVENT: PropTypes.string.isRequired,

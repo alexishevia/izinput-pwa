@@ -190,12 +190,14 @@ async function getExpense(id) {
 }
 
 async function getExpenses({
-  fromDate,
-  toDate,
   accountIDs,
   categoryIDs,
+  from = 0,
+  fromDate,
   orderBy,
   reverse,
+  to = 500,
+  toDate,
 }) {
   // TODO: instead of hardcoding the `from` and `to` values, should iterate until all categories are pulled from DB
   const localDB = await getLocalDB();
@@ -205,19 +207,21 @@ async function getExpenses({
     accountIDs,
     categoryIDs,
     orderBy,
-    from: 0,
-    to: 500,
+    from,
+    to,
     reverse,
   });
 }
 
 async function getIncomes({
-  fromDate,
-  toDate,
   accountIDs,
   categoryIDs,
+  from = 0,
+  fromDate,
   orderBy,
   reverse,
+  to = 500,
+  toDate,
 }) {
   // TODO: instead of hardcoding the `from` and `to` values, should iterate until all categories are pulled from DB
   const localDB = await getLocalDB();
@@ -227,18 +231,20 @@ async function getIncomes({
     accountIDs,
     categoryIDs,
     orderBy,
-    from: 0,
-    to: 500,
+    from,
+    to,
     reverse,
   });
 }
 
 async function getTransfers({
-  fromDate,
-  toDate,
   accountIDs,
+  from = 0,
+  fromDate,
   orderBy,
   reverse,
+  to = 500,
+  toDate,
 }) {
   // TODO: instead of hardcoding the `from` and `to` values, should iterate until all categories are pulled from DB
   const localDB = await getLocalDB();
@@ -247,8 +253,8 @@ async function getTransfers({
     toDate,
     accountIDs,
     orderBy,
-    from: 0,
-    to: 500,
+    from,
+    to,
     reverse,
   });
 }
@@ -258,44 +264,70 @@ async function getIncome(id) {
   return localDB.getIncome(id);
 }
 
-const recentCount = 15;
-async function getRecentTransactions() {
+async function getTransactions({
+  types = ["INCOME", "EXPENSE", "TRANSFER"],
+  accountIDs,
+  categoryIDs,
+  from = 0,
+  fromDate,
+  limit = 500,
+  orderBy,
+  reverse,
+  toDate,
+}) {
   const localDB = await getLocalDB();
   const [incomes, expenses, transfers] = await Promise.all([
-    localDB
-      .getIncomes({
-        from: 0,
-        to: recentCount,
-        orderBy: "modifiedAt",
-        reverse: true,
-      })
-      .then((result) =>
-        result.map((income) => ({ ...income, type: "INCOME" }))
-      ),
-    localDB
-      .getExpenses({
-        from: 0,
-        to: recentCount,
-        orderBy: "modifiedAt",
-        reverse: true,
-      })
-      .then((result) =>
-        result.map((expense) => ({ ...expense, type: "EXPENSE" }))
-      ),
-    localDB
-      .getTransfers({
-        from: 0,
-        to: recentCount,
-        orderBy: "modifiedAt",
-        reverse: true,
-      })
-      .then((result) =>
-        result.map((transfer) => ({ ...transfer, type: "TRANSFER" }))
-      ),
+    types.includes("INCOME")
+      ? localDB
+          .getIncomes({
+            accountIDs,
+            categoryIDs,
+            from,
+            fromDate,
+            orderBy,
+            reverse,
+            to: limit,
+            toDate,
+          })
+          .then((result) =>
+            result.map((income) => ({ ...income, type: "INCOME" }))
+          )
+      : Promise.resolve([]),
+    types.includes("EXPENSE")
+      ? localDB
+          .getExpenses({
+            accountIDs,
+            categoryIDs,
+            from,
+            fromDate,
+            orderBy,
+            reverse,
+            to: limit,
+            toDate,
+          })
+          .then((result) =>
+            result.map((expense) => ({ ...expense, type: "EXPENSE" }))
+          )
+      : Promise.resolve([]),
+    types.includes("TRANSFER")
+      ? localDB
+          .getTransfers({
+            accountIDs,
+            from,
+            fromDate,
+            orderBy,
+            reverse,
+            to: limit,
+            toDate,
+          })
+          .then((result) =>
+            result.map((transfer) => ({ ...transfer, type: "TRANSFER" }))
+          )
+      : Promise.resolve([]),
   ]);
   return [...incomes, ...expenses, ...transfers]
     .sort(sortByModifiedAt)
-    .slice(0, recentCount);
+    .slice(0, limit);
 }
 
 export default function InvoiceZero() {
@@ -594,7 +626,7 @@ export default function InvoiceZero() {
     getExpenses,
     getIncome,
     getIncomes,
-    getRecentTransactions,
+    getTransactions,
     getTransfer,
     getTransfers,
     isGDriveLoggedIn,

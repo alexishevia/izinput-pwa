@@ -7,12 +7,12 @@ import { Switch } from "react-router";
 import Errors from "./Errors";
 import SyncStatus from "./SyncStatus";
 import MainMenu from "./MainMenu";
+import Accounts from "./screens/Accounts";
 import EditAccount from "./screens/EditAccount";
 import EditExpense from "./screens/EditExpense";
 import EditIncome from "./screens/EditIncome";
 import EditTransfer from "./screens/EditTransfer";
 import Home from "./screens/Home";
-import Accounts from "./screens/Accounts";
 import NewAccount from "./screens/NewAccount";
 import NewExpense from "./screens/NewExpense";
 import NewIncome from "./screens/NewIncome";
@@ -20,9 +20,7 @@ import NewTransfer from "./screens/NewTransfer";
 import NotFound from "./screens/NotFound";
 import Screen from "./Screen";
 import Sync from "./screens/Sync";
-import Expenses from "./screens/Expenses";
-import Income from "./screens/Income";
-import Transfers from "./screens/Transfers";
+import Transactions from "./screens/Transactions";
 
 /* Core CSS required for Ionic components to work properly */
 import "@ionic/react/css/core.css";
@@ -76,11 +74,11 @@ export default function App({ coreApp }) {
               )}
             />
             <Route
-              path="/expenses"
+              path="/transactions"
               component={() => {
                 return (
                   <Screen>
-                    <Expenses coreApp={coreApp} />
+                    <Transactions coreApp={coreApp} />
                   </Screen>
                 );
               }}
@@ -102,14 +100,6 @@ export default function App({ coreApp }) {
               )}
             />
             <Route
-              path="/income"
-              component={() => (
-                <Screen>
-                  <Income coreApp={coreApp} />
-                </Screen>
-              )}
-            />
-            <Route
               path="/newIncome"
               component={({ history }) => (
                 <NewIncome coreApp={coreApp} onClose={history.goBack} />
@@ -123,14 +113,6 @@ export default function App({ coreApp }) {
                   id={match.params.id}
                   onClose={history.goBack}
                 />
-              )}
-            />
-            <Route
-              path="/transfers"
-              component={() => (
-                <Screen>
-                  <Transfers coreApp={coreApp} />
-                </Screen>
               )}
             />
             <Route

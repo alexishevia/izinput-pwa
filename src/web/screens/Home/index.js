@@ -38,7 +38,11 @@ export default function Home({ coreApp }) {
     [],
     function* loadRecentTransactions() {
       try {
-        yield coreApp.getRecentTransactions();
+        yield coreApp.getTransactions({
+          orderBy: "modifiedAt",
+          reverse: true,
+          limit: 15,
+        });
       } catch (err) {
         coreApp.newError(err);
       }
@@ -84,7 +88,7 @@ Home.propTypes = {
     extendAccounts: PropTypes.func.isRequired,
     getAccounts: PropTypes.func.isRequired,
     getCategories: PropTypes.func.isRequired,
-    getRecentTransactions: PropTypes.func.isRequired,
+    getTransactions: PropTypes.func.isRequired,
     off: PropTypes.func.isRequired,
     on: PropTypes.func.isRequired,
     newError: PropTypes.func.isRequired,
