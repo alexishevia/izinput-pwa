@@ -19,8 +19,9 @@ import NewIncome from "./screens/NewIncome";
 import NewTransfer from "./screens/NewTransfer";
 import NotFound from "./screens/NotFound";
 import Screen from "./Screen";
-import Transactions from "./screens/Transactions";
 import Settings from "./screens/Settings";
+import Transactions from "./screens/Transactions";
+import Trends from "./screens/Trends";
 
 /* Core CSS required for Ionic components to work properly */
 import "@ionic/react/css/core.css";
@@ -54,6 +55,14 @@ export default function App({ coreApp }) {
               component={() => (
                 <Screen>
                   <Accounts coreApp={coreApp} />
+                </Screen>
+              )}
+            />
+            <Route
+              path="/trends"
+              component={() => (
+                <Screen>
+                  <Trends coreApp={coreApp} />
                 </Screen>
               )}
             />

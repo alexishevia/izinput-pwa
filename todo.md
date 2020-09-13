@@ -1,6 +1,7 @@
 # To-Do
 
 - [ ] add trends screen
+- [ ] show totals per category on the transactions filter screen
 - [ ] add calculator screen
 - [ ] move the try/catch logic that just calls newError() inside the coreApp caller functions
 - [ ] allow pulling down to force sync

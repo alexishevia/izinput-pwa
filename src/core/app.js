@@ -115,6 +115,16 @@ async function getTotalWithdrawals({ id, fromDate, toDate }) {
   return asMoneyFloat(withdrawals);
 }
 
+async function getTotalDeposits({ id, fromDate, toDate }) {
+  const localDB = await getLocalDB();
+  const deposits = await localDB.getTotalDeposits({
+    id,
+    fromDate,
+    toDate,
+  });
+  return asMoneyFloat(deposits);
+}
+
 function getMonthlyWithdrawals(accounts) {
   const now = new Date();
   const monthStart = dateToDayStr(
@@ -642,6 +652,8 @@ export default function InvoiceZero() {
     getExpenses,
     getIncome,
     getIncomes,
+    getTotalDeposits,
+    getTotalWithdrawals,
     getTransactions,
     getTransfer,
     getTransfers,

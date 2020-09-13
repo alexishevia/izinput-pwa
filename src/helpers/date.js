@@ -34,12 +34,28 @@ export function isValidUTCDateStr(str) {
   return isValidDateStr(str) && new Date(str).toISOString() === str;
 }
 
-export function monthStart() {
-  const now = new Date();
+export function monthStart(date) {
+  const now = date || new Date();
   return new Date(now.getFullYear(), now.getMonth(), 1);
 }
 
-export function monthEnd() {
-  const now = new Date();
+export function monthEnd(date) {
+  const now = date || new Date();
   return new Date(now.getFullYear(), now.getMonth() + 1, 0);
+}
+
+export function getMonthStrFromDate(date) {
+  return date.toISOString().slice(0, 7);
+}
+
+export function substractMonths(date, nMonths) {
+  const result = new Date(date);
+  result.setMonth(date.getMonth() - nMonths);
+  return result;
+}
+
+export function addMonths(date, nMonths) {
+  const result = new Date(date);
+  result.setMonth(date.getMonth() + nMonths);
+  return result;
 }

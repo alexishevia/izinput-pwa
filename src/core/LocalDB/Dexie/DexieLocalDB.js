@@ -765,17 +765,18 @@ function ByName(name) {
   function getTotalWithdrawals({ id, fromDate, toDate }) {
     function getOutTransfersTotal() {
       let total = 0;
-      let query = db.transfers.filter(
-        (transfer) => !transfer.deleted && transfer.fromID === id
-      );
+      let query = db.transfers.filter((transfer) => !transfer.deleted);
+      if (id) {
+        query = query.filter((transfer) => transfer.fromID === id);
+      }
       if (fromDate) {
         query = query.filter(
-          ({ transactionDate }) => transactionDate >= fromDate
+          ({ transactionDate }) => fromDate <= transactionDate
         );
       }
       if (toDate) {
         query = query.filter(
-          ({ transactionDate }) => transactionDate <= fromDate
+          ({ transactionDate }) => transactionDate <= toDate
         );
       }
       return query
@@ -792,12 +793,13 @@ function ByName(name) {
 
     function getExpensesTotal() {
       let total = 0;
-      let query = db.expenses.filter(
-        (expense) => !expense.deleted && expense.accountID === id
-      );
+      let query = db.expenses.filter((expense) => !expense.deleted);
+      if (id) {
+        query = query.filter((expense) => expense.accountID === id);
+      }
       if (fromDate) {
         query = query.filter(
-          ({ transactionDate }) => transactionDate >= fromDate
+          ({ transactionDate }) => fromDate <= transactionDate
         );
       }
       if (toDate) {
@@ -825,9 +827,10 @@ function ByName(name) {
   function getTotalDeposits({ id, fromDate, toDate }) {
     function getInTransfersTotal() {
       let total = 0;
-      let query = db.transfers.filter(
-        (transfer) => !transfer.deleted && transfer.toID === id
-      );
+      let query = db.transfers.filter((transfer) => !transfer.deleted);
+      if (id) {
+        query = query.filter((transfer) => transfer.toID === id);
+      }
       if (fromDate) {
         query = query.filter(
           ({ transactionDate }) => transactionDate >= fromDate
@@ -851,17 +854,18 @@ function ByName(name) {
     }
     function getIncomesTotal() {
       let total = 0;
-      let query = db.incomes.filter(
-        (income) => !income.deleted && income.accountID === id
-      );
+      let query = db.incomes.filter((income) => !income.deleted);
+      if (id) {
+        query = query.filter((income) => income.accountID === id);
+      }
       if (fromDate) {
         query = query.filter(
-          ({ transactionDate }) => transactionDate >= fromDate
+          ({ transactionDate }) => fromDate <= transactionDate
         );
       }
       if (toDate) {
         query = query.filter(
-          ({ transactionDate }) => transactionDate <= fromDate
+          ({ transactionDate }) => transactionDate <= toDate
         );
       }
       return query
@@ -921,7 +925,7 @@ function ByName(name) {
     if (orderBy) {
       query = query.orderBy(orderBy);
     }
-    query = query.filter((expense) => !expense.deleted);
+    query = query.filter((income) => !income.deleted);
     if (Array.isArray(accountIDs)) {
       query = query.filter(({ accountID }) => accountIDs.includes(accountID));
     }
@@ -1131,14 +1135,15 @@ function ByName(name) {
     getActionsCount,
     getCategories,
     getExpense,
+    getExpenses,
     getIncome,
+    getIncomes,
     getLastAction,
     getLocalActions,
-    getExpenses,
-    getIncomes,
-    getTransfers,
+    getTotalDeposits,
     getTotalWithdrawals,
     getTransfer,
+    getTransfers,
     name,
     processActions,
   };

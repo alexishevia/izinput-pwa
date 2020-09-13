@@ -24,6 +24,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test && npm run cleanTests",
+    "test:once": "react-scripts test --runInBand --watchAll=false && npm run cleanTests",
     "test:debug": "react-scripts --inspect-brk test --runInBand --no-cache --testTimeout=100000 && npm run cleanTests",
     "cleanTests": "rm ./*.sqlite",
     "eject": "react-scripts eject",
@@ -32,7 +33,7 @@
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged",
-      "pre-push": "npm run lint && react-scripts test --watchAll=false && npm run cleanTests"
+      "pre-push": "npm run lint && npm run test:once"
     }
   },
   "lint-staged": {

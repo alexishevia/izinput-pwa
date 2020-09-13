@@ -14,6 +14,7 @@ import {
 const routes = [
   { name: "Home", route: "/" },
   { name: "Transactions", route: "/transactions" },
+  { name: "Trends", route: "/trends" },
   { name: "Accounts", route: "/accounts" },
   { name: "Settings", route: "/settings" },
 ];
