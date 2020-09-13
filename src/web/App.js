@@ -19,8 +19,8 @@ import NewIncome from "./screens/NewIncome";
 import NewTransfer from "./screens/NewTransfer";
 import NotFound from "./screens/NotFound";
 import Screen from "./Screen";
-import Sync from "./screens/Sync";
 import Transactions from "./screens/Transactions";
+import Settings from "./screens/Settings";
 
 /* Core CSS required for Ionic components to work properly */
 import "@ionic/react/css/core.css";
@@ -136,10 +136,10 @@ export default function App({ coreApp }) {
               )}
             />
             <Route
-              path="/sync"
+              path="/settings"
               component={() => (
                 <Screen>
-                  <Sync coreApp={coreApp} />
+                  <Settings coreApp={coreApp} />
                 </Screen>
               )}
             />

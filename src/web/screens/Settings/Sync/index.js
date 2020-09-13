@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import PropTypes from "prop-types";
-import useAsyncState from "../../hooks/useAsyncState";
+import useAsyncState from "../../../hooks/useAsyncState";
 import GDriveFilePicker from "./GDriveFilePicker";
 
 function Sync({ coreApp }) {
@@ -67,6 +67,7 @@ function Sync({ coreApp }) {
         onLogin={onLogin}
         onLogout={onLogout}
         onFilePick={onFilePick}
+        onError={coreApp.newError}
         runSync={coreApp.runSync}
       />
     </>

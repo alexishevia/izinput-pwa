@@ -20,7 +20,7 @@ import {
   alertCircleOutline,
 } from "ionicons/icons";
 import loadDir from "./api/loadDir";
-import useAsyncState from "../../../hooks/useAsyncState";
+import useAsyncState from "../../../../hooks/useAsyncState";
 
 function isFile(node) {
   return node.fileType === "file";

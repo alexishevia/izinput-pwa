@@ -15,7 +15,7 @@ const routes = [
   { name: "Home", route: "/" },
   { name: "Transactions", route: "/transactions" },
   { name: "Accounts", route: "/accounts" },
-  { name: "Sync", route: "/sync" },
+  { name: "Settings", route: "/settings" },
 ];
 
 export default function MainMenu() {
