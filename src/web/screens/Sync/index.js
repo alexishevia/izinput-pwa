@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import PropTypes from "prop-types";
 import useAsyncState from "../../hooks/useAsyncState";
 import GDriveFilePicker from "./GDriveFilePicker";
-import RunSync from "./RunSync";
 
 function Sync({ coreApp }) {
   const [isLoggedIn, reloadIsLoggedIn] = useAsyncState(
@@ -68,9 +67,8 @@ function Sync({ coreApp }) {
         onLogin={onLogin}
         onLogout={onLogout}
         onFilePick={onFilePick}
+        runSync={coreApp.runSync}
       />
-      <hr />
-      <RunSync isFileSelected={!!file} coreApp={coreApp} />
     </>
   );
 }
