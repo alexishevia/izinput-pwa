@@ -1,8 +1,8 @@
 # To-Do
 
-- [ ] add ability to reset all data (delete indexeddbs and localStorage)
 - [ ] add trends screen
 - [ ] add calculator screen
+- [ ] move the try/catch logic that just calls newError() inside the coreApp caller functions
 - [ ] allow pulling down to force sync
 - [ ] display the full path to Google Spreadsheet file in `Sync` screen
 - [ ] add recursive limit

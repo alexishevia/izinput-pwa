@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { IonButton, IonAlert } from "@ionic/react";
 
-const header = "Disconnect";
-const message = "Are you sure you want to disconnect from Google Drive?";
+const header = "Delete Local Data";
+const message =
+  "When you delete your local data, all Invoice Zero data will be removed from this device.\nAre you sure you want to delete local data?";
 
-export default function LogoutButton({ onClick }) {
+export default function ChangeFileButton({ onClick }) {
   const [isAlertOpen, setAlertOpen] = useState(false);
 
   return (
@@ -20,13 +21,13 @@ export default function LogoutButton({ onClick }) {
           { text: header, handler: onClick },
         ]}
       />
-      <IonButton color="dark" onClick={() => setAlertOpen(true)}>
-        Disconnect
+      <IonButton color="danger" onClick={() => setAlertOpen(true)}>
+        Delete Local Data
       </IonButton>
     </>
   );
 }
 
-LogoutButton.propTypes = {
+ChangeFileButton.propTypes = {
   onClick: PropTypes.func.isRequired,
 };

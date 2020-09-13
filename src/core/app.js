@@ -25,6 +25,7 @@ import { dateToDayStr } from "../helpers/date";
 import {
   GOOGLE_API_KEY,
   GOOGLE_CLIENT_ID,
+  STORAGE_KEY_ACTIVE_DB,
   STORAGE_KEY_SELECTED_FILE,
 } from "../constants";
 
@@ -601,6 +602,20 @@ export default function InvoiceZero() {
     eventEmitter.emit(ERROR_EVENT, err);
   }
 
+  async function deleteLocalData() {
+    try {
+      const cloudReplica = await getCloudReplica();
+      await cloudReplica.deleteDB();
+      const localDB = await getLocalDB();
+      await localDB.deleteDB();
+      localStorage.removeItem(STORAGE_KEY_SELECTED_FILE);
+      localStorage.removeItem(STORAGE_KEY_ACTIVE_DB);
+      await gDriveLogout();
+    } catch (err) {
+      newError(err);
+    }
+  }
+
   return {
     CHANGE_EVENT,
     ERROR_EVENT,
@@ -613,6 +628,7 @@ export default function InvoiceZero() {
     createTransfer,
     deleteExpense,
     deleteIncome,
+    deleteLocalData,
     deleteTransfer,
     extendAccounts,
     gDriveGetSelectedFile,
