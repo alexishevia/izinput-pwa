@@ -34,7 +34,7 @@ export default function Income({ income, accounts, categories }) {
         <p>
           <IonNote color="success">${amount.toFixed(2)}</IonNote>
           <br />
-          {accountLabel} =&gt; {categoryLabel}
+          {categoryLabel} =&gt; {accountLabel}
           <br />
           <span className="TransactionsListItemDate">{transactionDate}</span>
           {description}

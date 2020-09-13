@@ -765,14 +765,18 @@ function ByName(name) {
   function getTotalWithdrawals({ id, fromDate, toDate }) {
     function getOutTransfersTotal() {
       let total = 0;
-      const query = db.transfers.filter(
+      let query = db.transfers.filter(
         (transfer) => !transfer.deleted && transfer.fromID === id
       );
       if (fromDate) {
-        query.filter(({ transactionDate }) => transactionDate >= fromDate);
+        query = query.filter(
+          ({ transactionDate }) => transactionDate >= fromDate
+        );
       }
       if (toDate) {
-        query.filter(({ transactionDate }) => transactionDate <= fromDate);
+        query = query.filter(
+          ({ transactionDate }) => transactionDate <= fromDate
+        );
       }
       return query
         .each((transfer) => {
@@ -788,14 +792,18 @@ function ByName(name) {
 
     function getExpensesTotal() {
       let total = 0;
-      const query = db.expenses.filter(
+      let query = db.expenses.filter(
         (expense) => !expense.deleted && expense.accountID === id
       );
       if (fromDate) {
-        query.filter(({ transactionDate }) => transactionDate >= fromDate);
+        query = query.filter(
+          ({ transactionDate }) => transactionDate >= fromDate
+        );
       }
       if (toDate) {
-        query.filter(({ transactionDate }) => transactionDate <= fromDate);
+        query = query.filter(
+          ({ transactionDate }) => transactionDate <= toDate
+        );
       }
       return query
         .each((expense) => {
@@ -817,14 +825,18 @@ function ByName(name) {
   function getTotalDeposits({ id, fromDate, toDate }) {
     function getInTransfersTotal() {
       let total = 0;
-      const query = db.transfers.filter(
+      let query = db.transfers.filter(
         (transfer) => !transfer.deleted && transfer.toID === id
       );
       if (fromDate) {
-        query.filter(({ transactionDate }) => transactionDate >= fromDate);
+        query = query.filter(
+          ({ transactionDate }) => transactionDate >= fromDate
+        );
       }
       if (toDate) {
-        query.filter(({ transactionDate }) => transactionDate <= fromDate);
+        query = query.filter(
+          ({ transactionDate }) => transactionDate <= fromDate
+        );
       }
       return query
         .each((transfer) => {
@@ -839,14 +851,18 @@ function ByName(name) {
     }
     function getIncomesTotal() {
       let total = 0;
-      const query = db.incomes.filter(
+      let query = db.incomes.filter(
         (income) => !income.deleted && income.accountID === id
       );
       if (fromDate) {
-        query.filter(({ transactionDate }) => transactionDate >= fromDate);
+        query = query.filter(
+          ({ transactionDate }) => transactionDate >= fromDate
+        );
       }
       if (toDate) {
-        query.filter(({ transactionDate }) => transactionDate <= fromDate);
+        query = query.filter(
+          ({ transactionDate }) => transactionDate <= fromDate
+        );
       }
       return query
         .each((income) => {
