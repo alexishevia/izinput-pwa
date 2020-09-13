@@ -58,6 +58,7 @@ export default function Home({ coreApp }) {
     }
     coreApp.on(coreApp.CHANGE_EVENT, reloadData);
     return () => coreApp.off(coreApp.CHANGE_EVENT, reloadData);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

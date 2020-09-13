@@ -23,6 +23,7 @@ export default function Accounts({ coreApp }) {
   useEffect(() => {
     coreApp.on(coreApp.CHANGE_EVENT, reloadAccounts);
     return () => coreApp.off(coreApp.CHANGE_EVENT, reloadAccounts);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

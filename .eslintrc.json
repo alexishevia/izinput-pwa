@@ -5,8 +5,9 @@
     "browser": true
   },
   "extends": ["airbnb", "prettier", "prettier/react"],
-  "plugins": ["prettier", "jest"],
+  "plugins": ["prettier", "jest", "react", "react-hooks"],
   "rules": {
+    "react-hooks/exhaustive-deps": [0],
     "no-underscore-dangle": [0],
     "no-await-in-loop": [0],
     "import/no-extraneous-dependencies": [0],

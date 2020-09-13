@@ -37,6 +37,7 @@ export default function useAsyncState(initialValue, generator) {
     return () => {
       cancelPendingGenerators();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return [value, loadData];

@@ -158,11 +158,13 @@ export default function Transactions({ coreApp }) {
     }
     coreApp.on(coreApp.CHANGE_EVENT, reloadData);
     return () => coreApp.off(coreApp.CHANGE_EVENT, reloadData);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // reload transactions when filters change
   useEffect(() => {
     reloadTransactions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [types, fromDate, toDate, accountsStatus, categoriesStatus]);
 
   return (

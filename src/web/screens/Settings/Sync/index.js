@@ -33,6 +33,7 @@ function Sync({ coreApp }) {
     return () => {
       coreApp.off(coreApp.CHANGE_EVENT, reloadData);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function onLogin() {

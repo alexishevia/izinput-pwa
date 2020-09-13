@@ -90,6 +90,7 @@ export default function FilePicker({ onCancel, onFilePick, onError }) {
 
   useEffect(() => {
     reloadContents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFileSelected, pathIDs]);
 
   function onGoBack(evt) {

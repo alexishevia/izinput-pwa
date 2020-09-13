@@ -64,6 +64,7 @@ export default function SyncStatus({ coreApp }) {
       coreApp.off(coreApp.SYNC_ERROR_EVENT, onSyncError);
       coreApp.off(coreApp.SYNC_SUCCESS_EVENT, onSyncSuccess);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function onClick(evt) {

@@ -31,6 +31,7 @@ function Errors({ coreApp }) {
     return () => {
       coreApp.off(coreApp.ERROR_EVENT, addError);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const msg = errors.length ? getErrorMsg(errors[errors.length - 1]) : "";
