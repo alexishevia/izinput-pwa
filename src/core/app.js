@@ -105,20 +105,27 @@ async function getBalances(accounts) {
   return Promise.all(accounts.map((account) => getAccountBalance(account.id)));
 }
 
-async function getTotalWithdrawals({ id, fromDate, toDate }) {
+async function getTotalWithdrawals({
+  accountIDs,
+  categoryIDs,
+  fromDate,
+  toDate,
+}) {
   const localDB = await getLocalDB();
   const withdrawals = await localDB.getTotalWithdrawals({
-    id,
+    accountIDs,
+    categoryIDs,
     fromDate,
     toDate,
   });
   return asMoneyFloat(withdrawals);
 }
 
-async function getTotalDeposits({ id, fromDate, toDate }) {
+async function getTotalDeposits({ accountIDs, categoryIDs, fromDate, toDate }) {
   const localDB = await getLocalDB();
   const deposits = await localDB.getTotalDeposits({
-    id,
+    accountIDs,
+    categoryIDs,
     fromDate,
     toDate,
   });
@@ -136,7 +143,7 @@ function getMonthlyWithdrawals(accounts) {
   return Promise.all(
     accounts.map((account) =>
       getTotalWithdrawals({
-        id: account.id,
+        accountIDs: [account.id],
         fromDate: monthStart,
         toDate: monthEnd,
       })

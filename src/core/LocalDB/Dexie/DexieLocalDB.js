@@ -762,12 +762,14 @@ function ByName(name) {
   }
 
   // `fromDate` and `toDate` are inclusive
-  function getTotalWithdrawals({ id, fromDate, toDate }) {
+  function getTotalWithdrawals({ accountIDs, categoryIDs, fromDate, toDate }) {
     function getOutTransfersTotal() {
       let total = 0;
       let query = db.transfers.filter((transfer) => !transfer.deleted);
-      if (id) {
-        query = query.filter((transfer) => transfer.fromID === id);
+      if (accountIDs && accountIDs.length) {
+        query = query.filter((transfer) =>
+          accountIDs.includes(transfer.fromID)
+        );
       }
       if (fromDate) {
         query = query.filter(
@@ -783,7 +785,7 @@ function ByName(name) {
         .each((transfer) => {
           const amount = parseFloat(transfer.amount, 10);
           if (Number.isNaN(amount)) {
-            const msg = `Transfer with id: ${id} has non-numeric amount: ${transfer.amount}`;
+            const msg = `Transfer with id: ${transfer.id} has non-numeric amount: ${transfer.amount}`;
             throw new ErrInvalidTransfer(msg);
           }
           total += transfer.amount;
@@ -794,8 +796,15 @@ function ByName(name) {
     function getExpensesTotal() {
       let total = 0;
       let query = db.expenses.filter((expense) => !expense.deleted);
-      if (id) {
-        query = query.filter((expense) => expense.accountID === id);
+      if (accountIDs && accountIDs.length) {
+        query = query.filter((expense) =>
+          accountIDs.includes(expense.accountID)
+        );
+      }
+      if (categoryIDs && categoryIDs.length) {
+        query = query.filter((expense) =>
+          categoryIDs.includes(expense.categoryID)
+        );
       }
       if (fromDate) {
         query = query.filter(
@@ -811,7 +820,7 @@ function ByName(name) {
         .each((expense) => {
           const amount = parseFloat(expense.amount, 10);
           if (Number.isNaN(amount)) {
-            const msg = `Expense with id: ${id} has non-numeric amount: ${expense.amount}`;
+            const msg = `Expense with id: ${expense.id} has non-numeric amount: ${expense.amount}`;
             throw new ErrInvalidTransfer(msg);
           }
           total += expense.amount;
@@ -824,12 +833,12 @@ function ByName(name) {
     );
   }
 
-  function getTotalDeposits({ id, fromDate, toDate }) {
+  function getTotalDeposits({ accountIDs, categoryIDs, fromDate, toDate }) {
     function getInTransfersTotal() {
       let total = 0;
       let query = db.transfers.filter((transfer) => !transfer.deleted);
-      if (id) {
-        query = query.filter((transfer) => transfer.toID === id);
+      if (accountIDs) {
+        query = query.filter((transfer) => accountIDs.includes(transfer.toID));
       }
       if (fromDate) {
         query = query.filter(
@@ -845,18 +854,24 @@ function ByName(name) {
         .each((transfer) => {
           const amount = parseFloat(transfer.amount, 10);
           if (Number.isNaN(amount)) {
-            const msg = `Transfer with id: ${id} has non-numeric amount: ${transfer.amount}`;
+            const msg = `Transfer with id: ${transfer.id} has non-numeric amount: ${transfer.amount}`;
             throw new ErrInvalidTransfer(msg);
           }
           total += transfer.amount;
         })
         .then(() => total);
     }
+
     function getIncomesTotal() {
       let total = 0;
       let query = db.incomes.filter((income) => !income.deleted);
-      if (id) {
-        query = query.filter((income) => income.accountID === id);
+      if (accountIDs) {
+        query = query.filter((income) => accountIDs.includes(income.accountID));
+      }
+      if (categoryIDs) {
+        query = query.filter((income) =>
+          categoryIDs.includes(income.categoryIDs)
+        );
       }
       if (fromDate) {
         query = query.filter(
@@ -872,7 +887,7 @@ function ByName(name) {
         .each((income) => {
           const amount = parseFloat(income.amount, 10);
           if (Number.isNaN(amount)) {
-            const msg = `Income with id: ${id} has non-numeric amount: ${income.amount}`;
+            const msg = `Income with id: ${income.id} has non-numeric amount: ${income.amount}`;
             throw new ErrInvalidTransfer(msg);
           }
           total += income.amount;
@@ -887,8 +902,8 @@ function ByName(name) {
   function getAccountBalance(id) {
     return Promise.all([
       getInitialBalance({ id }),
-      getTotalDeposits({ id }),
-      getTotalWithdrawals({ id }),
+      getTotalDeposits({ accountIDs: [id] }),
+      getTotalWithdrawals({ accountIDs: [id] }),
     ]).then(([initialBalance, deposits, withdrawals]) => {
       return initialBalance + deposits - withdrawals;
     });

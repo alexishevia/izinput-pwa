@@ -41,25 +41,27 @@ export default function IncomeVsExpenses({ coreApp }) {
   // ]
   const [graphData] = useAsyncState([], async function* loadGraphData() {
     try {
-      const dates = getLastMonths(13);
-      yield dates.map((date) => ({
+      const months = getLastMonths(13).map((date) => ({
         name: getMonthStrFromDate(date),
-        income: 0,
-        expenses: 0,
+        fromDate: dateToDayStr(monthStart(date)),
+        toDate: dateToDayStr(monthEnd(date)),
       }));
-      const values = await Promise.all(
-        dates.map(async (date) => {
-          const name = getMonthStrFromDate(date);
-          const fromDate = dateToDayStr(monthStart(date));
-          const toDate = dateToDayStr(monthEnd(date));
-          const [income, expenses] = await Promise.all([
-            coreApp.getTotalDeposits({ fromDate, toDate }),
-            coreApp.getTotalWithdrawals({ fromDate, toDate }),
-          ]);
-          return { name, income, expenses };
-        })
-      );
-      yield values;
+
+      let result = months.map(({ name }) => ({ name, income: 0, expenses: 0 }));
+      yield result;
+
+      /* eslint no-restricted-syntax: [0] */
+      for (const month of months) {
+        const { name: monthName, fromDate, toDate } = month;
+        const [income, expenses] = await Promise.all([
+          coreApp.getTotalDeposits({ fromDate, toDate }),
+          coreApp.getTotalWithdrawals({ fromDate, toDate }),
+        ]);
+        result = result.map((data) =>
+          data.name === monthName ? { ...data, income, expenses } : data
+        );
+        yield result;
+      }
     } catch (err) {
       coreApp.newError(err);
     }
@@ -68,13 +70,13 @@ export default function IncomeVsExpenses({ coreApp }) {
     <>
       <IonItem style={{ marginBottom: "1rem" }}>
         <IonLabel>
-          <h3>Income Vs Expenses</h3>
+          <h2>Income Vs Expenses</h2>
         </IonLabel>
       </IonItem>
       <ResponsiveContainer className="AccountsChart" width="100%" height={300}>
         <BarChart data={graphData}>
           <XAxis dataKey="name" />
-          <YAxis type="number" domain={[0, "dataMax"]} />
+          <YAxis type="number" domain={[0, "dataMax"]} hide />
           <Tooltip />
           <Bar dataKey="income" fill="#82ca9d" />
           <Bar dataKey="expenses" fill="#EF666D" />
