@@ -8,6 +8,7 @@ import Errors from "./Errors";
 import SyncStatus from "./SyncStatus";
 import MainMenu from "./MainMenu";
 import Accounts from "./screens/Accounts";
+import Calculator from "./screens/Calculator";
 import EditAccount from "./screens/EditAccount";
 import EditExpense from "./screens/EditExpense";
 import EditIncome from "./screens/EditIncome";
@@ -55,6 +56,14 @@ export default function App({ coreApp }) {
               component={() => (
                 <Screen>
                   <Accounts coreApp={coreApp} />
+                </Screen>
+              )}
+            />
+            <Route
+              path="/calculator"
+              component={() => (
+                <Screen>
+                  <Calculator coreApp={coreApp} />
                 </Screen>
               )}
             />

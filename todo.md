@@ -1,8 +1,10 @@
 # To-Do
 
-- [ ] add trends screen
-- [ ] show totals per category on the transactions filter screen
 - [ ] add calculator screen
+- [ ] convert to PWA
+  - make installable
+  - allow app to work offline
+- [ ] show totals per category on the transactions filter screen
 - [ ] move the try/catch logic that just calls newError() inside the coreApp caller functions
 - [ ] allow pulling down to force sync
 - [ ] display the full path to Google Spreadsheet file in `Sync` screen
