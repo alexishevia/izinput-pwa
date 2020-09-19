@@ -659,6 +659,7 @@ export default function InvoiceZero() {
     getExpenses,
     getIncome,
     getIncomes,
+    getLocalDB,
     getTotalDeposits,
     getTotalWithdrawals,
     getTransactions,

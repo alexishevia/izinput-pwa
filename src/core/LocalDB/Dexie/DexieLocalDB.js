@@ -1142,6 +1142,7 @@ function ByName(name) {
   }
 
   return {
+    dexie: db,
     deleteDB,
     deleteLocalActions,
     getAccount,
