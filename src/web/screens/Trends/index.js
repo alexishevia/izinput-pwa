@@ -28,13 +28,13 @@ function asMoneyFloat(num) {
 }
 
 export default function Trends({ coreApp }) {
-  // incomeByMonth is an array with format:
+  // incomeByMonth is an object with format:
   // { [monthName]: value }
   // eg:
   // { "2020-01": 1250.34, "2020-02": 1832.01, ... }
   const [incomeByMonth, setIncomeByMonth] = useState({});
 
-  // expensesByMonth is an array with format:
+  // expensesByMonth is an object with format:
   // { [monthName]: value }
   // eg:
   // { "2020-01": 1250.34, "2020-02": 1832.01, ... }
@@ -50,73 +50,79 @@ export default function Trends({ coreApp }) {
   const [expensesByCategory, setExpensesByCategory] = useState({});
 
   useEffect(() => {
-    const months = getLastMonths(13).map((date) => ({
-      name: getMonthStrFromDate(date),
-      fromDate: dateToDayStr(monthStart(date)),
-      toDate: dateToDayStr(monthEnd(date)),
-    }));
-    const { fromDate } = months[0];
-    const { toDate } = months[months.length - 1];
-    const monthsObj = months.reduce(
-      (memo, { name }) => ({
-        ...memo,
-        [name]: 0,
-      }),
-      {}
-    );
-
-    const incomeByMonthResult = { ...monthsObj };
-    const expensesByMonthResult = { ...monthsObj };
-    const expensesByCategoryResult = {};
-
-    setIncomeByMonth(incomeByMonthResult);
-    setExpensesByMonth(expensesByMonthResult);
-
-    let cancelled = false;
-
-    function iterateThroughIncomes(localDB) {
-      return localDB.dexie.incomes
-        .filter(
-          ({ transactionDate }) =>
-            fromDate <= transactionDate && transactionDate <= toDate
-        )
-        .until(() => cancelled)
-        .each(({ transactionDate, amount }) => {
-          const month = transactionDate.substr(0, 7);
-          incomeByMonthResult[month] += amount;
-        });
-    }
-
-    function iterateThroughExpenses(localDB, categories) {
-      return localDB.dexie.expenses
-        .filter(
-          ({ transactionDate }) =>
-            fromDate <= transactionDate && transactionDate <= toDate
-        )
-        .until(() => cancelled)
-        .each(({ transactionDate, amount, categoryID }) => {
-          const month = transactionDate.substr(0, 7);
-          expensesByMonthResult[month] += amount;
-
-          const category = categories.find((cat) => cat.id === categoryID);
-          const categoryName =
-            category && category.name ? category.name : "No Category";
-          if (!expensesByCategoryResult[categoryName]) {
-            expensesByCategoryResult[categoryName] = { ...monthsObj };
-          }
-          expensesByCategoryResult[categoryName][month] += amount;
-        });
-    }
-
     function loadData() {
-      return Promise.all([coreApp.getLocalDB(), coreApp.getCategories()])
-        .then(([localDB, categories]) =>
-          Promise.all([
+      const months = getLastMonths(13).map((date) => ({
+        name: getMonthStrFromDate(date),
+        fromDate: dateToDayStr(monthStart(date)),
+        toDate: dateToDayStr(monthEnd(date)),
+      }));
+      const { fromDate } = months[0];
+      const { toDate } = months[months.length - 1];
+      const monthsObj = months.reduce(
+        (memo, { name }) => ({
+          ...memo,
+          [name]: 0,
+        }),
+        {}
+      );
+
+      const incomeByMonthResult = { ...monthsObj };
+      const expensesByMonthResult = { ...monthsObj };
+      const expensesByCategoryResult = {};
+
+      setIncomeByMonth(incomeByMonthResult);
+      setExpensesByMonth(expensesByMonthResult);
+
+      let cancelled = false;
+
+      function iterateThroughIncomes(localDB) {
+        return localDB.dexie.incomes
+          .filter(
+            ({ transactionDate }) =>
+              fromDate <= transactionDate && transactionDate <= toDate
+          )
+          .until(() => cancelled)
+          .each(({ transactionDate, amount }) => {
+            const month = transactionDate.substr(0, 7);
+            incomeByMonthResult[month] += amount;
+          });
+      }
+
+      function iterateThroughExpenses(localDB, categories) {
+        return localDB.dexie.expenses
+          .filter(
+            ({ transactionDate }) =>
+              fromDate <= transactionDate && transactionDate <= toDate
+          )
+          .until(() => cancelled)
+          .each(({ transactionDate, amount, categoryID }) => {
+            const month = transactionDate.substr(0, 7);
+            expensesByMonthResult[month] += amount;
+
+            const category = categories.find((cat) => cat.id === categoryID);
+            const categoryName =
+              category && category.name ? category.name : "No Category";
+            if (!expensesByCategoryResult[categoryName]) {
+              expensesByCategoryResult[categoryName] = { ...monthsObj };
+            }
+            expensesByCategoryResult[categoryName][month] += amount;
+          });
+      }
+
+      Promise.all([coreApp.getLocalDB(), coreApp.getCategories()])
+        .then(([localDB, categories]) => {
+          if (cancelled) {
+            return Promise.resolve([]);
+          }
+          return Promise.all([
             iterateThroughIncomes(localDB),
             iterateThroughExpenses(localDB, categories),
-          ])
-        )
+          ]);
+        })
         .then(() => {
+          if (cancelled) {
+            return;
+          }
           setIncomeByMonth(
             Object.entries(incomeByMonthResult).reduce(
               (memo, [month, val]) => ({
@@ -152,15 +158,31 @@ export default function Trends({ coreApp }) {
           );
         })
         .catch((err) => {
-          coreApp.newError(err);
+          if (!cancelled) {
+            coreApp.newError(err);
+          }
         });
+
+      return function cancel() {
+        cancelled = true;
+      };
     }
 
-    loadData();
+    let cancelDataLoad = loadData();
+
+    function onChangeEvent() {
+      cancelDataLoad();
+      cancelDataLoad = loadData();
+    }
+
+    // reload data on coreApp.CHANGE_EVENT
+    coreApp.on(coreApp.CHANGE_EVENT, onChangeEvent);
+
     return () => {
-      cancelled = true;
+      coreApp.off(coreApp.CHANGE_EVENT, onChangeEvent);
+      cancelDataLoad();
     };
-  }, []);
+  }, [coreApp]);
 
   return (
     <>
@@ -175,8 +197,11 @@ export default function Trends({ coreApp }) {
 
 Trends.propTypes = {
   coreApp: PropTypes.shape({
+    CHANGE_EVENT: PropTypes.string.isRequired,
     getCategories: PropTypes.func.isRequired,
     getLocalDB: PropTypes.func.isRequired,
     newError: PropTypes.func.isRequired,
+    on: PropTypes.func.isRequired,
+    off: PropTypes.func.isRequired,
   }).isRequired,
 };
