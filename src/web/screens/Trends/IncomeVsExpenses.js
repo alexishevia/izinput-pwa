@@ -1,6 +1,5 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { IonLabel, IonItem } from "@ionic/react";
 import {
   Bar,
   BarChart,
@@ -52,23 +51,16 @@ export default function IncomeVsExpenses({ incomeByMonth, expensesByMonth }) {
   }));
 
   return (
-    <>
-      <IonItem style={{ marginBottom: "1rem" }}>
-        <IonLabel>
-          <h2>Income Vs Expenses</h2>
-        </IonLabel>
-      </IonItem>
-      <ResponsiveContainer className="AccountsChart" width="100%" height={300}>
-        <BarChart data={byMonth}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis type="number" domain={[0, dataMax]} />
-          <Tooltip />
-          <Bar dataKey="income" fill="#82ca9d" />
-          <Bar dataKey="expenses" fill="#EF666D" />
-        </BarChart>
-      </ResponsiveContainer>
-    </>
+    <ResponsiveContainer className="AccountsChart" width="100%" height={300}>
+      <BarChart data={byMonth}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="name" />
+        <YAxis type="number" domain={[0, dataMax]} />
+        <Tooltip />
+        <Bar dataKey="income" fill="#82ca9d" />
+        <Bar dataKey="expenses" fill="#EF666D" />
+      </BarChart>
+    </ResponsiveContainer>
   );
 }
 

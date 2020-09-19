@@ -21,10 +21,10 @@ import {
 import useAsyncState from "../../hooks/useAsyncState";
 import TransactionsList from "../../TransactionsList";
 import { dateToDayStr, monthStart, monthEnd } from "../../../helpers/date";
-import TypesFilter from "./TypesFilter";
-import DateFilter from "./DateFilter";
-import AccountsFilter from "./AccountsFilter";
-import CategoriesFilter from "./CategoriesFilter";
+import TypesFilter from "../../Filters/TypesFilter";
+import DateFilter from "../../Filters/DateFilter";
+import AccountsFilter from "../../Filters/AccountsFilter";
+import CategoriesFilter from "../../Filters/CategoriesFilter";
 
 function filterBySearchText(searchText) {
   return function filter({ amount, description }) {
@@ -124,16 +124,8 @@ export default function Transactions({ coreApp }) {
     [],
     function* loadTransactions() {
       try {
-        const activeAccounts = getActiveAccounts();
-        const accountIDs =
-          activeAccounts.length !== accounts.length
-            ? activeAccounts.map((acc) => acc.id)
-            : null;
-        const activeCategories = getActiveCategories();
-        const categoryIDs =
-          activeCategories.length !== categories.length
-            ? activeCategories.map((cat) => cat.id)
-            : null;
+        const accountIDs = getActiveAccounts().map((acc) => acc.id);
+        const categoryIDs = getActiveCategories().map((cat) => cat.id);
         yield coreApp.getTransactions({
           types,
           fromDate,
@@ -165,7 +157,15 @@ export default function Transactions({ coreApp }) {
   useEffect(() => {
     reloadTransactions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [types, fromDate, toDate, accountsStatus, categoriesStatus]);
+  }, [
+    types,
+    fromDate,
+    toDate,
+    accounts,
+    accountsStatus,
+    categories,
+    categoriesStatus,
+  ]);
 
   return (
     <>

@@ -35,8 +35,8 @@ function toNearestThousand(n) {
   return parseInt(result, 10);
 }
 
-function getHighestValue(obj) {
-  return Object.values(obj).sort((a, b) => b - a)[0];
+function getTotal(obj) {
+  return Object.values(obj).reduce((memo, val) => memo + val, 0);
 }
 
 export default function ExpensesByMonth({ expensesByCategory }) {
@@ -49,20 +49,21 @@ export default function ExpensesByMonth({ expensesByCategory }) {
     });
   });
 
-  const categoryNamesSortedByMax = Object.keys(expensesByCategory).sort(
-    (catA, catB) =>
-      getHighestValue(expensesByCategory[catB]) -
-      getHighestValue(expensesByCategory[catA])
+  const totalsByCategory = Object.entries(expensesByCategory).reduce(
+    (memo, [categoryName, values]) => ({
+      ...memo,
+      [categoryName]: getTotal(values),
+    }),
+    {}
+  );
+
+  const categoryNamesSortedByTotal = Object.keys(expensesByCategory).sort(
+    (catA, catB) => totalsByCategory[catB] - totalsByCategory[catA]
   );
 
   return (
     <>
-      <IonItem style={{ marginTop: "1rem", marginBottom: "1rem" }}>
-        <IonLabel>
-          <h2>Expenses By Month</h2>
-        </IonLabel>
-      </IonItem>
-      {categoryNamesSortedByMax.map((name) => {
+      {categoryNamesSortedByTotal.map((name) => {
         const graphData = Object.entries(
           expensesByCategory[name]
         ).map(([month, expenses]) => ({ month, expenses }));
@@ -71,6 +72,7 @@ export default function ExpensesByMonth({ expensesByCategory }) {
             <IonItem style={{ marginBottom: "1rem" }}>
               <IonLabel>
                 <h3>{name}</h3>
+                <p>Total: ${totalsByCategory[name].toLocaleString()}</p>
               </IonLabel>
             </IonItem>
             <ResponsiveContainer

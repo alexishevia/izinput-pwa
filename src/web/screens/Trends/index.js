@@ -1,5 +1,22 @@
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
+import {
+  IonButton,
+  IonButtons,
+  IonContent,
+  IonIcon,
+  IonItem,
+  IonLabel,
+  IonList,
+  IonModal,
+  IonTitle,
+  IonToolbar,
+} from "@ionic/react";
+import { chevronBackOutline, filterOutline } from "ionicons/icons";
+import useAsyncState from "../../hooks/useAsyncState";
+import AccountsFilter from "../../Filters/AccountsFilter";
+import CategoriesFilter from "../../Filters/CategoriesFilter";
+import DateFilter from "../../Filters/DateFilter";
 import IncomeVsExpenses from "./IncomeVsExpenses";
 import ExpensesByMonth from "./ExpensesByMonth";
 import {
@@ -11,15 +28,18 @@ import {
   substractMonths,
 } from "../../../helpers/date";
 
-function getLastMonths(n) {
-  const today = new Date();
-  let date = substractMonths(today, n - 1);
-  const result = [];
-  while (date <= today) {
-    result.push(date);
-    date = addMonths(date, 1);
+function getMonthsInRange(startDate, endDate) {
+  const months = [];
+  let date = monthStart(endDate);
+  while (date >= startDate) {
+    months.push({
+      name: getMonthStrFromDate(date),
+      fromDate: dateToDayStr(monthStart(date)),
+      toDate: dateToDayStr(monthEnd(date)),
+    });
+    date = addMonths(date, -1);
   }
-  return result;
+  return months.reverse();
 }
 
 // asMoneyFloat truncates a float to 2 decimal points
@@ -28,6 +48,13 @@ function asMoneyFloat(num) {
 }
 
 export default function Trends({ coreApp }) {
+  const today = new Date();
+  const [fromDate, setFromDate] = useState(
+    dateToDayStr(substractMonths(monthStart(today), 12))
+  );
+  const [toDate, setToDate] = useState(dateToDayStr(monthEnd(today)));
+  const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false);
+
   // incomeByMonth is an object with format:
   // { [monthName]: value }
   // eg:
@@ -49,147 +76,263 @@ export default function Trends({ coreApp }) {
   // }
   const [expensesByCategory, setExpensesByCategory] = useState({});
 
-  useEffect(() => {
-    function loadData() {
-      const months = getLastMonths(13).map((date) => ({
-        name: getMonthStrFromDate(date),
-        fromDate: dateToDayStr(monthStart(date)),
-        toDate: dateToDayStr(monthEnd(date)),
-      }));
-      const { fromDate } = months[0];
-      const { toDate } = months[months.length - 1];
-      const monthsObj = months.reduce(
-        (memo, { name }) => ({
-          ...memo,
-          [name]: 0,
-        }),
-        {}
-      );
-
-      const incomeByMonthResult = { ...monthsObj };
-      const expensesByMonthResult = { ...monthsObj };
-      const expensesByCategoryResult = {};
-
-      setIncomeByMonth(incomeByMonthResult);
-      setExpensesByMonth(expensesByMonthResult);
-
-      let cancelled = false;
-
-      function iterateThroughIncomes(localDB) {
-        return localDB.dexie.incomes
-          .filter(
-            ({ transactionDate }) =>
-              fromDate <= transactionDate && transactionDate <= toDate
-          )
-          .until(() => cancelled)
-          .each(({ transactionDate, amount }) => {
-            const month = transactionDate.substr(0, 7);
-            incomeByMonthResult[month] += amount;
-          });
+  const [accounts, reloadAccounts] = useAsyncState(
+    [],
+    function* loadAccounts() {
+      try {
+        yield coreApp.getAccounts();
+      } catch (err) {
+        coreApp.newError(err);
       }
+    }
+  );
 
-      function iterateThroughExpenses(localDB, categories) {
-        return localDB.dexie.expenses
-          .filter(
-            ({ transactionDate }) =>
-              fromDate <= transactionDate && transactionDate <= toDate
-          )
-          .until(() => cancelled)
-          .each(({ transactionDate, amount, categoryID }) => {
-            const month = transactionDate.substr(0, 7);
-            expensesByMonthResult[month] += amount;
+  const [accountsStatus, setAccountsStatus] = useState({});
 
-            const category = categories.find((cat) => cat.id === categoryID);
-            const categoryName =
-              category && category.name ? category.name : "No Category";
-            if (!expensesByCategoryResult[categoryName]) {
-              expensesByCategoryResult[categoryName] = { ...monthsObj };
-            }
-            expensesByCategoryResult[categoryName][month] += amount;
-          });
+  function setStatusForAccount(id, isActive) {
+    setAccountsStatus((prevStatus) => ({ ...prevStatus, [id]: isActive }));
+  }
+
+  function getActiveAccounts() {
+    return (accounts || [])
+      .filter(({ id }) => (accountsStatus || {})[id] !== false)
+      .map((acc) => acc.id);
+  }
+
+  const [categories, reloadCategories] = useAsyncState(
+    [],
+    function* loadCategories() {
+      try {
+        yield coreApp.getCategories();
+      } catch (err) {
+        coreApp.newError(err);
       }
+    }
+  );
 
-      Promise.all([coreApp.getLocalDB(), coreApp.getCategories()])
-        .then(([localDB, categories]) => {
-          if (cancelled) {
-            return Promise.resolve([]);
-          }
-          return Promise.all([
-            iterateThroughIncomes(localDB),
-            iterateThroughExpenses(localDB, categories),
-          ]);
-        })
-        .then(() => {
-          if (cancelled) {
-            return;
-          }
-          setIncomeByMonth(
-            Object.entries(incomeByMonthResult).reduce(
-              (memo, [month, val]) => ({
-                ...memo,
-                [month]: asMoneyFloat(val),
-              }),
-              {}
-            )
-          );
-          setExpensesByMonth(
-            Object.entries(expensesByMonthResult).reduce(
-              (memo, [month, val]) => ({
-                ...memo,
-                [month]: asMoneyFloat(val),
-              }),
-              {}
-            )
-          );
-          setExpensesByCategory(
-            Object.entries(expensesByCategoryResult).reduce(
-              (memo, [categoryName, values]) => ({
-                ...memo,
-                [categoryName]: Object.entries(values).reduce(
-                  (agg, [month, val]) => ({
-                    ...agg,
-                    [month]: asMoneyFloat(val),
-                  }),
-                  {}
-                ),
-              }),
-              {}
-            )
-          );
-        })
-        .catch((err) => {
-          if (!cancelled) {
-            coreApp.newError(err);
-          }
+  const [categoriesStatus, setCategoriesStatus] = useState({});
+
+  function setStatusForCategory(id, isActive) {
+    setCategoriesStatus((prevStatus) => ({ ...prevStatus, [id]: isActive }));
+  }
+
+  function getActiveCategories() {
+    return (categories || [])
+      .filter(({ id }) => (categoriesStatus || {})[id] !== false)
+      .map((cat) => cat.id);
+  }
+
+  function handleOpenFiltersModal(evt) {
+    evt.preventDefault();
+    setIsFiltersModalOpen(true);
+  }
+
+  function handleCloseFiltersModal(evt) {
+    evt.preventDefault();
+    setIsFiltersModalOpen(false);
+  }
+
+  function loadGraphData() {
+    const months = getMonthsInRange(new Date(fromDate), new Date(toDate));
+    const monthsObj = months.reduce(
+      (memo, { name }) => ({
+        ...memo,
+        [name]: 0,
+      }),
+      {}
+    );
+
+    const incomeByMonthResult = { ...monthsObj };
+    const expensesByMonthResult = { ...monthsObj };
+    const expensesByCategoryResult = {};
+
+    setIncomeByMonth(incomeByMonthResult);
+    setExpensesByMonth(expensesByMonthResult);
+
+    const activeAccounts = getActiveAccounts();
+    const activeCategories = getActiveCategories();
+
+    let cancelled = false;
+
+    function iterateThroughIncomes(localDB) {
+      return localDB.dexie.incomes
+        .filter(
+          ({ transactionDate, accountID, categoryID }) =>
+            fromDate <= transactionDate &&
+            transactionDate <= toDate &&
+            activeAccounts.includes(accountID) &&
+            activeCategories.includes(categoryID)
+        )
+        .until(() => cancelled)
+        .each(({ transactionDate, amount }) => {
+          const month = transactionDate.substr(0, 7);
+          incomeByMonthResult[month] += amount;
         });
-
-      return function cancel() {
-        cancelled = true;
-      };
     }
 
-    let cancelDataLoad = loadData();
+    function iterateThroughExpenses(localDB) {
+      return localDB.dexie.expenses
+        .filter(
+          ({ transactionDate, accountID, categoryID }) =>
+            fromDate <= transactionDate &&
+            transactionDate <= toDate &&
+            activeAccounts.includes(accountID) &&
+            activeCategories.includes(categoryID)
+        )
+        .until(() => cancelled)
+        .each(({ transactionDate, amount, categoryID }) => {
+          const month = transactionDate.substr(0, 7);
+          expensesByMonthResult[month] += amount;
 
-    function onChangeEvent() {
-      cancelDataLoad();
-      cancelDataLoad = loadData();
+          const category = categories.find((cat) => cat.id === categoryID);
+          const categoryName =
+            category && category.name ? category.name : "No Category";
+          if (!expensesByCategoryResult[categoryName]) {
+            expensesByCategoryResult[categoryName] = { ...monthsObj };
+          }
+          expensesByCategoryResult[categoryName][month] += amount;
+        });
     }
 
-    // reload data on coreApp.CHANGE_EVENT
-    coreApp.on(coreApp.CHANGE_EVENT, onChangeEvent);
+    coreApp
+      .getLocalDB()
+      .then((localDB) => {
+        if (cancelled) {
+          return Promise.resolve([]);
+        }
+        return Promise.all([
+          iterateThroughIncomes(localDB),
+          iterateThroughExpenses(localDB),
+        ]);
+      })
+      .then(() => {
+        if (cancelled) {
+          return;
+        }
+        setIncomeByMonth(
+          Object.entries(incomeByMonthResult).reduce(
+            (memo, [month, val]) => ({
+              ...memo,
+              [month]: asMoneyFloat(val),
+            }),
+            {}
+          )
+        );
+        setExpensesByMonth(
+          Object.entries(expensesByMonthResult).reduce(
+            (memo, [month, val]) => ({
+              ...memo,
+              [month]: asMoneyFloat(val),
+            }),
+            {}
+          )
+        );
+        setExpensesByCategory(
+          Object.entries(expensesByCategoryResult).reduce(
+            (memo, [categoryName, values]) => ({
+              ...memo,
+              [categoryName]: Object.entries(values).reduce(
+                (agg, [month, val]) => ({
+                  ...agg,
+                  [month]: asMoneyFloat(val),
+                }),
+                {}
+              ),
+            }),
+            {}
+          )
+        );
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          coreApp.newError(err);
+        }
+      });
 
-    return () => {
-      coreApp.off(coreApp.CHANGE_EVENT, onChangeEvent);
-      cancelDataLoad();
+    return function cancel() {
+      cancelled = true;
     };
-  }, [coreApp]);
+  }
+
+  // reload async data on coreApp.CHANGE_EVENT
+  useEffect(() => {
+    function reloadData() {
+      reloadAccounts();
+      reloadCategories();
+    }
+    coreApp.on(coreApp.CHANGE_EVENT, reloadData);
+    return () => coreApp.off(coreApp.CHANGE_EVENT, reloadData);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // reload graph data when filters change
+  useEffect(() => {
+    const cancel = loadGraphData();
+    return () => {
+      cancel();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    fromDate,
+    toDate,
+    accounts,
+    accountsStatus,
+    categories,
+    categoriesStatus,
+  ]);
 
   return (
     <>
+      <IonModal
+        isOpen={isFiltersModalOpen}
+        onDidDismiss={() => setIsFiltersModalOpen(false)}
+      >
+        <IonToolbar color="primary">
+          <IonButtons slot="start">
+            <IonButton onClick={handleCloseFiltersModal}>
+              <IonIcon icon={chevronBackOutline} />
+            </IonButton>
+          </IonButtons>
+          <IonTitle>Filters</IonTitle>
+        </IonToolbar>
+        <IonContent>
+          <IonList>
+            <DateFilter
+              fromDate={fromDate}
+              setFromDate={setFromDate}
+              toDate={toDate}
+              setToDate={setToDate}
+            />
+            <AccountsFilter
+              accounts={accounts}
+              accountsStatus={accountsStatus}
+              setStatusForAccount={setStatusForAccount}
+            />
+            <CategoriesFilter
+              categories={categories}
+              categoriesStatus={categoriesStatus}
+              setStatusForCategory={setStatusForCategory}
+            />
+          </IonList>
+        </IonContent>
+      </IonModal>
+      <IonItem style={{ marginBottom: "1rem" }}>
+        <IonLabel>
+          <h2>Income Vs Expenses</h2>
+        </IonLabel>
+        <IonButton fill="clear" slot="end" onClick={handleOpenFiltersModal}>
+          <IonIcon icon={filterOutline} />
+        </IonButton>
+      </IonItem>
       <IncomeVsExpenses
         incomeByMonth={incomeByMonth}
         expensesByMonth={expensesByMonth}
       />
+      <IonItem style={{ marginTop: "1rem", marginBottom: "1rem" }}>
+        <IonLabel>
+          <h2>Expenses By Month</h2>
+        </IonLabel>
+      </IonItem>
       <ExpensesByMonth expensesByCategory={expensesByCategory} />
     </>
   );
@@ -198,10 +341,11 @@ export default function Trends({ coreApp }) {
 Trends.propTypes = {
   coreApp: PropTypes.shape({
     CHANGE_EVENT: PropTypes.string.isRequired,
+    getAccounts: PropTypes.func.isRequired,
     getCategories: PropTypes.func.isRequired,
     getLocalDB: PropTypes.func.isRequired,
     newError: PropTypes.func.isRequired,
-    on: PropTypes.func.isRequired,
     off: PropTypes.func.isRequired,
+    on: PropTypes.func.isRequired,
   }).isRequired,
 };
