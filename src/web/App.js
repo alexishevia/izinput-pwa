@@ -8,11 +8,11 @@ import Errors from "./Errors";
 import SyncStatus from "./SyncStatus";
 import MainMenu from "./MainMenu";
 import Accounts from "./screens/Accounts";
-import Calculator from "./screens/Calculator";
 import EditAccount from "./screens/EditAccount";
 import EditExpense from "./screens/EditExpense";
 import EditIncome from "./screens/EditIncome";
 import EditTransfer from "./screens/EditTransfer";
+import Forecast from "./screens/Forecast";
 import Home from "./screens/Home";
 import NewAccount from "./screens/NewAccount";
 import NewExpense from "./screens/NewExpense";
@@ -60,18 +60,18 @@ export default function App({ coreApp }) {
               )}
             />
             <Route
-              path="/calculator"
-              component={() => (
-                <Screen>
-                  <Calculator coreApp={coreApp} />
-                </Screen>
-              )}
-            />
-            <Route
               path="/trends"
               component={() => (
                 <Screen>
                   <Trends coreApp={coreApp} />
+                </Screen>
+              )}
+            />
+            <Route
+              path="/forecast"
+              component={() => (
+                <Screen>
+                  <Forecast coreApp={coreApp} />
                 </Screen>
               )}
             />

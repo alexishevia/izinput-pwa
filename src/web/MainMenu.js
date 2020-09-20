@@ -15,7 +15,7 @@ const routes = [
   { name: "Home", route: "/" },
   { name: "Transactions", route: "/transactions" },
   { name: "Trends", route: "/trends" },
-  { name: "Calculator", route: "/calculator" },
+  { name: "Forecast", route: "/forecast" },
   { name: "Accounts", route: "/accounts" },
   { name: "Settings", route: "/settings" },
 ];

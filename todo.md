@@ -1,6 +1,5 @@
 # To-Do
 
-- [ ] add calculator screen
 - [ ] convert to PWA
   - make installable
   - allow app to work offline

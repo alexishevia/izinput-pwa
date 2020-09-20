@@ -157,7 +157,8 @@ export default function Trends({ coreApp }) {
     function iterateThroughIncomes(localDB) {
       return localDB.dexie.incomes
         .filter(
-          ({ transactionDate, accountID, categoryID }) =>
+          ({ deleted, transactionDate, accountID, categoryID }) =>
+            !deleted &&
             fromDate <= transactionDate &&
             transactionDate <= toDate &&
             activeAccounts.includes(accountID) &&
@@ -173,7 +174,8 @@ export default function Trends({ coreApp }) {
     function iterateThroughExpenses(localDB) {
       return localDB.dexie.expenses
         .filter(
-          ({ transactionDate, accountID, categoryID }) =>
+          ({ deleted, transactionDate, accountID, categoryID }) =>
+            !deleted &&
             fromDate <= transactionDate &&
             transactionDate <= toDate &&
             activeAccounts.includes(accountID) &&
