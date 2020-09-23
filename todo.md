@@ -1,8 +1,6 @@
 # To-Do
 
-- [ ] convert to PWA
-  - make installable
-  - allow app to work offline
+- [ ] improve performance of transactions screen
 - [ ] show totals per category on the transactions filter screen
 - [ ] move the try/catch logic that just calls newError() inside the coreApp caller functions
 - [ ] allow pulling down to force sync

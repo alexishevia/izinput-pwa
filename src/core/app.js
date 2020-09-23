@@ -105,6 +105,17 @@ async function getBalances(accounts) {
   return Promise.all(accounts.map((account) => getAccountBalance(account.id)));
 }
 
+async function getTotalExpenses({ accountIDs, categoryIDs, fromDate, toDate }) {
+  const localDB = await getLocalDB();
+  const withdrawals = await localDB.getTotalExpenses({
+    accountIDs,
+    categoryIDs,
+    fromDate,
+    toDate,
+  });
+  return asMoneyFloat(withdrawals);
+}
+
 async function getTotalWithdrawals({
   accountIDs,
   categoryIDs,
@@ -130,6 +141,25 @@ async function getTotalDeposits({ accountIDs, categoryIDs, fromDate, toDate }) {
     toDate,
   });
   return asMoneyFloat(deposits);
+}
+
+function getMonthlyExpenses(accounts) {
+  const now = new Date();
+  const monthStart = dateToDayStr(
+    new Date(now.getFullYear(), now.getMonth(), 1)
+  );
+  const monthEnd = dateToDayStr(
+    new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  );
+  return Promise.all(
+    accounts.map((account) =>
+      getTotalExpenses({
+        accountIDs: [account.id],
+        fromDate: monthStart,
+        toDate: monthEnd,
+      })
+    )
+  );
 }
 
 function getMonthlyWithdrawals(accounts) {
@@ -161,6 +191,8 @@ async function extendAccounts(accounts, fields) {
           return getBalances(accounts);
         case "monthlyWithdrawals":
           return getMonthlyWithdrawals(accounts);
+        case "monthlyExpenses":
+          return getMonthlyExpenses(accounts);
         default:
           throw new Error(`Unknown account field: ${field}`);
       }

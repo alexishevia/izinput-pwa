@@ -32,8 +32,8 @@ export default function AccountsChart({ accounts }) {
         <Bar stackId="a" dataKey="balance" fill="#82ca9d" />
         <Bar
           stackId="a"
-          dataKey="monthlyWithdrawals"
-          name="monthly withdrawals"
+          dataKey="monthlyExpenses"
+          name="expenses (this month)"
           fill="#EF666D"
         />
       </BarChart>
@@ -46,7 +46,7 @@ AccountsChart.propTypes = {
     PropTypes.shape({
       name: PropTypes.string.isRequired,
       balance: PropTypes.number,
-      monthlyWithdrawals: PropTypes.number,
+      monthlyExpenses: PropTypes.number,
     })
   ).isRequired,
 };

@@ -14,7 +14,7 @@ export default function Home({ coreApp }) {
         yield allAccounts;
         const extendedAccounts = await coreApp.extendAccounts(allAccounts, [
           "balance",
-          "monthlyWithdrawals",
+          "monthlyExpenses",
         ]);
         yield extendedAccounts;
       } catch (err) {

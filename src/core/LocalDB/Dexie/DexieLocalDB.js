@@ -762,6 +762,40 @@ function ByName(name) {
   }
 
   // `fromDate` and `toDate` are inclusive
+  function getTotalExpenses({ accountIDs, categoryIDs, fromDate, toDate }) {
+    let total = 0;
+    let query = db.expenses.filter((expense) => !expense.deleted);
+    if (accountIDs && accountIDs.length) {
+      query = query.filter((expense) => accountIDs.includes(expense.accountID));
+    }
+    if (categoryIDs && categoryIDs.length) {
+      query = query.filter((expense) =>
+        categoryIDs.includes(expense.categoryID)
+      );
+    }
+    if (fromDate) {
+      query = query.filter(
+        ({ transactionDate }) => fromDate <= transactionDate
+      );
+    }
+    if (toDate) {
+      query = query.filter(({ transactionDate }) => transactionDate <= toDate);
+    }
+    return query
+      .each((expense) => {
+        const amount = parseFloat(expense.amount, 10);
+        if (Number.isNaN(amount)) {
+          const msg = `Expense with id: ${expense.id} has non-numeric amount: ${expense.amount}`;
+          throw new ErrInvalidTransfer(msg);
+        }
+        total += expense.amount;
+      })
+      .then(() => {
+        return total;
+      });
+  }
+
+  // `fromDate` and `toDate` are inclusive
   function getTotalWithdrawals({ accountIDs, categoryIDs, fromDate, toDate }) {
     function getOutTransfersTotal() {
       let total = 0;
@@ -793,44 +827,10 @@ function ByName(name) {
         .then(() => total);
     }
 
-    function getExpensesTotal() {
-      let total = 0;
-      let query = db.expenses.filter((expense) => !expense.deleted);
-      if (accountIDs && accountIDs.length) {
-        query = query.filter((expense) =>
-          accountIDs.includes(expense.accountID)
-        );
-      }
-      if (categoryIDs && categoryIDs.length) {
-        query = query.filter((expense) =>
-          categoryIDs.includes(expense.categoryID)
-        );
-      }
-      if (fromDate) {
-        query = query.filter(
-          ({ transactionDate }) => fromDate <= transactionDate
-        );
-      }
-      if (toDate) {
-        query = query.filter(
-          ({ transactionDate }) => transactionDate <= toDate
-        );
-      }
-      return query
-        .each((expense) => {
-          const amount = parseFloat(expense.amount, 10);
-          if (Number.isNaN(amount)) {
-            const msg = `Expense with id: ${expense.id} has non-numeric amount: ${expense.amount}`;
-            throw new ErrInvalidTransfer(msg);
-          }
-          total += expense.amount;
-        })
-        .then(() => total);
-    }
-
-    return Promise.all([getOutTransfersTotal(), getExpensesTotal()]).then(
-      ([outTransfers, expenses]) => outTransfers + expenses
-    );
+    return Promise.all([
+      getOutTransfersTotal(),
+      getTotalExpenses({ accountIDs, categoryIDs, fromDate, toDate }),
+    ]).then(([outTransfers, expenses]) => outTransfers + expenses);
   }
 
   function getTotalDeposits({ accountIDs, categoryIDs, fromDate, toDate }) {
@@ -1142,9 +1142,9 @@ function ByName(name) {
   }
 
   return {
-    dexie: db,
     deleteDB,
     deleteLocalActions,
+    dexie: db,
     getAccount,
     getAccountBalance,
     getAccounts,
@@ -1157,6 +1157,7 @@ function ByName(name) {
     getLastAction,
     getLocalActions,
     getTotalDeposits,
+    getTotalExpenses,
     getTotalWithdrawals,
     getTransfer,
     getTransfers,
