@@ -10,6 +10,7 @@ import {
 import { add } from "ionicons/icons";
 
 const buttons = [
+  { name: "Category", route: "/newCategory" },
   { name: "Account", route: "/newAccount" },
   { name: "Transfer", route: "/newTransfer", color: "tertiary" },
   { name: "Income", route: "/newIncome", color: "success" },

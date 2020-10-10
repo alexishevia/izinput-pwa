@@ -1,5 +1,7 @@
 # To-Do
 
+- [ ] display "global balance" somewhere
+- [ ] allow trasferring to multiple accounts on a single transaction
 - [ ] improve performance of transactions screen
 - [ ] show totals per category on the transactions filter screen
 - [ ] move the try/catch logic that just calls newError() inside the coreApp caller functions

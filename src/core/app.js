@@ -11,6 +11,9 @@ import GoogleSpreadsheet from "./AppendOnlyLog/GoogleSpreadsheet";
 import {
   AccountsCreateAction,
   AccountsUpdateAction,
+  CategoriesCreateAction,
+  CategoriesDeleteAction,
+  CategoriesUpdateAction,
   ExpensesCreateAction,
   ExpensesDeleteAction,
   ExpensesUpdateAction,
@@ -228,6 +231,11 @@ async function getCategories() {
   const localDB = await getLocalDB();
   const allCategories = await localDB.getCategories({ from: 0, to: 100 });
   return allCategories;
+}
+
+async function getCategory(id) {
+  const localDB = await getLocalDB();
+  return localDB.getCategory(id);
 }
 
 async function getTransfer(id) {
@@ -461,6 +469,30 @@ export default function InvoiceZero() {
     await processActions([action]);
   }
 
+  async function createCategory(categoryProps) {
+    const { name } = categoryProps;
+    const action = new CategoriesCreateAction({
+      id: uuidv4(),
+      name,
+      modifiedAt: new Date().toISOString(),
+      deleted: false,
+    });
+    await processActions([action]);
+  }
+
+  async function updateCategory(categoryProps) {
+    const data = {};
+    ["id", "name"].forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(categoryProps, key)) {
+        data[key] = categoryProps[key];
+      }
+    });
+    data.modifiedAt = new Date().toISOString();
+    data.deleted = false;
+    const action = new CategoriesUpdateAction(data);
+    await processActions([action]);
+  }
+
   async function updateAccount(accountProps) {
     const data = {};
     ["id", "name", "type", "initialBalance"].forEach((key) => {
@@ -471,6 +503,14 @@ export default function InvoiceZero() {
     data.modifiedAt = new Date().toISOString();
     data.active = true;
     const action = new AccountsUpdateAction(data);
+    await processActions([action]);
+  }
+
+  async function deleteCategory(id) {
+    const action = new CategoriesDeleteAction({
+      id,
+      modifiedAt: new Date().toISOString(),
+    });
     await processActions([action]);
   }
 
@@ -674,9 +714,11 @@ export default function InvoiceZero() {
     SYNC_START_EVENT,
     SYNC_SUCCESS_EVENT,
     createAccount,
+    createCategory,
     createExpense,
     createIncome,
     createTransfer,
+    deleteCategory,
     deleteExpense,
     deleteIncome,
     deleteLocalData,
@@ -689,6 +731,7 @@ export default function InvoiceZero() {
     getAccount,
     getAccounts,
     getCategories,
+    getCategory,
     getExpense,
     getExpenses,
     getIncome,
@@ -705,6 +748,7 @@ export default function InvoiceZero() {
     on,
     runSync,
     updateAccount,
+    updateCategory,
     updateExpense,
     updateIncome,
     updateTransfer,

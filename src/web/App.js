@@ -8,13 +8,16 @@ import Errors from "./Errors";
 import SyncStatus from "./SyncStatus";
 import MainMenu from "./MainMenu";
 import Accounts from "./screens/Accounts";
+import Categories from "./screens/Categories";
 import EditAccount from "./screens/EditAccount";
+import EditCategory from "./screens/EditCategory";
 import EditExpense from "./screens/EditExpense";
 import EditIncome from "./screens/EditIncome";
 import EditTransfer from "./screens/EditTransfer";
 import Forecast from "./screens/Forecast";
 import Home from "./screens/Home";
 import NewAccount from "./screens/NewAccount";
+import NewCategory from "./screens/NewCategory";
 import NewExpense from "./screens/NewExpense";
 import NewIncome from "./screens/NewIncome";
 import NewTransfer from "./screens/NewTransfer";
@@ -52,14 +55,6 @@ export default function App({ coreApp }) {
           <MainMenu />
           <Switch>
             <Route
-              path="/accounts"
-              component={() => (
-                <Screen>
-                  <Accounts coreApp={coreApp} />
-                </Screen>
-              )}
-            />
-            <Route
               path="/trends"
               component={() => (
                 <Screen>
@@ -76,6 +71,14 @@ export default function App({ coreApp }) {
               )}
             />
             <Route
+              path="/accounts"
+              component={() => (
+                <Screen>
+                  <Accounts coreApp={coreApp} />
+                </Screen>
+              )}
+            />
+            <Route
               path="/newAccount"
               component={({ history }) => (
                 <NewAccount coreApp={coreApp} onClose={history.goBack} />
@@ -85,6 +88,30 @@ export default function App({ coreApp }) {
               path="/editAccount/:id"
               component={({ history, match }) => (
                 <EditAccount
+                  coreApp={coreApp}
+                  id={match.params.id}
+                  onClose={history.goBack}
+                />
+              )}
+            />
+            <Route
+              path="/categories"
+              component={() => (
+                <Screen>
+                  <Categories coreApp={coreApp} />
+                </Screen>
+              )}
+            />
+            <Route
+              path="/newCategory"
+              component={({ history }) => (
+                <NewCategory coreApp={coreApp} onClose={history.goBack} />
+              )}
+            />
+            <Route
+              path="/editCategory/:id"
+              component={({ history, match }) => (
+                <EditCategory
                   coreApp={coreApp}
                   id={match.params.id}
                   onClose={history.goBack}

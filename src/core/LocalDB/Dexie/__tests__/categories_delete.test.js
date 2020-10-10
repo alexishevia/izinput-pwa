@@ -28,7 +28,7 @@ function createCategory(db, values) {
 describe("categories/delete", () => {
   const tests = [
     {
-      name: "transfer is deleted correctly",
+      name: "category is deleted correctly",
       setup: async (db) => {
         await createCategory(db, {
           id: "food",
@@ -38,7 +38,7 @@ describe("categories/delete", () => {
       },
       action: { id: "food", modifiedAt: "2020-06-14T17:50:00.000Z" },
       expect: {
-        categories: [{ id: "food", deleted: true }],
+        categories: [],
         actionsCount: 2,
         lastAction: {
           id: "food",

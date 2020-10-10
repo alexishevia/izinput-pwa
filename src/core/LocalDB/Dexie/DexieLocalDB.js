@@ -32,6 +32,18 @@ const ERR_NO_EXISTING_CATEGORY = 'No category with id: "<ID>" exists';
 const ERR_INVALID_CATEGORY = "Invalid data for category: <ERR>";
 const ERR_UPDATE_CONFLICT = "Update conflict";
 const ERR_NO_DELETE_ALLOWED = "Delete is not allowed in this action";
+const ERR_ORPHAN_DEPENDENCY =
+  "Cannot delete this <PARENT> until all related <DEPENDANTS> are deleted first";
+
+function ErrOrphanDependency({ parent, dependants }) {
+  return {
+    name: ERR_ORPHAN_DEPENDENCY,
+    message: ERR_ORPHAN_DEPENDENCY.replace("<PARENT>", parent).replace(
+      "<DEPENDANTS>",
+      dependants
+    ),
+  };
+}
 
 function ErrNoDeleteAllowed() {
   return { name: ERR_NO_DELETE_ALLOWED, message: ERR_NO_DELETE_ALLOWED };
@@ -457,33 +469,6 @@ function ByName(name) {
           case ERR_INVALID_CATEGORY:
           case ERR_NO_DELETE_ALLOWED:
             console.warn(`${err.message}. updateCategory will be ignored`);
-            return false; // expected failure
-          default:
-            throw err; // unexpected failure
-        }
-      });
-  }
-
-  function deleteCategory({ payload }) {
-    const { id, modifiedAt } = payload;
-    return getExistingCategory(id)
-      .then((existing) => {
-        checkNoUpdateConflict(existing, payload);
-        return existing;
-      })
-      .then((existing) => ({ ...existing, deleted: true, modifiedAt }))
-      .then((updated) => {
-        checkValidCategory(updated);
-        return updated;
-      })
-      .then((updated) => db.categories.put(updated))
-      .then(() => true /* success */)
-      .catch((err) => {
-        switch (err.name) {
-          case ERR_INVALID_CATEGORY:
-          case ERR_UPDATE_CONFLICT:
-          case ERR_NO_EXISTING_CATEGORY:
-            console.warn(`${err.message}. deleteCategory will be ignored`);
             return false; // expected failure
           default:
             throw err; // unexpected failure
@@ -920,6 +905,7 @@ function ByName(name) {
   // `from` and `to` are inclusive
   function getCategories({ from, to }) {
     return db.categories
+      .filter((cat) => !cat.deleted)
       .offset(from)
       .limit(to - from + 1)
       .toArray();
@@ -1045,6 +1031,49 @@ function ByName(name) {
       .toArray();
   }
 
+  function deleteCategory({ payload }) {
+    const { id, modifiedAt } = payload;
+    return getExistingCategory(id)
+      .then((existing) => {
+        checkNoUpdateConflict(existing, payload);
+        return existing;
+      })
+      .then((category) => {
+        return Promise.all([
+          Promise.resolve(category),
+          getExpenses({ categoryIDs: [category.id], from: 0, to: 1 }),
+          getIncomes({ categoryIDs: [category.id], from: 0, to: 1 }),
+        ]);
+      })
+      .then(([category, expenses, incomes]) => {
+        if (expenses.length || incomes.length) {
+          throw new ErrOrphanDependency({
+            parent: "category",
+            dependants: "transactions",
+          });
+        }
+        return category;
+      })
+      .then((existing) => ({ ...existing, deleted: true, modifiedAt }))
+      .then((updated) => {
+        checkValidCategory(updated);
+        return updated;
+      })
+      .then((updated) => db.categories.put(updated))
+      .then(() => true /* success */)
+      .catch((err) => {
+        switch (err.name) {
+          case ERR_INVALID_CATEGORY:
+          case ERR_UPDATE_CONFLICT:
+          case ERR_NO_EXISTING_CATEGORY:
+            console.warn(`${err.message}. deleteCategory will be ignored`);
+            return false; // expected failure
+          default:
+            throw err; // unexpected failure
+        }
+      });
+  }
+
   function deleteLocalActions({ from, to }) {
     return db.localActions
       .offset(from)
@@ -1153,6 +1182,7 @@ function ByName(name) {
     getAccounts,
     getActionsCount,
     getCategories,
+    getCategory,
     getExpense,
     getExpenses,
     getIncome,

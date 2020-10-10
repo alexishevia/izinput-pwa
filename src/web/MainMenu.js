@@ -17,6 +17,7 @@ const routes = [
   { name: "Trends", route: "/trends" },
   { name: "Forecast", route: "/forecast" },
   { name: "Accounts", route: "/accounts" },
+  { name: "Categories", route: "/categories" },
   { name: "Settings", route: "/settings" },
 ];
 
