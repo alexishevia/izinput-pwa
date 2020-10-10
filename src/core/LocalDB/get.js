@@ -18,7 +18,6 @@ async function getLatestLocalDBNumber() {
   const dbs = await Dexie.getDatabaseNames();
   const val =
     dbs
-      .map((db) => db.name)
       .map((name) => (localDBName.regex.exec(name) || [])[2])
       .filter(Boolean)
       .sort()
