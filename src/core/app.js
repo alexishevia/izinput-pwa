@@ -5,6 +5,7 @@ import { EventEmitter } from "events";
 import syncRecursive from "./sync/sync";
 import getLocalDB from "./LocalDB/get";
 import setLocalDB from "./LocalDB/set";
+import deleteLocalDBs from "./LocalDB/delete";
 import getCloudReplica from "./CloudReplica/get";
 import GoogleSpreadsheet from "./AppendOnlyLog/GoogleSpreadsheet";
 import {
@@ -427,6 +428,7 @@ export default function InvoiceZero() {
       });
       if (newLocalDB !== localDB) {
         setLocalDB(newLocalDB);
+        await deleteLocalDBs({ except: newLocalDB.name });
         eventEmitter.emit(CHANGE_EVENT);
       }
       onSyncSuccess();

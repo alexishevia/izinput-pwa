@@ -1,12 +1,8 @@
 import Dexie from "dexie";
 import LocalDB from "./Dexie";
 import { RULES_VERSION, STORAGE_KEY_ACTIVE_DB } from "../../constants";
+import { localDBName } from "./constants";
 import setLocalDB from "./set";
-
-const localDBName = {
-  regex: /([^_\s]+)_local_(\d+)/,
-  template: "<VERSION>_local_<NUM>",
-};
 
 function newLocalDBName(num) {
   return localDBName.template
@@ -54,24 +50,11 @@ async function getNewLocalDB() {
   return new LocalDB.ByName(name);
 }
 
-async function deleteLocalDBs({ except }) {
-  const dbs = await window.indexedDB.databases();
-  return Promise.all(
-    dbs
-      .map((db) => db.name)
-      .filter((name) => name !== except && localDBName.regex.exec(name))
-      .map(Dexie.delete)
-  );
-}
-
-export default async function getLocalDB({ forceNew, deleteOldDBs } = {}) {
+export default async function getLocalDB({ forceNew } = {}) {
   if (forceNew) {
     return getNewLocalDB();
   }
   const localDB = (await getActiveLocalDB()) || (await getLatestLocalDB());
   setLocalDB(localDB);
-  if (deleteOldDBs) {
-    await deleteLocalDBs({ except: localDB.name });
-  }
   return localDB;
 }
