@@ -1112,9 +1112,6 @@ function ByName(name) {
                   }
                 })
                 .then((success) => {
-                  if (!success) {
-                    return Promise.resolve();
-                  }
                   const actionStr = JSON.stringify(action);
                   return Promise.all(
                     [
@@ -1126,9 +1123,15 @@ function ByName(name) {
                         return db.localActions.put(actionStr);
                       },
                       function updateLastAction() {
+                        if (!success && !actionsAreRemote) {
+                          return Promise.resolve();
+                        }
                         return db.meta.put(actionStr, "lastAction");
                       },
                       function updateActionsCount() {
+                        if (!success && !actionsAreRemote) {
+                          return Promise.resolve();
+                        }
                         actionsCount += 1;
                         return db.meta.put(actionsCount, "actionsCount");
                       },
