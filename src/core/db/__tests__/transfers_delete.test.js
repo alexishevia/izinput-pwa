@@ -2,8 +2,9 @@ import { v1 as uuid } from "uuid";
 import {
   AccountsCreateAction,
   TransfersCreateAction,
-} from "../../../actionCreators";
-import LocalDB from "..";
+  TransfersDeleteAction,
+} from "../../actionCreators";
+import LocalDB from "../db";
 
 /* --- helper functions --- */
 
@@ -14,6 +15,7 @@ function Account(values) {
     name: "testsAccount",
     initialBalance: 0,
     modifiedAt: now,
+    active: true,
     ...values,
   };
 }
@@ -45,47 +47,10 @@ function createTransfer(db, values) {
 
 /* --- test start --- */
 
-describe("transfers/create", () => {
+describe("transfers/delete", () => {
   const tests = [
     {
-      name: "new transfer is created correctly",
-      setup: async (db) => {
-        await createAccount(db, {
-          id: "savings",
-          initialBalance: 100,
-        });
-        await createAccount(db, { id: "food" });
-      },
-      action: { fromID: "savings", toID: "food", amount: 30 },
-      expect: {
-        balances: { savings: 70, food: 30 },
-        actionsCount: 3,
-        lastAction: { fromID: "savings", toID: "food" },
-      },
-    },
-    {
-      name: "using a timezone other than UTC is ignored",
-      setup: async (db) => {
-        await createAccount(db, {
-          id: "savings",
-          initialBalance: 100,
-        });
-        await createAccount(db, { id: "food" });
-      },
-      action: {
-        fromID: "savings",
-        toID: "food",
-        amount: 30,
-        modifiedAt: "2020-06-20T17:00:00.000-05:00",
-      }, // using -05:00
-      expect: {
-        balances: { savings: 100, food: 0 },
-        actionsCount: 2,
-        lastAction: { id: "food" },
-      },
-    },
-    {
-      name: "transfer with duplicate id is ignored",
+      name: "transfer is deleted correctly",
       setup: async (db) => {
         await createAccount(db, { id: "savings", initialBalance: 100 });
         await createAccount(db, { id: "food" });
@@ -94,63 +59,69 @@ describe("transfers/create", () => {
           fromID: "savings",
           toID: "food",
           amount: 50,
+          modifiedAt: "2020-06-14T10:00:00.000Z",
         });
       },
-      action: { id: "buyingFood", fromID: "savings", toID: "food", amount: 30 },
+      action: { id: "buyingFood", modifiedAt: "2020-06-14T17:50:00.000Z" },
       expect: {
-        balances: { savings: 50, food: 50 },
-        actionsCount: 3,
+        balances: { savings: 100, food: 0 },
+        actionsCount: 4,
         lastAction: {
           id: "buyingFood",
-          fromID: "savings",
-          toID: "food",
-          amount: 50,
+          modifiedAt: "2020-06-14T17:50:00.000Z",
         },
       },
     },
     {
-      name: "transfer with invalid amount is ignored",
-      setup: async (db) => {
-        await createAccount(db, { id: "savings", initialBalance: 100 });
-        await createAccount(db, { id: "food" });
-      },
-      action: {
-        id: "invalidAmount",
-        fromID: "savings",
-        toID: "food",
-        amount: -50,
-      },
-      expect: {
-        balances: { savings: 100, food: 0 },
-        actionsCount: 2,
-        lastAction: { id: "food" },
-      },
-    },
-    {
-      name: "transfer using non-existent account is ignored",
-      action: { fromID: "foo", toID: "bar", amount: 50 },
+      name: "action with new id is ignored",
+      action: { id: "computer", modifiedAt: "2020-06-14T17:50:00.000Z" },
       expect: {
         balances: {},
         actionsCount: 0,
       },
     },
     {
-      name: "transfer using deleted: true is ignored",
+      name: "action using a timezone other than UTC is ignored",
       setup: async (db) => {
-        await createAccount(db, {
-          id: "savings",
-          initialBalance: 100,
-        });
+        await createAccount(db, { id: "savings", initialBalance: 100 });
         await createAccount(db, { id: "food" });
+        await createTransfer(db, {
+          id: "buyingFood",
+          fromID: "savings",
+          toID: "food",
+          amount: 50,
+          modifiedAt: "2020-06-14T10:00:00.000Z",
+        });
       },
-      action: { fromID: "savings", toID: "food", amount: 30, deleted: true },
+      action: {
+        id: "buyingFood",
+        modifiedAt: "2020-06-20T17:00:00.000-05:00", // using -05:00
+      },
       expect: {
-        balances: {
-          savings: 100,
-          food: 0,
-        },
-        actionsCount: 2,
-        lastAction: { id: "food" },
+        balances: { savings: 50, food: 50 },
+        actionsCount: 3,
+        lastAction: { id: "buyingFood", amount: 50 },
+      },
+    },
+    {
+      name:
+        "action with modifiedAt earlier than existing modifiedAt is ignored",
+      setup: async (db) => {
+        await createAccount(db, { id: "savings", initialBalance: 100 });
+        await createAccount(db, { id: "food" });
+        await createTransfer(db, {
+          id: "buyingFood",
+          fromID: "savings",
+          toID: "food",
+          amount: 50,
+          modifiedAt: "2020-06-14T10:00:00.000Z",
+        });
+      },
+      action: { id: "buyingFood", modifiedAt: "2020-06-14T05:00:00.000Z" },
+      expect: {
+        balances: { savings: 50, food: 50 },
+        actionsCount: 3,
+        lastAction: { id: "buyingFood", amount: 50 },
       },
     },
   ];
@@ -165,7 +136,7 @@ describe("transfers/create", () => {
         }
 
         // run action
-        const action = new TransfersCreateAction(new Transfer(test.action));
+        const action = new TransfersDeleteAction(test.action);
         await localDB.processActions([action]);
 
         // run balances assertions

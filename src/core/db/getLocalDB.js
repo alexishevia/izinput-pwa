@@ -1,8 +1,8 @@
-import Dexie from "dexie";
-import LocalDB from "./Dexie";
+import Dexie from "../../Dexie";
+import db from "./db";
 import { RULES_VERSION, STORAGE_KEY_ACTIVE_DB } from "../../constants";
 import { localDBName } from "./constants";
-import setLocalDB from "./set";
+import setLocalDB from "./setLocalDB";
 
 function newLocalDBName(num) {
   return localDBName.template
@@ -37,17 +37,17 @@ async function getNewLocalDBName() {
 
 async function getActiveLocalDB() {
   const name = localStorage.getItem(STORAGE_KEY_ACTIVE_DB);
-  return name ? new LocalDB.ByName(name) : null;
+  return name ? new db.ByName(name) : null;
 }
 
 async function getLatestLocalDB() {
   const name = await getLatestLocalDBName();
-  return new LocalDB.ByName(name);
+  return new db.ByName(name);
 }
 
 async function getNewLocalDB() {
   const name = await getNewLocalDBName();
-  return new LocalDB.ByName(name);
+  return new db.ByName(name);
 }
 
 export default async function getLocalDB({ forceNew } = {}) {

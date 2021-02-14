@@ -1,19 +1,9 @@
 /*
- * This is a LocalDB implementation backed up by Dexie - https://dexie.org
+ * This is a db implementation backed up by Dexie - https://dexie.org
  */
 
-import Dexie from "dexie";
-import shimIndexedDb from "indexeddbshim";
-import Validation from "../../../helpers/Validation";
-
-// fix to get Dexie working in environments with no indexedDB support
-if (!window.indexedDB) {
-  const shim = {};
-  shimIndexedDb(shim, { checkOrigin: false });
-  const { indexedDB, IDBKeyRange } = shim;
-  Dexie.dependencies.indexedDB = indexedDB;
-  Dexie.dependencies.IDBKeyRange = IDBKeyRange;
-}
+import Dexie from "../../Dexie";
+import Validation from "../../helpers/Validation";
 
 const ERR_EXISTING_INCOME = 'A income with id: "<ID>" exists';
 const ERR_NO_EXISTING_INCOME = 'No income with id: "<ID>" exists';

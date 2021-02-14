@@ -1,11 +1,13 @@
+/* eslint no-inner-declarations:[0] */
+
 import { v4 as uuidv4 } from "uuid";
 import {
   AccountsCreateAction,
   TransfersCreateAction,
 } from "../../actionCreators";
 import sync from "../sync";
-import LocalDB from "../../LocalDB/Dexie";
-import CloudReplica from "../../CloudReplica/Dexie";
+import cloneDB from "../../db/clone";
+import DB from "../../db/db";
 import AppendOnlyLog from "../../AppendOnlyLog/InMemoryLog";
 
 /* --- helper functions --- */
@@ -23,9 +25,8 @@ function Account(values) {
   };
 }
 
-function createAccount(db, values) {
-  const action = new AccountsCreateAction(new Account(values));
-  return db.processActions([action]);
+function createAccount(values) {
+  return new AccountsCreateAction(new Account(values));
 }
 
 function Transfer(values) {
@@ -43,9 +44,14 @@ function Transfer(values) {
   };
 }
 
-function createTransfer(db, values) {
-  const action = new TransfersCreateAction(new Transfer(values));
-  return db.processActions([action]);
+function createTransfer(values) {
+  return new TransfersCreateAction(new Transfer(values));
+}
+
+async function cleanup(dbs) {
+  return dbs.reduce((prevStep, db) => {
+    return prevStep.then(() => (db ? db.deleteDB() : Promise.resolve()));
+  }, Promise.resolve());
 }
 
 /* --- test start --- */
@@ -53,89 +59,118 @@ function createTransfer(db, values) {
 describe("sync", () => {
   const tests = [
     {
-      name: "sync a new localDB to an empty cloudReplica",
-      setup: async () => {
-        return {
-          localDB: await new LocalDB.ByName(uuidv4()),
-          cloudReplica: await new CloudReplica.ByName(uuidv4()),
-          appendOnlyLog: await new AppendOnlyLog(),
-        };
-      },
-      expect: {
-        balances: {},
-      },
-    },
-    {
-      name: "sync existing app to a new app",
-      setup: async () => {
-        // the old app and new app will share the same append-only log
-        const appendOnlyLog = await new AppendOnlyLog();
+      name: "sync two apps, where one has data and the other is empty",
+      setup: async ({ dbARun, dbASync, dbBSync }) => {
+        // add data to dbA
+        await dbARun([
+          createAccount({ id: "savings", initialBalance: 100 }),
+          createAccount({ id: "food" }),
+          createTransfer({ fromID: "savings", toID: "food", amount: 50 }),
+        ]);
 
-        // old app
-        const oldLocalDB = await new LocalDB.ByName(uuidv4());
-        await createAccount(oldLocalDB, { id: "savings", initialBalance: 100 });
-        await createAccount(oldLocalDB, { id: "food" });
-        await createTransfer(oldLocalDB, {
-          fromID: "savings",
-          toID: "food",
-          amount: 50,
-        });
+        // sync dbA to the append-only log
+        await dbASync();
 
-        // sync old app to the append-only log
-        await sync({
-          localDB: oldLocalDB,
-          cloudReplica: await new CloudReplica.ByName(uuidv4()),
-          appendOnlyLog,
-        });
-
-        return {
-          localDB: await new LocalDB.ByName(uuidv4()),
-          cloudReplica: await new CloudReplica.ByName(uuidv4()),
-          appendOnlyLog,
-        };
+        // sync dbB to the append-only log
+        await dbBSync();
       },
       expect: {
         balances: { savings: 50, food: 50 },
+      },
+    },
+    {
+      name: "sync two apps with data",
+      setup: async ({ dbARun, dbASync, dbBRun, dbBSync }) => {
+        // add data to dbA
+        await dbARun([
+          createAccount({ id: "savings", initialBalance: 100 }),
+          createAccount({ id: "food", initialBalance: 0 }),
+        ]);
+
+        // sync dbA to the append-only log
+        await dbASync();
+
+        // sync dbB to the append-only log
+        await dbBSync();
+
+        // run operation on dbA
+        await dbARun([
+          createTransfer({ fromID: "savings", toID: "food", amount: 20 }),
+        ]);
+
+        // run operation on dbB
+        await dbBRun([
+          createTransfer({ fromID: "savings", toID: "food", amount: 50 }),
+        ]);
+
+        // sync both apps
+        await dbASync();
+        await dbBSync();
+        await dbASync();
+      },
+      expect: {
+        balances: { savings: 30, food: 70 },
       },
     },
   ];
 
   tests.forEach((test) => {
     it(test.name, async () => {
-      let localDB;
-      let syncedLocalDB;
-      let cloudReplica;
-      let appendOnlyLog;
+      let dbA;
+      let dbB;
+      const dbACloudReplica = await new DB.ByName(uuidv4());
+      const dbBCloudReplica = await new DB.ByName(uuidv4());
+      const dbsToCleanup = [dbACloudReplica, dbBCloudReplica];
+      const appendOnlyLog = await new AppendOnlyLog();
+
+      function dbARun(actions) {
+        return dbA.processActions(actions);
+      }
+
+      async function dbASync() {
+        dbA = await sync({
+          cloudReplica: dbACloudReplica,
+          localDB: dbA,
+          appendOnlyLog,
+          cloneDB,
+        });
+        dbsToCleanup.push(dbA);
+      }
+
+      function dbBRun(actions) {
+        return dbB.processActions(actions);
+      }
+
+      async function dbBSync() {
+        dbB = await sync({
+          cloudReplica: dbBCloudReplica,
+          localDB: dbB,
+          appendOnlyLog,
+          cloneDB,
+        });
+        dbsToCleanup.push(dbB);
+      }
 
       try {
         // setup
-        ({ localDB, cloudReplica, appendOnlyLog } = await test.setup());
-
-        // run sync
-        syncedLocalDB = await sync({
-          localDB,
-          cloudReplica,
-          appendOnlyLog,
-          newLocalDB: () => new LocalDB.ByName(uuidv4()),
-        });
+        dbA = await new DB.ByName(uuidv4());
+        dbB = await new DB.ByName(uuidv4());
+        dbsToCleanup.push(dbA, dbB);
+        await test.setup({ dbARun, dbASync, dbBRun, dbBSync });
 
         // run balances assertions
         /* eslint no-restricted-syntax: [0] */
         for (const [key, val] of Object.entries(test.expect.balances)) {
-          const gotBalance = await syncedLocalDB.getAccountBalance(key);
-          expect(gotBalance).toEqual(val);
+          const balanceA = await dbA.getAccountBalance(key);
+          expect(balanceA).toEqual(val);
+
+          const balanceB = await dbB.getAccountBalance(key);
+          expect(balanceB).toEqual(val);
         }
+
+        await cleanup(dbsToCleanup);
       } catch (err) {
-        // cleanup
-        if (localDB) {
-          await localDB.deleteDB();
-        }
-        if (syncedLocalDB) {
-          await syncedLocalDB.deleteDB();
-        }
-        if (cloudReplica) {
-          await cloudReplica.deleteDB();
-        }
+        await cleanup(dbsToCleanup);
         throw err;
       }
     });

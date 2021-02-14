@@ -1,12 +1,11 @@
 import { v1 as uuid } from "uuid";
 import {
   AccountsCreateAction,
-  CategoriesCreateAction,
-  ExpensesCreateAction,
-  ExpensesDeleteAction,
-  ExpensesUpdateAction,
-} from "../../../actionCreators";
-import LocalDB from "..";
+  TransfersCreateAction,
+  TransfersDeleteAction,
+  TransfersUpdateAction,
+} from "../../actionCreators";
+import LocalDB from "../db";
 
 /* --- helper functions --- */
 
@@ -27,30 +26,14 @@ function createAccount(db, values) {
   return db.processActions([action]);
 }
 
-function Category(values) {
+function Transfer(values) {
   const now = new Date().toISOString();
   return {
     id: uuid(),
-    name: "testscategory",
-    modifiedAt: now,
-    deleted: false,
-    ...values,
-  };
-}
-
-function createCategory(db, values) {
-  const action = new CategoriesCreateAction(new Category(values));
-  return db.processActions([action]);
-}
-
-function Expense(values) {
-  const now = new Date().toISOString();
-  return {
-    id: uuid(),
-    accountID: uuid(),
-    categoryID: uuid(),
+    fromID: uuid(),
+    toID: uuid(),
     amount: 0,
-    description: "test expense",
+    description: "test transfer",
     transactionDate: now.split("T")[0],
     modifiedAt: now,
     deleted: false,
@@ -58,114 +41,98 @@ function Expense(values) {
   };
 }
 
-function createExpense(db, values) {
-  const action = new ExpensesCreateAction(new Expense(values));
+function createTransfer(db, values) {
+  const action = new TransfersCreateAction(new Transfer(values));
   return db.processActions([action]);
 }
 
-function deleteExpense(db, values) {
-  const action = new ExpensesDeleteAction(values);
+function deleteTransfer(db, values) {
+  const action = new TransfersDeleteAction(values);
   return db.processActions([action]);
 }
 
 /* --- test start --- */
 
-describe("expenses/update", () => {
+describe("transfers/update", () => {
   const tests = [
     {
-      name: "expense is updated correctly",
+      name: "transfer is updated correctly",
       setup: async (db) => {
         await createAccount(db, { id: "savings", initialBalance: 100 });
-        await createCategory(db, { id: "freelance" });
-        await createExpense(db, {
-          id: "food",
-          accountID: "savings",
-          categoryID: "freelance",
+        await createAccount(db, { id: "food" });
+        await createTransfer(db, {
+          id: "buyingFood",
+          fromID: "savings",
+          toID: "food",
           amount: 50,
           modifiedAt: "2020-06-14T10:00:00.000Z",
         });
       },
       action: {
-        id: "food",
+        id: "buyingFood",
         amount: 10,
-        modifiedAt: "2020-06-14T17:50:00.000Z",
+        modifiedAt: "2020-06-14T10:50:00.000Z",
       },
       expect: {
-        balances: { savings: 90 },
+        balances: { savings: 90, food: 10 },
         actionsCount: 4,
-        lastAction: { id: "food", amount: 10 },
+        lastAction: {
+          id: "buyingFood",
+          amount: 10,
+          modifiedAt: "2020-06-14T10:50:00.000Z",
+        },
       },
     },
     {
       name: "action using a timezone other than UTC is ignored",
       setup: async (db) => {
         await createAccount(db, { id: "savings", initialBalance: 100 });
-        await createCategory(db, { id: "freelance" });
-        await createExpense(db, {
-          id: "food",
-          accountID: "savings",
-          categoryID: "freelance",
+        await createAccount(db, { id: "food" });
+        await createTransfer(db, {
+          id: "buyingFood",
+          fromID: "savings",
+          toID: "food",
           amount: 50,
           modifiedAt: "2020-06-14T10:00:00.000Z",
         });
       },
       action: {
-        id: "food",
+        id: "buyingFood",
         amount: 10,
         modifiedAt: "2020-06-20T17:00:00.000-05:00", // using -05:00
       },
       expect: {
-        balances: { savings: 50 },
+        balances: { savings: 50, food: 50 },
         actionsCount: 3,
-        lastAction: { id: "food", amount: 50 },
+        lastAction: { id: "buyingFood", amount: 50 },
       },
     },
     {
       name: "action with new id is ignored",
-      setup: async (db) => {
-        await createAccount(db, { id: "savings", initialBalance: 100 });
-        await createCategory(db, { id: "freelance" });
-        await createExpense(db, {
-          id: "food",
-          accountID: "savings",
-          categoryID: "freelance",
-          amount: 50,
-          modifiedAt: "2020-06-14T10:00:00.000Z",
-        });
-      },
-      action: {
-        id: "newID",
-        amount: 10,
-        modifiedAt: "2020-06-20T17:00:00.000-05:00", // using -05:00
-      },
+      action: { id: "buyingFood", amount: 10 },
       expect: {
-        balances: { savings: 50 },
-        actionsCount: 3,
-        lastAction: { id: "food", amount: 50 },
+        balances: {},
+        actionsCount: 0,
       },
     },
     {
       name: "action without valid modifiedAt is ignored",
       setup: async (db) => {
         await createAccount(db, { id: "savings", initialBalance: 100 });
-        await createCategory(db, { id: "freelance" });
-        await createExpense(db, {
-          id: "food",
-          accountID: "savings",
-          categoryID: "freelance",
+        await createAccount(db, { id: "food" });
+        await createTransfer(db, {
+          id: "buyingFood",
+          fromID: "savings",
+          toID: "food",
           amount: 50,
           modifiedAt: "2020-06-14T10:00:00.000Z",
         });
       },
-      action: {
-        id: "food",
-        amount: 10,
-        modifiedAt: "hello", // using -05:00
-      },
+      action: { id: "buyingFood", amount: 10, modifiedAt: "hello" },
       expect: {
-        balances: { savings: 50 },
+        balances: { savings: 50, food: 50 },
         actionsCount: 3,
-        lastAction: { id: "food", amount: 50 },
+        lastAction: { id: "buyingFood", amount: 50 },
       },
     },
     {
@@ -173,77 +140,77 @@ describe("expenses/update", () => {
         "action with modifiedAt earlier than existing modifiedAt is ignored",
       setup: async (db) => {
         await createAccount(db, { id: "savings", initialBalance: 100 });
-        await createCategory(db, { id: "freelance" });
-        await createExpense(db, {
-          id: "food",
-          accountID: "savings",
-          categoryID: "freelance",
+        await createAccount(db, { id: "food" });
+        await createTransfer(db, {
+          id: "buyingFood",
+          fromID: "savings",
+          toID: "food",
           amount: 50,
           modifiedAt: "2020-06-14T10:00:00.000Z",
         });
       },
       action: {
-        id: "food",
+        id: "buyingFood",
         amount: 10,
         modifiedAt: "2020-06-14T05:00:00.000Z",
       },
       expect: {
-        balances: { savings: 50 },
+        balances: { savings: 50, food: 50 },
         actionsCount: 3,
-        lastAction: { id: "food", amount: 50 },
+        lastAction: { id: "buyingFood", amount: 50 },
       },
     },
     {
       name:
-        "action with 'deleted: true' is ignored (expenses/delete must be used instead)",
+        "action with 'deleted: true' is ignored (transfers/delete must be used instead)",
       setup: async (db) => {
         await createAccount(db, { id: "savings", initialBalance: 100 });
-        await createCategory(db, { id: "freelance" });
-        await createExpense(db, {
-          id: "food",
-          accountID: "savings",
-          categoryID: "freelance",
+        await createAccount(db, { id: "food" });
+        await createTransfer(db, {
+          id: "buyingFood",
+          fromID: "savings",
+          toID: "food",
           amount: 50,
           modifiedAt: "2020-06-14T10:00:00.000Z",
         });
       },
       action: {
-        id: "food",
-        modifiedAt: "2020-06-14T17:50:00.000Z",
+        id: "buyingFood",
+        amount: 10,
         deleted: true,
       },
       expect: {
-        balances: { savings: 50 },
+        balances: { savings: 50, food: 50 },
         actionsCount: 3,
-        lastAction: { id: "food", amount: 50 },
+        lastAction: { id: "buyingFood", amount: 50 },
       },
     },
     {
-      name: "running an update on a deleted expense 'un-deletes' the expense",
+      name: "running an update on a deleted transfer 'un-deletes' the transfer",
       setup: async (db) => {
         await createAccount(db, { id: "savings", initialBalance: 100 });
-        await createCategory(db, { id: "freelance" });
-        await createExpense(db, {
-          id: "food",
-          accountID: "savings",
-          categoryID: "freelance",
+        await createAccount(db, { id: "food" });
+        await createTransfer(db, {
+          id: "buyingFood",
+          fromID: "savings",
+          toID: "food",
           amount: 50,
           modifiedAt: "2020-06-14T10:00:00.000Z",
         });
-        await deleteExpense(db, {
-          id: "food",
-          modifiedAt: "2020-06-14T15:00:00.000Z",
+        await deleteTransfer(db, {
+          id: "buyingFood",
+          modifiedAt: "2020-06-14T20:00:00.000Z",
         });
       },
       action: {
-        id: "food",
+        id: "buyingFood",
         amount: 10,
-        modifiedAt: "2020-06-14T17:50:00.000Z",
+        modifiedAt: "2020-06-14T22:00:00.000Z",
       },
       expect: {
-        balances: { savings: 90 },
+        balances: { savings: 90, food: 10 },
         actionsCount: 5,
-        lastAction: { id: "food", amount: 10 },
+        lastAction: { id: "buyingFood", amount: 10 },
       },
     },
   ];
@@ -258,7 +225,7 @@ describe("expenses/update", () => {
         }
 
         // run action
-        const action = new ExpensesUpdateAction(test.action);
+        const action = new TransfersUpdateAction(test.action);
         await localDB.processActions([action]);
 
         // run balances assertions

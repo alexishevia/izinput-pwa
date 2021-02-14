@@ -1,73 +1,47 @@
 import { v1 as uuid } from "uuid";
 import {
-  AccountsCreateAction,
-  TransfersCreateAction,
-  TransfersDeleteAction,
-} from "../../../actionCreators";
-import LocalDB from "..";
+  CategoriesCreateAction,
+  CategoriesDeleteAction,
+} from "../../actionCreators";
+import LocalDB from "../db";
 
 /* --- helper functions --- */
 
-function Account(values) {
+function Category(values) {
   const now = new Date().toISOString();
   return {
     id: uuid(),
-    name: "testsAccount",
-    initialBalance: 0,
-    modifiedAt: now,
-    active: true,
-    ...values,
-  };
-}
-
-function createAccount(db, values) {
-  const action = new AccountsCreateAction(new Account(values));
-  return db.processActions([action]);
-}
-
-function Transfer(values) {
-  const now = new Date().toISOString();
-  return {
-    id: uuid(),
-    fromID: uuid(),
-    toID: uuid(),
-    amount: 0,
-    description: "test transfer",
-    transactionDate: now.split("T")[0],
+    name: "testsCategory",
     modifiedAt: now,
     deleted: false,
     ...values,
   };
 }
 
-function createTransfer(db, values) {
-  const action = new TransfersCreateAction(new Transfer(values));
+function createCategory(db, values) {
+  const action = new CategoriesCreateAction(new Category(values));
   return db.processActions([action]);
 }
 
 /* --- test start --- */
 
-describe("transfers/delete", () => {
+describe("categories/delete", () => {
   const tests = [
     {
-      name: "transfer is deleted correctly",
+      name: "category is deleted correctly",
       setup: async (db) => {
-        await createAccount(db, { id: "savings", initialBalance: 100 });
-        await createAccount(db, { id: "food" });
-        await createTransfer(db, {
-          id: "buyingFood",
-          fromID: "savings",
-          toID: "food",
-          amount: 50,
+        await createCategory(db, {
+          id: "food",
+          name: "Food",
           modifiedAt: "2020-06-14T10:00:00.000Z",
         });
       },
-      action: { id: "buyingFood", modifiedAt: "2020-06-14T17:50:00.000Z" },
+      action: { id: "food", modifiedAt: "2020-06-14T17:50:00.000Z" },
       expect: {
-        balances: { savings: 100, food: 0 },
-        actionsCount: 4,
+        categories: [],
+        actionsCount: 2,
         lastAction: {
-          id: "buyingFood",
+          id: "food",
           modifiedAt: "2020-06-14T17:50:00.000Z",
         },
       },
@@ -76,52 +50,46 @@ describe("transfers/delete", () => {
       name: "action with new id is ignored",
       action: { id: "computer", modifiedAt: "2020-06-14T17:50:00.000Z" },
       expect: {
-        balances: {},
+        categories: [],
         actionsCount: 0,
       },
     },
     {
       name: "action using a timezone other than UTC is ignored",
       setup: async (db) => {
-        await createAccount(db, { id: "savings", initialBalance: 100 });
-        await createAccount(db, { id: "food" });
-        await createTransfer(db, {
-          id: "buyingFood",
-          fromID: "savings",
-          toID: "food",
-          amount: 50,
+        await createCategory(db, {
+          id: "food",
+          name: "Food",
           modifiedAt: "2020-06-14T10:00:00.000Z",
         });
       },
       action: {
-        id: "buyingFood",
+        id: "food",
         modifiedAt: "2020-06-20T17:00:00.000-05:00", // using -05:00
       },
       expect: {
         balances: { savings: 50, food: 50 },
-        actionsCount: 3,
-        lastAction: { id: "buyingFood", amount: 50 },
+        categories: [{ id: "food", deleted: false }],
+        actionsCount: 1,
+        lastAction: { id: "food", deleted: false },
       },
     },
     {
       name:
         "action with modifiedAt earlier than existing modifiedAt is ignored",
       setup: async (db) => {
-        await createAccount(db, { id: "savings", initialBalance: 100 });
-        await createAccount(db, { id: "food" });
-        await createTransfer(db, {
-          id: "buyingFood",
-          fromID: "savings",
-          toID: "food",
-          amount: 50,
+        await createCategory(db, {
+          id: "food",
+          name: "Food",
           modifiedAt: "2020-06-14T10:00:00.000Z",
         });
       },
-      action: { id: "buyingFood", modifiedAt: "2020-06-14T05:00:00.000Z" },
+      action: { id: "food", modifiedAt: "2020-06-14T05:00:00.000Z" },
       expect: {
         balances: { savings: 50, food: 50 },
-        actionsCount: 3,
-        lastAction: { id: "buyingFood", amount: 50 },
+        categories: [{ id: "food", deleted: false }],
+        actionsCount: 1,
+        lastAction: { id: "food", deleted: false },
       },
     },
   ];
@@ -136,15 +104,18 @@ describe("transfers/delete", () => {
         }
 
         // run action
-        const action = new TransfersDeleteAction(test.action);
+        const action = new CategoriesDeleteAction(test.action);
         await localDB.processActions([action]);
 
-        // run balances assertions
-        /* eslint no-restricted-syntax: [0] */
-        for (const [key, val] of Object.entries(test.expect.balances)) {
-          const gotBalance = await localDB.getAccountBalance(key);
-          expect(gotBalance).toEqual(val);
-        }
+        // run categories assertions
+        const gotCategories = await localDB.getCategories({ from: 0, to: 50 });
+        expect(gotCategories).toHaveLength(test.expect.categories.length);
+        test.expect.categories.forEach((expectCategory, i) => {
+          const gotCategory = gotCategories[i];
+          Object.entries(expectCategory).forEach(([key, val]) => {
+            expect(gotCategory[key]).toEqual(val);
+          });
+        });
 
         // run actionsCount assertions
         const gotActionsCount = await localDB.getActionsCount();

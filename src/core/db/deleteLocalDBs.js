@@ -1,4 +1,4 @@
-import Dexie from "dexie";
+import Dexie from "../../Dexie";
 import { localDBName } from "./constants";
 
 export default async function deleteLocalDBs({ except }) {

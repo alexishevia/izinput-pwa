@@ -2,8 +2,8 @@ import { v1 as uuid } from "uuid";
 import {
   AccountsCreateAction,
   AccountsUpdateAction,
-} from "../../../actionCreators";
-import LocalDB from "..";
+} from "../../actionCreators";
+import LocalDB from "../db";
 
 /* --- helper functions --- */
 

@@ -1,34 +1,34 @@
 import { v1 as uuid } from "uuid";
-import { CategoriesCreateAction } from "../../../actionCreators";
-import LocalDB from "..";
+import { AccountsCreateAction } from "../../actionCreators";
+import LocalDB from "../db";
 
 /* --- helper functions --- */
 
-function Category(values) {
+function Account(values) {
   const now = new Date().toISOString();
   return {
     id: uuid(),
-    name: "testscategory",
+    name: "testsAccount",
+    initialBalance: 0,
     modifiedAt: now,
-    deleted: false,
     ...values,
   };
 }
 
-function createCategory(db, values) {
-  const action = new CategoriesCreateAction(new Category(values));
+function createAccount(db, values) {
+  const action = new AccountsCreateAction(new Account(values));
   return db.processActions([action]);
 }
 
 /* --- test start --- */
 
-describe("categories/create", () => {
+describe("accounts/create", () => {
   const tests = [
     {
-      name: "new category is created correctly",
+      name: "new account is created correctly",
       action: { id: "candy", initialBalance: 0 },
       expect: {
-        categories: [{ id: "candy", initialBalance: 0 }],
+        accounts: [{ id: "candy", initialBalance: 0 }],
         actionsCount: 1,
         lastAction: { id: "candy", initialBalance: 0 },
       },
@@ -37,28 +37,20 @@ describe("categories/create", () => {
       name: "using a timezone other than UTC is ignored",
       action: { modifiedAt: "2020-06-20T17:00:00.000-05:00" }, // using -05:00
       expect: {
-        categories: [],
+        accounts: [],
         actionsCount: 0,
       },
     },
     {
-      name: "category with duplicate id is ignored",
+      name: "account with duplicate id is ignored",
       setup: async (db) => {
-        await createCategory(db, { id: "milk", name: "Milk" });
+        await createAccount(db, { id: "milk", name: "Milk" });
       },
       action: { id: "milk", name: "2%" },
       expect: {
-        categories: [{ id: "milk", name: "Milk" }],
+        accounts: [{ id: "milk", name: "Milk" }],
         actionsCount: 1,
         lastAction: { id: "milk", name: "Milk" },
-      },
-    },
-    {
-      name: "category using deleted: true is ignored",
-      action: { id: "electronics", name: "Electronics", deleted: true },
-      expect: {
-        categories: [],
-        actionsCount: 0,
       },
     },
   ];
@@ -73,16 +65,16 @@ describe("categories/create", () => {
         }
 
         // run action
-        const action = new CategoriesCreateAction(new Category(test.action));
+        const action = new AccountsCreateAction(new Account(test.action));
         await localDB.processActions([action]);
 
-        // run categories assertions
-        const gotCategories = await localDB.getCategories({ from: 0, to: 50 });
-        expect(gotCategories).toHaveLength(test.expect.categories.length);
-        test.expect.categories.forEach((expectCategory, i) => {
-          const gotCategory = gotCategories[i];
-          Object.entries(expectCategory).forEach(([key, val]) => {
-            expect(gotCategory[key]).toEqual(val);
+        // run accounts assertions
+        const gotAccounts = await localDB.getAccounts({ from: 0, to: 50 });
+        expect(gotAccounts).toHaveLength(test.expect.accounts.length);
+        test.expect.accounts.forEach((expectAccount, i) => {
+          const gotAccount = gotAccounts[i];
+          Object.entries(expectAccount).forEach(([key, val]) => {
+            expect(gotAccount[key]).toEqual(val);
           });
         });
 

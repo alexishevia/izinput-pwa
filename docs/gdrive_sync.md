@@ -45,14 +45,9 @@ This app keeps two "types" of indexedDB databases:
 
 ### Cloud Replica
 
-The "cloudReplica" database keeps a local copy of the Google spreadsheet.
+The "cloudReplica" only processes events from the Google spreadsheet.
 
-It is used for performance reasons, to avoid having to re-download the spreadsheet multiple times.
-
-The "cloudReplica" database has a single store:
-
-- actions
-  Every action from the Google spreadsheet is downloaded to `cloudReplica.actions`.
+It is used for performance reasons, to avoid having to re-download and re-process the spreadsheet multiple times.
 
 ### Local DBs
 
@@ -67,19 +62,7 @@ These databases are called `<version>_local_<N>`, where:
 Whenever the app runs, it connects to the "active" local DB.
 Note: `localStorage.activeLocalDB` keeps track of the local DB that is considered "active". If no `localStorage.activeLocalDB` exists, a new local DB must be generated as described in the "Generating a new local DB" section.
 
-Local DBs have the following stores:
-
-- localActions
-  Actions that have been created locally, but not yet uploaded to the Google Spreadsheet.
-- meta
-  Keeps track of processing info, to be able to detect conflicts. Some of the documents found in this store are:
-  - actionsCount: amount of actions that have been processed.
-  - lastAction: the last action (the full string) that was processed.
-  - initialSavings: amount money you had before starting to use IZ.
-- transfers
-  Transfers that have been processed by the app.
-- categories
-  Financial categories that have been processed by the app.
+Local DBs process local events immediately, without waiting for them to be uploaded to the Google spreadsheet (offline first).
 
 ### Generating a new local DB
 
@@ -87,14 +70,12 @@ To generate a new local DB:
 
 1. Generate a new `<version>_local_<N>` indexedDB database, where:
    - `<version>` should be the version of rules the app is currently running.
-   - `<N>` should be the current `<N>` + 1.
+   - `<N>` should be the current `<N>` + 1.  
      Note: If `<version>_local_<N+1>` DB exists, try `<version>_local_<N+2>`, `<version>_local_<N+3>`, etc. until an unused name is found.
-2. For every action found in `cloudReplica.actions`:
-   - Process the action as described in the "Processing Actions" section, with the exception that the action should NOT be added to the `localActions` store.
-   - NOTE: If the action has a version number higher than the app's rules version, then processing must be aborted and the app must be updated.
-3. For every action found in the "active" localDB:
-   - Process the action as described in the "Processing Actions" section (including copying actions to the `localActions` store).
-     Note: this step will only be necessary if new actions are created while the local DB is being generated. My guess is that generating a new local DB should be fast enough that it won't give the user a chance to generate new actions.
+2. Copy all items from `cloudReplica` into the new local DB.
+3. For every item in the "active" localDB's `localActions` table:
+   - Process the action as described in the "Processing Actions" section (including copying actions to the `localActions` store).  
+     Note: this step will only be necessary if actions are created while the new local DB is being generated. My guess is that generating a new local DB should be fast enough that it won't give the user a chance to generate new actions.
 4. Update `localStorage.activeLocalDB` to match the name that was picked in step #1.
 5. To free up space, old local DBs should be deleted.
 
@@ -103,10 +84,9 @@ To generate a new local DB:
 When a new action is generated, the following happens in the current "local" DB:
 
 1. The action is added to `localDB.localActions`.
-2. If a transfer is added/modified/deleted, the corresponding change is reflected in `localDB.transfers`.
-3. If a financial category is added/modified/deleted, the corresponding change is reflected in `localDB.categories`
-4. The `localDB.meta.actionsCount` value must be increased by `1`.
-5. The `localDB.meta.lastAction` value should be updated to match the action being processed.
+2. The action is processed (the corresponding table/item is created/updated/deleted)
+3. The `localDB.meta.actionsCount` is increased by `1`.
+4. The `localDB.meta.lastAction` value is updated to match the action that was processed.
 
 Note: if there is no active local DB, a new local DB must be generated as described in the "Generating a new local DB" section.
 
@@ -115,13 +95,12 @@ Note: if there is no active local DB, a new local DB must be generated as descri
 1. updateCloudReplica()
    Download rows (actions) from Google Spreadsheet, where `row index > cloudReplica.actions.count()`.
    For every action downloaded:
-   - add the action to `cloudReplica.actions`
-   - if the action's "version" is greater than `cloudReplica.meta.latestVersion`, update `cloudReplica.meta.latestVersion` to match.
+   - process the action in `cloudReplica`
 2. uploadLocalActions()
    If there are any `localDB.localActions`:
-   _ upload them (ie: append) to the Google spreadsheet
-   _ delete them from `localDB.actions` \* proceed to step #1
-   If there are no `localDB.actions`, proceed to step #3.
+   - upload them (ie: append) to the Google spreadsheet
+   - delete them from `localDB.actions`, then proceed to step #1
+     If there are no `localDB.actions`, proceed to step #3.
 3. checkConflicts()
    - If local DB is in sync with cloudReplica, sync is done.
    - Otherwise, local DB is in conflict, and a new local DB must be generated (as described in the "Generating a new local DB" section).

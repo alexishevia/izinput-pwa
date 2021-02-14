@@ -3,10 +3,11 @@ import { v4 as uuidv4 } from "uuid";
 import { promisify } from "util";
 import { EventEmitter } from "events";
 import syncRecursive from "./sync/sync";
-import getLocalDB from "./LocalDB/get";
-import setLocalDB from "./LocalDB/set";
-import deleteLocalDBs from "./LocalDB/delete";
-import getCloudReplica from "./CloudReplica/get";
+import getLocalDB from "./db/getLocalDB";
+import setLocalDB from "./db/setLocalDB";
+import cloneDB from "./db/clone";
+import deleteLocalDBs from "./db/deleteLocalDBs";
+import getCloudReplica from "./db/getCloudReplica";
 import GoogleSpreadsheet from "./AppendOnlyLog/GoogleSpreadsheet";
 import {
   AccountsCreateAction,
@@ -432,7 +433,7 @@ export default function InvoiceZero() {
         localDB,
         cloudReplica: await getCloudReplica(),
         appendOnlyLog: new GoogleSpreadsheet({ spreadsheetId: file.id }),
-        newLocalDB: () => getLocalDB({ forceNew: true }),
+        cloneDB,
       });
       if (newLocalDB !== localDB) {
         setLocalDB(newLocalDB);

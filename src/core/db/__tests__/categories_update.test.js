@@ -3,8 +3,8 @@ import {
   CategoriesCreateAction,
   CategoriesUpdateAction,
   CategoriesDeleteAction,
-} from "../../../actionCreators";
-import LocalDB from "..";
+} from "../../actionCreators";
+import LocalDB from "../db";
 
 /* --- helper functions --- */
 
