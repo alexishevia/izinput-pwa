@@ -8,14 +8,15 @@ function cloneCollection(sourceCollection, destCollection) {
 
 function cloneDB(sourceDB, destDB) {
   const tableNames = sourceDB.dexie.tables.map((t) => t.name);
-  return Promise.all(
-    tableNames.map((tableName) => {
-      return cloneCollection(
-        sourceDB.dexie[tableName],
-        destDB.dexie[tableName]
-      );
-    })
-  ).then(() => destDB);
+  return tableNames
+    .reduce(
+      (prevStep, tableName) =>
+        prevStep.then(() =>
+          cloneCollection(sourceDB.dexie[tableName], destDB.dexie[tableName])
+        ),
+      Promise.resolve()
+    )
+    .then(() => destDB);
 }
 
 export default function clone(sourceDB) {
