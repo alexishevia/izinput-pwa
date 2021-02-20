@@ -1,8 +1,30 @@
 import getLocalDB from "./getLocalDB";
+import { PAGE_SIZE } from "../../constants";
 
-function cloneCollection(sourceCollection, destCollection) {
-  return sourceCollection.each((item, cursor) => {
-    return destCollection.put(item, cursor.key);
+async function cloneCollectionRecursive({
+  fromCollection,
+  toCollection,
+  offset,
+}) {
+  let done = true;
+  const lowerBound = offset || 0;
+  const upperBound = lowerBound + PAGE_SIZE;
+  await fromCollection
+    .offset(lowerBound)
+    .limit(upperBound - lowerBound + 1)
+    .each((item, cursor) => {
+      done = false;
+      return toCollection.put(item, cursor.key);
+    });
+
+  if (done) {
+    return Promise.resolve();
+  }
+
+  return cloneCollectionRecursive({
+    fromCollection,
+    toCollection,
+    offset: upperBound + 1,
   });
 }
 
@@ -12,7 +34,10 @@ function cloneDB(sourceDB, destDB) {
     .reduce(
       (prevStep, tableName) =>
         prevStep.then(() =>
-          cloneCollection(sourceDB.dexie[tableName], destDB.dexie[tableName])
+          cloneCollectionRecursive({
+            fromCollection: sourceDB.dexie[tableName],
+            toCollection: destDB.dexie[tableName],
+          })
         ),
       Promise.resolve()
     )
