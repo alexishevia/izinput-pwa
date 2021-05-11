@@ -11,7 +11,7 @@
     "dexie": "v3.1.0-alpha.8",
     "fake-indexeddb": "^3.1.2",
     "ionicons": "^5.5.0",
-    "lodash": "^4.17.20",
+    "lodash": "^4.17.21",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-router": "^5.2.0",
