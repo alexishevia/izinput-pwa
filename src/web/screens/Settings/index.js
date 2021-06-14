@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { IonButton, IonLoading } from "@ionic/react";
+import { v1 as uuid } from "uuid";
 import DangerArea from "./DangerArea";
 import Sync from "./Sync";
 
@@ -27,19 +28,71 @@ export default function Settings({ coreApp }) {
       const localDB = await coreApp.getLocalDB();
 
       await localDB.dexie.accounts.each((data) => {
-        write({ TYPE: "ACCOUNT", ...data });
+        write({
+          id: uuid(),
+          type: "accounts/create",
+          payload: {
+            id: data.id,
+            name: data.name,
+            initialBalance: data.initialBalance * 100,
+            modifiedAt: data.modifiedAt,
+          },
+        });
       });
       await localDB.dexie.categories.each((data) => {
-        write({ TYPE: "CATEGORY", ...data });
+        write({
+          id: uuid(),
+          type: "categories/create",
+          payload: {
+            id: data.id,
+            name: data.name,
+            modifiedAt: data.modifiedAt,
+          },
+        });
       });
       await localDB.dexie.incomes.each((data) => {
-        write({ TYPE: "INCOME", ...data });
+        write({
+          id: uuid(),
+          type: "income/create",
+          payload: {
+            id: data.id,
+            amount: data.amount * 100,
+            accountID: data.accountID,
+            categoryID: data.categoryID,
+            description: data.description,
+            transactionDate: data.transactionDate,
+            modifiedAt: data.modifiedAt,
+          },
+        });
       });
       await localDB.dexie.expenses.each((data) => {
-        write({ TYPE: "EXPENSE", ...data });
+        write({
+          id: uuid(),
+          type: "expenses/create",
+          payload: {
+            id: data.id,
+            amount: data.amount * 100,
+            accountID: data.accountID,
+            categoryID: data.categoryID,
+            description: data.description,
+            transactionDate: data.transactionDate,
+            modifiedAt: data.modifiedAt,
+          },
+        });
       });
       await localDB.dexie.transfers.each((data) => {
-        write({ TYPE: "TRANSFER", ...data });
+        write({
+          id: uuid(),
+          type: "transfers/create",
+          payload: {
+            id: data.id,
+            amount: data.amount * 100,
+            fromID: data.fromID,
+            toID: data.toID,
+            transactionDate: data.transactionDate,
+            modifiedAt: data.modifiedAt,
+          },
+        });
       });
 
       setIsLoading(false);
