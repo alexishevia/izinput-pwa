@@ -40,6 +40,9 @@ export default function Settings({ coreApp }) {
         });
       });
       await localDB.dexie.categories.each((data) => {
+        if (data.deleted) {
+          return;
+        }
         write({
           id: uuid(),
           type: "categories/create",
@@ -51,6 +54,9 @@ export default function Settings({ coreApp }) {
         });
       });
       await localDB.dexie.incomes.each((data) => {
+        if (data.deleted) {
+          return;
+        }
         write({
           id: uuid(),
           type: "income/create",
@@ -66,6 +72,9 @@ export default function Settings({ coreApp }) {
         });
       });
       await localDB.dexie.expenses.each((data) => {
+        if (data.deleted) {
+          return;
+        }
         write({
           id: uuid(),
           type: "expenses/create",
@@ -81,6 +90,9 @@ export default function Settings({ coreApp }) {
         });
       });
       await localDB.dexie.transfers.each((data) => {
+        if (data.deleted) {
+          return;
+        }
         write({
           id: uuid(),
           type: "transfers/create",
