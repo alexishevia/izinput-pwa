@@ -35,7 +35,6 @@ export default function Settings({ coreApp }) {
             id: data.id,
             name: data.name,
             initialBalance: data.initialBalance * 100,
-            modifiedAt: data.modifiedAt,
           },
         });
       });
@@ -49,7 +48,6 @@ export default function Settings({ coreApp }) {
           payload: {
             id: data.id,
             name: data.name,
-            modifiedAt: data.modifiedAt,
           },
         });
       });
@@ -67,7 +65,6 @@ export default function Settings({ coreApp }) {
             categoryID: data.categoryID,
             description: data.description,
             transactionDate: data.transactionDate,
-            modifiedAt: data.modifiedAt,
           },
         });
       });
@@ -85,7 +82,6 @@ export default function Settings({ coreApp }) {
             categoryID: data.categoryID,
             description: data.description,
             transactionDate: data.transactionDate,
-            modifiedAt: data.modifiedAt,
           },
         });
       });
@@ -102,7 +98,6 @@ export default function Settings({ coreApp }) {
             fromID: data.fromID,
             toID: data.toID,
             transactionDate: data.transactionDate,
-            modifiedAt: data.modifiedAt,
           },
         });
       });
