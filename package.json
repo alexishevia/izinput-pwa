@@ -8,7 +8,7 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
-    "dexie": "v3.1.0-alpha.8",
+    "dexie": "v3.2.2",
     "fake-indexeddb": "^3.1.2",
     "ionicons": "^5.5.0",
     "lodash": "^4.17.20",
